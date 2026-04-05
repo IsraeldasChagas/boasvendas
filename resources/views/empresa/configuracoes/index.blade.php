@@ -1,0 +1,98 @@
+@extends('layouts.empresa')
+
+@section('title', 'Configurações')
+
+@section('content')
+    @include('partials.components.breadcrumb', ['items' => [
+        ['label' => 'Dashboard', 'url' => route('empresa.dashboard')],
+        ['label' => 'Configurações', 'url' => route('empresa.configuracoes.index')],
+    ]])
+
+    @if (session('status'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('status') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    @endif
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h1 class="h5 fw-bold mb-0">Configurações</h1>
+    </div>
+
+    <form action="{{ route('empresa.configuracoes.update') }}" method="post">
+        @csrf
+        @method('PUT')
+
+        <div class="row g-3">
+            <div class="col-lg-8">
+                <div class="vf-card p-4 mb-3">
+                    <h2 class="h6 fw-bold mb-3">Dados da empresa</h2>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="nome">Nome / razão social</label>
+                            <input type="text" class="form-control form-control-sm @error('nome') is-invalid @enderror" id="nome" name="nome" value="{{ old('nome', $empresa->nome) }}" required maxlength="255">
+                            @error('nome')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="slug">Slug da loja (URL pública)</label>
+                            <input type="text" class="form-control form-control-sm @error('slug') is-invalid @enderror" id="slug" name="slug" value="{{ old('slug', $empresa->slug) }}" maxlength="64" placeholder="ex.: minha-loja" autocomplete="off">
+                            @error('slug')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <p class="small text-muted mb-0 mt-1">Apenas letras minúsculas, números e hífens. Deixe em branco se ainda não for usar a loja online.</p>
+                            @if ($empresa->slug)
+                                <p class="small mb-0 mt-2">
+                                    <a href="{{ route('publico.loja', $empresa->slug) }}" target="_blank" rel="noopener">Abrir loja pública <i class="bi bi-box-arrow-up-right"></i></a>
+                                </p>
+                            @endif
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="email_contato">E-mail de contato</label>
+                            <input type="email" class="form-control form-control-sm @error('email_contato') is-invalid @enderror" id="email_contato" name="email_contato" value="{{ old('email_contato', $empresa->email_contato) }}" maxlength="255">
+                            @error('email_contato')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="cnpj">CNPJ</label>
+                            <input type="text" class="form-control form-control-sm @error('cnpj') is-invalid @enderror" id="cnpj" name="cnpj" value="{{ old('cnpj', $empresa->cnpj) }}" maxlength="32">
+                            @error('cnpj')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
+                </div>
+
+                <div class="vf-card p-4 mb-3">
+                    <h2 class="h6 fw-bold mb-2">Delivery e pedidos online</h2>
+                    <p class="small text-muted mb-0">Opções como aceitar pedidos na loja pública e exigir geolocalização serão configuráveis aqui quando o fluxo de checkout estiver integrado a estes dados.</p>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="vf-card p-3 mb-3">
+                    <h2 class="h6 fw-bold mb-3">Contrato e plano</h2>
+                    <dl class="small mb-0">
+                        <dt class="text-muted fw-normal">Plano</dt>
+                        <dd class="mb-2">{{ $empresa->plano?->nome ?? '—' }}</dd>
+                        <dt class="text-muted fw-normal">Status</dt>
+                        <dd class="mb-2">{{ \App\Models\Empresa::statusRotulos()[$empresa->status] ?? $empresa->status }}</dd>
+                        <dt class="text-muted fw-normal">Cliente desde</dt>
+                        <dd class="mb-0">{{ $empresa->cliente_desde?->format('d/m/Y') ?? '—' }}</dd>
+                    </dl>
+                    <p class="small text-muted mb-0 mt-3">Plano e status são alterados pelo administrador do sistema.</p>
+                </div>
+
+                <div class="vf-card p-3 mb-3">
+                    <h2 class="h6 fw-bold mb-3">Módulos</h2>
+                    @if ($empresa->modulos_resumo)
+                        <ul class="list-unstyled small mb-0">
+                            @foreach (preg_split('/\s*\+\s*|\s*,\s*/', $empresa->modulos_resumo, -1, PREG_SPLIT_NO_EMPTY) as $mod)
+                                <li class="mb-2"><i class="bi bi-check-circle text-success me-1"></i>{{ trim($mod) }}</li>
+                            @endforeach
+                        </ul>
+                    @else
+                        <p class="small text-muted mb-0">Nenhum resumo de módulos cadastrado.</p>
+                    @endif
+                    <p class="small text-muted mb-0 mt-3">Liberação de módulos é feita pelo suporte ou administrador.</p>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">Salvar alterações</button>
+            </div>
+        </div>
+    </form>
+@endsection
