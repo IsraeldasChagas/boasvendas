@@ -9,7 +9,7 @@
                 <h1 class="fw-bold mb-3">Fale conosco</h1>
                 <p class="text-muted">Formulário apenas visual nesta versão — sem envio de e-mail.</p>
                 <ul class="list-unstyled small text-muted">
-                    <li class="mb-2"><i class="bi bi-envelope text-primary me-2"></i>contato@boavendas.demo</li>
+                    <li class="mb-2"><i class="bi bi-envelope text-primary me-2"></i>contato@vendaffacil.com.br</li>
                     <li class="mb-2"><i class="bi bi-whatsapp text-success me-2"></i>(11) 99999-0000</li>
                     <li><i class="bi bi-geo-alt text-danger me-2"></i>São Paulo, SP — Brasil</li>
                 </ul>

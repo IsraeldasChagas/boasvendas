@@ -100,7 +100,7 @@ class PublicoController extends Controller
 
     private function taxaEntregaValor(Empresa $empresa): float
     {
-        return (float) config('boasvendas.taxa_entrega_padrao', 5.99);
+        return (float) config('vendaffacil.taxa_entrega_padrao', 5.99);
     }
 
     private function gerarCodigoPublico(): string

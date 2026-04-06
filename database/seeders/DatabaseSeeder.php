@@ -14,7 +14,7 @@ class DatabaseSeeder extends Seeder
 
     /**
      * Usuários de demonstração (senha: password).
-     * Master: defina o mesmo e-mail em BOASVENDAS_ADMIN_EMAILS no .env
+     * Master: defina o mesmo e-mail em VENDAFFACIL_ADMIN_EMAILS no .env
      */
     public function run(): void
     {
@@ -32,7 +32,7 @@ class DatabaseSeeder extends Seeder
         $this->call(VendaExternaDemoSeeder::class);
 
         User::query()->firstOrCreate(
-            ['email' => 'admin@boavendas.app'],
+            ['email' => 'admin@vendaffacil.com.br'],
             [
                 'name' => 'Admin Master',
                 'password' => Hash::make('password'),
@@ -40,7 +40,7 @@ class DatabaseSeeder extends Seeder
         );
 
         User::query()->firstOrCreate(
-            ['email' => 'empresa@boavendas.app'],
+            ['email' => 'empresa@vendaffacil.com.br'],
             [
                 'name' => 'Empresa Demo',
                 'password' => Hash::make('password'),
@@ -49,7 +49,7 @@ class DatabaseSeeder extends Seeder
 
         $lanchoneteId = Empresa::query()->where('nome', 'Lanchonete Demo')->value('id');
         if ($lanchoneteId) {
-            User::query()->where('email', 'empresa@boavendas.app')->update([
+            User::query()->where('email', 'empresa@vendaffacil.com.br')->update([
                 'empresa_id' => $lanchoneteId,
                 'role' => 'gestor',
             ]);

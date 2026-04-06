@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-title Boas vendas — Enviar para GitHub
+title Venda Facil — Enviar para GitHub
 cd /d "%~dp0"
 
 echo.

@@ -1,4 +1,4 @@
--- Laravel: tabelas base equivalentes às migrations padrão do Boas Vendas
+-- Laravel: tabelas base equivalentes às migrations padrão do Venda Facil
 -- Charset alinhado ao Laravel (utf8mb4_unicode_ci)
 -- Importe no MySQL/phpMyAdmin no banco desejado.
 

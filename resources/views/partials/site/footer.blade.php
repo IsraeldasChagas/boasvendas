@@ -6,7 +6,7 @@
                 <p class="small mb-3">Delivery, cardápio digital e gestão para quem vende na rua e online.</p>
                 <div class="small">
                     <div class="text-white-50 text-uppercase fw-semibold mb-1">Contato</div>
-                    <a href="mailto:contato@boasvendas.com.br" class="link-light link-underline-opacity-0 d-block">contato@boasvendas.com.br</a>
+                    <a href="mailto:contato@vendaffacil.com.br" class="link-light link-underline-opacity-0 d-block">contato@vendaffacil.com.br</a>
                     <span class="text-white-50 d-block">(11) 99999-0000 · WhatsApp</span>
                     <a href="{{ route('site.contato') }}" class="link-light link-underline-opacity-0 d-inline-block mt-1">Fale conosco</a>
                 </div>

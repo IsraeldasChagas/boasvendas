@@ -18,7 +18,7 @@ class EmpresaSeeder extends Seeder
             [
                 'nome' => 'Lanchonete Demo',
                 'slug' => 'demo',
-                'email_contato' => 'lanchonete-demo@boavendas.app',
+                'email_contato' => 'lanchonete-demo@vendaffacil.com.br',
                 'cnpj' => null,
                 'plano_id' => $crescimento?->id,
                 'status' => 'ativa',

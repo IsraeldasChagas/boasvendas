@@ -57,7 +57,7 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        $emails = collect(config('boasvendas.admin_emails', []))
+        $emails = collect(config('vendaffacil.admin_emails', []))
             ->map(fn ($e) => strtolower(trim((string) $e)))
             ->filter();
 

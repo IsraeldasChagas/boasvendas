@@ -1,7 +1,7 @@
 {
-  "name": "Boas Vendas",
-  "short_name": "Boas Vendas",
-  "description": "SaaS multiempresa para delivery, cardápio digital e gestão de vendas.",
+  "name": "Venda Fácil",
+  "short_name": "Venda Fácil",
+  "description": "SaaS multiempresa para delivery, cardápio digital e gestão de vendas (vendaffacil.com.br).",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

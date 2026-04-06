@@ -8,7 +8,7 @@
     <title>@yield('title', 'Início') — {{ config('app.name') }} · SaaS para vendas e delivery</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" crossorigin="anonymous">
-    <link href="{{ asset('assets/css/boasvandas.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/css/vendaffacil.css') }}" rel="stylesheet">
     @stack('styles')
 </head>
 <body class="vf-body d-flex flex-column min-vh-100">
@@ -24,7 +24,7 @@
     </main>
     @include('partials.site.footer')
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-    <script src="{{ asset('assets/js/boasvandas.js') }}"></script>
+    <script src="{{ asset('assets/js/vendaffacil.js') }}"></script>
     @stack('scripts')
 </body>
 </html>

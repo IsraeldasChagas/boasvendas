@@ -7,7 +7,7 @@ $ErrorActionPreference = "Continue"
 $RepoRoot = if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
 Set-Location -LiteralPath $RepoRoot
 
-$RemoteUrl = "https://github.com/IsraeldasChagas/boasvendas.git"
+$RemoteUrl = "https://github.com/IsraeldasChagas/vendaffacil.git"
 $DefaultCommitMessage = "Atualização"
 
 # Estado para o resumo final (sempre exibido no finally)
@@ -65,11 +65,11 @@ try {
 
             $readmePath = Join-Path $RepoRoot "README.md"
             if (-not (Test-Path -LiteralPath $readmePath)) {
-                $mk = Read-Host "Criar README.md com linha '# boasvendas'? (como: echo # boasvendas >> README.md) (S/N)"
+                $mk = Read-Host "Criar README.md com linha '# vendaffacil'? (S/N)"
                 if ($mk -match '^[sSyY]') {
-                    Add-Content -LiteralPath $readmePath -Value "# boasvendas" -Encoding UTF8
+                    Add-Content -LiteralPath $readmePath -Value "# vendaffacil" -Encoding UTF8
                     Write-Host "README.md criado." -ForegroundColor Green
-                    Add-Log "README.md criado com # boasvendas"
+                    Add-Log "README.md criado com # vendaffacil"
                 }
             }
 
