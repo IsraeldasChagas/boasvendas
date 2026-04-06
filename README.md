@@ -1,4 +1,4 @@
-# Vendaffacil (vendaffacil.com.br)
+# Venda Fácil (vendaffacil.com.br)
 
 SaaS multiempresa: delivery, cardápio digital, pedidos, financeiro, venda externa (consignação / fiado) e painel master — em **Laravel**, **Blade** e **Bootstrap 5**.
 
@@ -58,4 +58,4 @@ Assets: `public/assets/css/vendaffacil.css`, `public/assets/js/vendaffacil.js`, 
 
 ---
 
-**Vendaffacil** — vendaffacil.com.br
+**Venda Fácil** — vendaffacil.com.br

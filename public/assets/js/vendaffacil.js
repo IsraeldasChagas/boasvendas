@@ -1,5 +1,5 @@
 /**
- * Vendaffacil — UI leve (sem frameworks JS)
+ * Boas Vendas — UI leve (sem frameworks JS)
  */
 (function () {
   'use strict';

@@ -1,10 +1,10 @@
 @echo off
 chcp 65001 >nul
-title Vendaffacil — servidor local
+title Boas Vendas — servidor local
 cd /d "%~dp0"
 
 echo.
-echo  Vendaffacil — iniciando servidor Laravel...
+echo  Boas Vendas — iniciando servidor Laravel...
 echo  Pasta: %CD%
 echo.
 
