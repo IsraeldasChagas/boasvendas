@@ -13,6 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Evita 419 após login em HTTPS atrás de proxy (cPanel, Cloudflare, etc.)
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
             'empresa.painel' => EnsureEmpresaPainelAccess::class,
