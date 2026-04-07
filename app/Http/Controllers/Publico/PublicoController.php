@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Adicional;
 use App\Models\Categoria;
 use App\Models\Empresa;
+use App\Models\EmpresaSlug;
 use App\Models\Pedido;
 use App\Models\PedidoItem;
 use App\Models\Produto;
@@ -25,6 +26,17 @@ class PublicoController extends Controller
             ->where('slug', $slug)
             ->where('status', '!=', 'suspensa')
             ->first();
+
+        if (! $empresa) {
+            $slugRow = EmpresaSlug::query()
+                ->where('slug', $slug)
+                ->with('empresa')
+                ->first();
+            $empresa = $slugRow?->empresa;
+            if ($empresa && $empresa->status === 'suspensa') {
+                $empresa = null;
+            }
+        }
 
         if (! $empresa) {
             abort(404, 'Não encontramos esta loja. Verifique o link ou se o estabelecimento ainda está ativo.');

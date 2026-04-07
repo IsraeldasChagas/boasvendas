@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Empresa;
 
 use App\Http\Controllers\Controller;
 use App\Models\Empresa;
+use App\Models\EmpresaSlug;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -57,6 +58,17 @@ class ConfiguracaoController extends Controller
             'loja_pix_banco' => ['nullable', 'string', 'max:120'],
             'loja_pix_copia_cola' => ['nullable', 'string', 'max:8192'],
         ]);
+
+        $slugAnterior = (string) ($empresa->slug ?? '');
+        $slugNovo = (string) ($data['slug'] ?? '');
+        $mudouSlug = $slugAnterior !== '' && $slugNovo !== '' && $slugAnterior !== $slugNovo;
+        if ($mudouSlug) {
+            EmpresaSlug::query()->firstOrCreate([
+                'slug' => $slugAnterior,
+            ], [
+                'empresa_id' => $empresa->id,
+            ]);
+        }
 
         $empresa->update($data);
 

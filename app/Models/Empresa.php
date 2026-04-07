@@ -120,6 +120,11 @@ class Empresa extends Model
         return $this->hasMany(Pedido::class, 'empresa_id');
     }
 
+    public function slugs(): HasMany
+    {
+        return $this->hasMany(EmpresaSlug::class, 'empresa_id');
+    }
+
     public static function statusRotulos(): array
     {
         return [
