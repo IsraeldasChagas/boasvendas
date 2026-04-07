@@ -254,12 +254,20 @@ class ProdutoController extends Controller
         $nome = Str::uuid()->toString().'.'.$ext;
         $dir = 'produtos/'.$empresa->id;
 
-        return $file->storeAs($dir, $nome, 'public');
+        return $file->storeAs($dir, $nome, 'uploads');
     }
 
     private function removerFotoDoDisco(Produto $produto): void
     {
         if (! $produto->foto) {
+            return;
+        }
+
+        $path = ltrim(str_replace('\\', '/', $produto->foto), '/');
+
+        if (Storage::disk('uploads')->exists($path)) {
+            Storage::disk('uploads')->delete($path);
+
             return;
         }
 

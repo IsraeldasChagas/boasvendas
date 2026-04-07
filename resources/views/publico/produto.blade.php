@@ -16,7 +16,7 @@
         <div class="row g-4">
             <div class="col-md-6">
                 <div class="vf-card ratio ratio-1x1 bg-light overflow-hidden">
-                    @if ($produto->foto)
+                    @if ($produto->urlFoto())
                         <img src="{{ $produto->urlFoto() }}" alt="{{ $produto->nome }}" class="w-100 h-100 object-fit-cover">
                     @else
                         <div class="d-flex align-items-center justify-content-center w-100 h-100">

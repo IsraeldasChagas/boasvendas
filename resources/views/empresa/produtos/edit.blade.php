@@ -21,9 +21,9 @@
             <div class="row g-3">
                 <div class="col-12">
                     <label class="form-label" for="foto">Foto do produto</label>
-                    <div id="foto-preview-wrap" class="mb-2 {{ $produto->foto ? '' : 'd-none' }}">
-                        <span class="small text-muted d-block mb-1" id="foto-preview-caption">{{ $produto->foto ? 'Foto atual' : 'Prévia' }}</span>
-                        <img id="foto-preview" @if($produto->foto) src="{{ $produto->urlFoto() }}" @endif alt="Foto do produto" class="rounded border {{ $produto->foto ? '' : 'd-none' }}" width="160" height="160" style="max-height: 160px; width: auto; object-fit: cover;">
+                    <div id="foto-preview-wrap" class="mb-2 {{ $produto->urlFoto() ? '' : 'd-none' }}">
+                        <span class="small text-muted d-block mb-1" id="foto-preview-caption">{{ $produto->urlFoto() ? 'Foto atual' : 'Prévia' }}</span>
+                        <img id="foto-preview" @if($produto->urlFoto()) src="{{ $produto->urlFoto() }}" @endif alt="Foto do produto" class="rounded border {{ $produto->urlFoto() ? '' : 'd-none' }}" width="160" height="160" style="max-height: 160px; width: auto; object-fit: cover;">
                     </div>
                     <input type="file" class="form-control @error('foto') is-invalid @enderror" id="foto" name="foto" accept="image/jpeg,image/png,image/webp,image/gif">
                     @error('foto')<div class="invalid-feedback">{{ $message }}</div>@enderror

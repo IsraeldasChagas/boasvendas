@@ -47,6 +47,14 @@ return [
             'report' => false,
         ],
 
+        /* Fotos de produto em public/uploads — não depende de php artisan storage:link */
+        'uploads' => [
+            'driver' => 'local',
+            'root' => public_path('uploads'),
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

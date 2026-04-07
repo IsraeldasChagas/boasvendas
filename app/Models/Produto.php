@@ -51,8 +51,8 @@ class Produto extends Model
     }
 
     /**
-     * URL para exibir a foto (caminho relativo ao domínio, funciona mesmo se APP_URL estiver diferente).
-     * Exige link simbólico: php artisan storage:link (public/storage → storage/app/public).
+     * URL da foto: prioriza arquivo em public/uploads (hospedagem sem storage:link);
+     * se ainda estiver só em storage/app/public, usa rota que envia o arquivo via PHP.
      */
     public function urlFoto(): ?string
     {
@@ -62,6 +62,14 @@ class Produto extends Model
 
         $path = ltrim(str_replace('\\', '/', $this->foto), '/');
 
-        return '/storage/'.$path;
+        if (is_file(public_path('uploads/'.$path))) {
+            return asset('uploads/'.$path);
+        }
+
+        if (is_file(storage_path('app/public/'.$path))) {
+            return '/media/produto/'.$this->id;
+        }
+
+        return null;
     }
 }

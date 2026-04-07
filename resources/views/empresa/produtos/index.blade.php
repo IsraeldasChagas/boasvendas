@@ -59,7 +59,7 @@
                     @forelse ($produtos as $pr)
                         <tr>
                             <td class="p-1">
-                                @if ($pr->foto)
+                                @if ($pr->urlFoto())
                                     <img src="{{ $pr->urlFoto() }}" alt="" width="40" height="40" class="rounded border object-fit-cover" style="width:40px;height:40px;">
                                 @else
                                     <span class="d-inline-flex align-items-center justify-content-center rounded border bg-light text-muted" style="width:40px;height:40px;"><i class="bi bi-image small"></i></span>

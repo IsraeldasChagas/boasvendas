@@ -38,7 +38,7 @@
                     <a href="{{ route('publico.produto', ['slug' => $slug, 'produto_id' => $pr->id]) }}" class="text-decoration-none text-dark">
                         <div class="vf-card vf-product-card h-100 overflow-hidden">
                             <div class="ratio ratio-4x3 bg-primary-subtle overflow-hidden">
-                                @if ($pr->foto)
+                                @if ($pr->urlFoto())
                                     <img src="{{ $pr->urlFoto() }}" alt="" class="w-100 h-100 object-fit-cover">
                                 @else
                                     <div class="d-flex align-items-center justify-content-center w-100 h-100">

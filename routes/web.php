@@ -47,6 +47,10 @@ Route::get('/cadastro-usuario', [AuthController::class, 'cadastroUsuario'])->nam
 Route::get('/esqueci-senha', [AuthController::class, 'esqueciSenha'])->name('auth.esqueci-senha');
 Route::get('/redefinir-senha', [AuthController::class, 'redefinirSenha'])->name('auth.redefinir-senha');
 
+Route::get('/media/produto/{produto}', [PublicoController::class, 'produtoFoto'])
+    ->whereNumber('produto')
+    ->name('publico.produto_foto');
+
 Route::get('/loja/{slug}/fidelidade', [FidelidadePublicController::class, 'show'])->name('publico.fidelidade');
 Route::post('/loja/{slug}/fidelidade', [FidelidadePublicController::class, 'consultar'])
     ->middleware('throttle:30,1')

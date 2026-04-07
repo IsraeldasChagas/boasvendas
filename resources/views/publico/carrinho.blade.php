@@ -32,7 +32,7 @@
                                         <tr>
                                             <td class="fw-medium">
                                                 <div class="d-flex align-items-start gap-2">
-                                                    @if ($p->foto)
+                                                    @if ($p->urlFoto())
                                                         <img src="{{ $p->urlFoto() }}" alt="" width="48" height="48" class="rounded border flex-shrink-0 object-fit-cover" style="width:48px;height:48px;">
                                                     @endif
                                                     <div>

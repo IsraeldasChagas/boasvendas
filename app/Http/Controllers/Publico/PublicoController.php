@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class PublicoController extends Controller
 {
@@ -576,6 +577,30 @@ class PublicoController extends Controller
             'slug' => $slug,
             'empresa' => $empresa,
             'pedido' => $pedido,
+        ]);
+    }
+
+    /**
+     * Serve foto guardada em storage/app/public (legado) quando não há symlink public/storage.
+     */
+    public function produtoFoto(Produto $produto): BinaryFileResponse
+    {
+        if ($produto->foto === null || $produto->foto === '') {
+            abort(404);
+        }
+
+        $rel = ltrim(str_replace('\\', '/', $produto->foto), '/');
+        if (! str_starts_with($rel, 'produtos/')) {
+            abort(404);
+        }
+
+        $full = storage_path('app/public/'.$rel);
+        if (! is_file($full)) {
+            abort(404);
+        }
+
+        return response()->file($full, [
+            'Cache-Control' => 'public, max-age=604800',
         ]);
     }
 
