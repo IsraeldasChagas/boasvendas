@@ -460,7 +460,7 @@ class VendaExternaController extends Controller
 
         $query = VeAcerto::query()
             ->where('empresa_id', $empresaId)
-            ->with(['ponto', 'remessa'])
+            ->with(['ponto', 'remessa.produto'])
             ->orderByRaw('CASE WHEN data_acerto IS NULL THEN 1 ELSE 0 END ASC')
             ->orderByDesc('data_acerto')
             ->orderByDesc('created_at');
@@ -494,7 +494,12 @@ class VendaExternaController extends Controller
 
         $acerto = new VeAcerto;
         $pontos = VePonto::query()->where('empresa_id', $empresa->id)->orderBy('nome')->get();
-        $remessas = VeRemessa::query()->where('empresa_id', $empresa->id)->orderByDesc('created_at')->limit(100)->get();
+        $remessas = VeRemessa::query()
+            ->where('empresa_id', $empresa->id)
+            ->with('produto')
+            ->orderByDesc('created_at')
+            ->limit(100)
+            ->get();
 
         return view('empresa.venda-externa.acertos.form', compact('empresa', 'acerto', 'pontos', 'remessas'));
     }
@@ -523,7 +528,7 @@ class VendaExternaController extends Controller
             abort(403);
         }
 
-        $veAcerto->load(['ponto', 'remessa']);
+        $veAcerto->load(['ponto', 'remessa.produto']);
         $acerto = $veAcerto;
 
         return view('empresa.venda-externa.acertos.show', compact('empresa', 'acerto'));
@@ -538,7 +543,12 @@ class VendaExternaController extends Controller
 
         $acerto = $veAcerto;
         $pontos = VePonto::query()->where('empresa_id', $empresa->id)->orderBy('nome')->get();
-        $remessas = VeRemessa::query()->where('empresa_id', $empresa->id)->orderByDesc('created_at')->limit(100)->get();
+        $remessas = VeRemessa::query()
+            ->where('empresa_id', $empresa->id)
+            ->with('produto')
+            ->orderByDesc('created_at')
+            ->limit(100)
+            ->get();
 
         return view('empresa.venda-externa.acertos.form', compact('empresa', 'acerto', 'pontos', 'remessas'));
     }
@@ -869,7 +879,7 @@ class VendaExternaController extends Controller
         $chartMax = max(1.0, ...$chartSerieRegistros, ...$chartSerieAcertos);
 
         $acertosPeriodo = $this->queryAcertosNoPeriodo($empresaId, $inicio, $fim)
-            ->with(['ponto', 'remessa'])
+            ->with(['ponto', 'remessa.produto'])
             ->orderByDesc('data_acerto')
             ->orderByDesc('id')
             ->limit(100)
@@ -939,7 +949,7 @@ class VendaExternaController extends Controller
         ['empresa' => $empresa, 'inicio' => $inicio, 'fim' => $fim] = $resolved;
 
         $acertos = $this->queryAcertosNoPeriodo($empresa->id, $inicio, $fim)
-            ->with(['ponto', 'remessa'])
+            ->with(['ponto', 'remessa.produto'])
             ->orderByDesc('data_acerto')
             ->orderByDesc('id')
             ->limit(5000)

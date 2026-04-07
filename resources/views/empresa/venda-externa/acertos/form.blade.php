@@ -26,16 +26,25 @@
                 @error('ve_ponto_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             <div class="mb-3">
-                <label class="form-label" for="ve_remessa_id">Remessa (opcional)</label>
+                <label class="form-label" for="ve_remessa_id">Entrega / remessa (opcional)</label>
                 <select class="form-select @error('ve_remessa_id') is-invalid @enderror" id="ve_remessa_id" name="ve_remessa_id">
                     <option value="">— Nenhuma —</option>
                     @foreach ($remessas as $rm)
-                        <option value="{{ $rm->id }}" @selected((string) old('ve_remessa_id', $acerto->ve_remessa_id) === (string) $rm->id)>
-                            R-{{ $rm->id }} — {{ $rm->tituloExibicao() }}
+                        <option
+                            value="{{ $rm->id }}"
+                            data-produto-nome="{{ $rm->produto?->nome ?? '' }}"
+                            data-produto-preco="{{ $rm->produto && $rm->produto->preco !== null ? number_format((float) $rm->produto->preco, 2, '.', '') : '' }}"
+                            @selected((string) old('ve_remessa_id', $acerto->ve_remessa_id) === (string) $rm->id)>
+                            R-{{ $rm->id }} — {{ $rm->produto?->nome ?? $rm->tituloExibicao() }}
                         </option>
                     @endforeach
                 </select>
                 @error('ve_remessa_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                <div class="form-text border rounded px-2 py-2 bg-light mt-2 d-none" id="vf-acerto-produto-ref">
+                    <span class="text-muted">Valor unitário do produto (cadastro):</span>
+                    <strong id="vf-acerto-produto-ref-preco">—</strong>
+                    <span class="text-muted" id="vf-acerto-produto-ref-nome-wrap"> · <span id="vf-acerto-produto-ref-nome"></span></span>
+                </div>
             </div>
             <div class="mb-3">
                 <label class="form-label" for="status">Status</label>
@@ -57,6 +66,7 @@
                     <label class="form-label" for="valor_repasse_unitario">Repasse unitário (R$)</label>
                     <input type="number" step="0.01" min="0" class="form-control @error('valor_repasse_unitario') is-invalid @enderror" id="valor_repasse_unitario" name="valor_repasse_unitario" value="{{ old('valor_repasse_unitario', $acerto->valor_repasse_unitario) }}">
                     @error('valor_repasse_unitario')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    <div class="form-text">Valor acertado com o parceiro por unidade (pode coincidir com o preço do produto ou não).</div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label" for="valor_repasse">Repasse total (R$)</label>
@@ -80,3 +90,46 @@
         </form>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        (function () {
+            const sel = document.getElementById('ve_remessa_id');
+            const box = document.getElementById('vf-acerto-produto-ref');
+            const elPreco = document.getElementById('vf-acerto-produto-ref-preco');
+            const elNome = document.getElementById('vf-acerto-produto-ref-nome');
+            const wrapNome = document.getElementById('vf-acerto-produto-ref-nome-wrap');
+            function fmtBr(val) {
+                const n = parseFloat(val);
+                if (Number.isNaN(n)) return '—';
+                return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+
+            function sync() {
+                if (!sel || !box) return;
+                const opt = sel.options[sel.selectedIndex];
+                if (!sel.value) {
+                    box.classList.add('d-none');
+                    return;
+                }
+                box.classList.remove('d-none');
+                const precoRaw = opt.getAttribute('data-produto-preco');
+                const nome = opt.getAttribute('data-produto-nome') || '';
+                if (precoRaw !== null && precoRaw !== '') {
+                    elPreco.textContent = 'R$ ' + fmtBr(precoRaw);
+                } else {
+                    elPreco.textContent = '— (vincule um produto na entrega ou cadastre o preço no produto)';
+                }
+                if (nome) {
+                    elNome.textContent = nome;
+                    wrapNome.classList.remove('d-none');
+                } else {
+                    wrapNome.classList.add('d-none');
+                }
+            }
+
+            sel?.addEventListener('change', sync);
+            sync();
+        })();
+    </script>
+@endpush

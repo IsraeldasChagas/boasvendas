@@ -163,7 +163,12 @@
                                     <td class="small">
                                         <a href="{{ route('empresa.venda-externa.acertos.show', $a) }}">{{ $a->data_acerto?->format('d/m/Y') ?? '—' }}</a>
                                     </td>
-                                    <td class="small">{{ $a->ponto?->nome ?? '—' }}</td>
+                                    <td class="small">
+                                        {{ $a->ponto?->nome ?? '—' }}
+                                        @if ($a->remessa?->produto && $a->remessa->produto->preco !== null)
+                                            <span class="d-block text-muted" style="font-size:0.7rem;">Unit. produto: R$ {{ number_format((float) $a->remessa->produto->preco, 2, ',', '.') }}</span>
+                                        @endif
+                                    </td>
                                     <td class="text-end small">{{ $a->valor_repasse_unitario !== null ? 'R$ '.number_format((float) $a->valor_repasse_unitario, 2, ',', '.') : '—' }}</td>
                                     <td class="text-end small">{{ $a->valor_repasse !== null ? 'R$ '.number_format((float) $a->valor_repasse, 2, ',', '.') : '—' }}</td>
                                     <td><span class="vf-badge {{ $a->classeBadgeStatus() }}">{{ $a->rotuloStatus() }}</span></td>

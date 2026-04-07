@@ -29,7 +29,7 @@
                         </div>
                         @if ($acerto->remessa)
                             <div class="small mt-2">
-                                Remessa:
+                                Entrega:
                                 <a href="{{ route('empresa.venda-externa.remessas.show', $acerto->remessa) }}">R-{{ $acerto->remessa->id }}</a>
                                 — {{ $acerto->remessa->tituloExibicao() }}
                             </div>
@@ -40,6 +40,16 @@
                 <dl class="row small mb-0">
                     <dt class="col-sm-4">Data do acerto</dt>
                     <dd class="col-sm-8">{{ $acerto->data_acerto?->format('d/m/Y') ?? '—' }}</dd>
+                    <dt class="col-sm-4">Produto (entrega)</dt>
+                    <dd class="col-sm-8">{{ $acerto->remessa?->produto?->nome ?? '—' }}</dd>
+                    <dt class="col-sm-4">Preço unit. produto (cadastro)</dt>
+                    <dd class="col-sm-8">
+                        @if ($acerto->remessa?->produto)
+                            R$ {{ number_format((float) $acerto->remessa->produto->preco, 2, ',', '.') }}
+                        @else
+                            —
+                        @endif
+                    </dd>
                     <dt class="col-sm-4">Repasse unitário</dt>
                     <dd class="col-sm-8">{{ $acerto->valor_repasse_unitario !== null ? 'R$ '.number_format((float) $acerto->valor_repasse_unitario, 2, ',', '.') : '—' }}</dd>
                     <dt class="col-sm-4">Repasse total</dt>

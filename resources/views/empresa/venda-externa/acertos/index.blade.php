@@ -68,6 +68,9 @@
                                 @if ($a->remessa)
                                     <a href="{{ route('empresa.venda-externa.remessas.show', $a->remessa) }}">R-{{ $a->remessa->id }}</a>
                                     <span class="text-muted d-block" style="font-size: 0.7rem;">{{ \Illuminate\Support\Str::limit($a->remessa->tituloExibicao(), 28) }}</span>
+                                    @if ($a->remessa->produto && $a->remessa->produto->preco !== null)
+                                        <span class="text-muted d-block" style="font-size: 0.7rem;">Preço unit. produto: R$ {{ number_format((float) $a->remessa->produto->preco, 2, ',', '.') }}</span>
+                                    @endif
                                 @else
                                     —
                                 @endif
