@@ -82,40 +82,29 @@ class Produto extends Model
             $candidates[] = public_path('uploads/'.ltrim(Str::after($rel, 'uploads/'), '/'));
         }
 
-        foreach (array_unique($candidates) as $full) {
-            if ($full && @is_file($full)) {
+        foreach (array_unique(array_filter($candidates)) as $full) {
+            if (@is_file($full)) {
                 return $full;
             }
         }
 
-        if (Str::startsWith($rel, 'produtos/')) {
-            $storage = storage_path('app/public/'.$rel);
-            if (@is_file($storage)) {
-                return $storage;
-            }
+        $storage = storage_path('app/public/'.$rel);
+        if (@is_file($storage)) {
+            return $storage;
         }
 
         return null;
     }
 
     /**
-     * URL da foto: arquivo em public usa asset(); legado em storage usa /media/produto/{id}.
+     * URL da foto: sempre pela rota que lê o arquivo no disco (evita asset/realpath quebrando no Windows ou em subpastas).
      */
     public function urlFoto(): ?string
     {
-        $abs = $this->resolveFotoAbsolutePath();
-        if ($abs === null) {
+        if ($this->resolveFotoAbsolutePath() === null) {
             return null;
         }
 
-        $publicRoot = realpath(public_path());
-        $real = realpath($abs);
-        if ($publicRoot !== false && $real !== false && str_starts_with($real, $publicRoot)) {
-            $rel = ltrim(str_replace('\\', '/', substr($real, strlen($publicRoot))), '/');
-
-            return asset($rel);
-        }
-
-        return url('/media/produto/'.$this->id);
+        return route('publico.produto_foto', ['produto' => $this->getKey()], absolute: false);
     }
 }
