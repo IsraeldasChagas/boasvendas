@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\EmpresaController as AdminEmpresaController;
 use App\Http\Controllers\Admin\ModuloController as AdminModuloController;
 use App\Http\Controllers\Admin\PlanoController as AdminPlanoController;
 use App\Http\Controllers\Admin\SuporteController as AdminSuporteController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Empresa\CaixaController;
 use App\Http\Controllers\Empresa\CategoriaController;
@@ -195,6 +196,16 @@ Route::middleware(['auth', 'empresa.painel'])->prefix('empresa')->name('empresa.
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/usuarios', [AdminUserController::class, 'index'])->name('usuarios.index');
+    Route::get('/usuarios/criar', [AdminUserController::class, 'create'])->name('usuarios.create');
+    Route::post('/usuarios', [AdminUserController::class, 'store'])
+        ->middleware('throttle:30,1')
+        ->name('usuarios.store');
+    Route::get('/usuarios/{user}/editar', [AdminUserController::class, 'edit'])->name('usuarios.edit');
+    Route::put('/usuarios/{user}', [AdminUserController::class, 'update'])
+        ->middleware('throttle:30,1')
+        ->name('usuarios.update');
+    Route::delete('/usuarios/{user}', [AdminUserController::class, 'destroy'])->name('usuarios.destroy');
     Route::get('/empresas', [AdminEmpresaController::class, 'index'])->name('empresas.index');
     Route::get('/empresas/criar', [AdminEmpresaController::class, 'create'])->name('empresas.create');
     Route::post('/empresas', [AdminEmpresaController::class, 'store'])->name('empresas.store');

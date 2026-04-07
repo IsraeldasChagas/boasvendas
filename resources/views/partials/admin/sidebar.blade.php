@@ -7,6 +7,9 @@
         <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
             <i class="bi bi-speedometer2"></i> Dashboard
         </a>
+        <a class="nav-link {{ request()->routeIs('admin.usuarios.*') ? 'active' : '' }}" href="{{ route('admin.usuarios.index') }}">
+            <i class="bi bi-people"></i> Usuários
+        </a>
         <a class="nav-link {{ request()->routeIs('admin.empresas.*') ? 'active' : '' }}" href="{{ route('admin.empresas.index') }}">
             <i class="bi bi-buildings"></i> Empresas
         </a>
