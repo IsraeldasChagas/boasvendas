@@ -10,37 +10,60 @@
         <a class="nav-link {{ request()->routeIs('empresa.dashboard') ? 'active' : '' }}" href="{{ route('empresa.dashboard') }}">
             <i class="bi bi-speedometer2"></i> Dashboard
         </a>
+    @php $menu = $empresa?->telasMenuEmpresaLiberadas() ?? []; @endphp
+    @php $tem = fn (string $k) => $menu === [] ? true : in_array($k, $menu, true); @endphp
+    @if ($tem('pedidos'))
         <a class="nav-link {{ request()->routeIs('empresa.pedidos.*') ? 'active' : '' }}" href="{{ route('empresa.pedidos.index') }}">
             <i class="bi bi-receipt"></i> Pedidos
         </a>
+    @endif
+    @if ($tem('produtos'))
         <a class="nav-link {{ request()->routeIs('empresa.produtos.*') ? 'active' : '' }}" href="{{ route('empresa.produtos.index') }}">
             <i class="bi bi-box-seam"></i> Produtos
         </a>
+    @endif
+    @if ($tem('categorias'))
         <a class="nav-link {{ request()->routeIs('empresa.categorias.*') ? 'active' : '' }}" href="{{ route('empresa.categorias.index') }}">
             <i class="bi bi-grid"></i> Categorias
         </a>
+    @endif
+    @if ($tem('adicionais'))
         <a class="nav-link {{ request()->routeIs('empresa.adicionais.*') ? 'active' : '' }}" href="{{ route('empresa.adicionais.index') }}">
             <i class="bi bi-plus-square-dotted"></i> Adicionais
         </a>
+    @endif
+    @if ($tem('clientes'))
         <a class="nav-link {{ request()->routeIs('empresa.clientes.*') ? 'active' : '' }}" href="{{ route('empresa.clientes.index') }}">
             <i class="bi bi-people"></i> Clientes
         </a>
+    @endif
+    @if ($tem('fidelidade'))
         <a class="nav-link {{ request()->routeIs('empresa.fidelidade.*') ? 'active' : '' }}" href="{{ route('empresa.fidelidade.programa') }}">
             <i class="bi bi-award"></i> Fidelidade
         </a>
+    @endif
+    @if ($tem('entregas'))
         <a class="nav-link {{ request()->routeIs('empresa.entregas.*') ? 'active' : '' }}" href="{{ route('empresa.entregas.index') }}">
             <i class="bi bi-truck"></i> Entregas
         </a>
+    @endif
+    @if ($tem('financeiro'))
         <a class="nav-link {{ request()->routeIs('empresa.financeiro.*') ? 'active' : '' }}" href="{{ route('empresa.financeiro.index') }}">
             <i class="bi bi-currency-dollar"></i> Financeiro
         </a>
+    @endif
+    @if ($tem('caixa'))
         <a class="nav-link {{ request()->routeIs('empresa.caixa.*') ? 'active' : '' }}" href="{{ route('empresa.caixa.index') }}">
             <i class="bi bi-cash-stack"></i> Caixa
         </a>
+    @endif
+    @if ($tem('relatorios'))
         <a class="nav-link {{ request()->routeIs('empresa.relatorios.*') && !$isVe ? 'active' : '' }}" href="{{ route('empresa.relatorios.index') }}">
             <i class="bi bi-graph-up-arrow"></i> Relatórios
         </a>
+    @endif
 
+    @if ($tem('venda_externa'))
         <div class="px-2 pt-2 pb-1 small text-white-50 text-uppercase">Venda externa</div>
         <div class="submenu">
             <a class="nav-link {{ request()->routeIs('empresa.venda-externa.dashboard') ? 'active' : '' }}" href="{{ route('empresa.venda-externa.dashboard') }}">
@@ -62,16 +85,23 @@
                 <i class="bi bi-pie-chart"></i> Relatórios VE
             </a>
         </div>
+    @endif
 
         <hr class="border-secondary opacity-25 mx-2">
+    @if ($tem('suporte'))
         <a class="nav-link {{ request()->routeIs('empresa.chamados.*') ? 'active' : '' }}" href="{{ route('empresa.chamados.index') }}">
             <i class="bi bi-headset"></i> Suporte
         </a>
+    @endif
+    @if ($tem('configuracoes'))
         <a class="nav-link {{ request()->routeIs('empresa.configuracoes.*') ? 'active' : '' }}" href="{{ route('empresa.configuracoes.index') }}">
             <i class="bi bi-gear"></i> Configurações
         </a>
+    @endif
+    @if ($tem('usuarios'))
         <a class="nav-link {{ request()->routeIs('empresa.usuarios.*') ? 'active' : '' }}" href="{{ route('empresa.usuarios.index') }}">
             <i class="bi bi-person-badge"></i> Usuários
         </a>
+    @endif
     </nav>
 </aside>

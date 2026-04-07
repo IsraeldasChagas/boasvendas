@@ -46,24 +46,19 @@
                 @error('status')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             <div class="mb-4">
-                <label class="form-label">Módulos liberados para a empresa</label>
+                <label class="form-label">Telas do menu liberadas para a empresa</label>
                 <div class="border rounded p-3 bg-light" style="max-height: 14rem; overflow-y: auto;">
-                    @forelse ($modulos as $m)
+                    @foreach (\App\Models\Empresa::telasMenuEmpresaRotulos() as $key => $rotulo)
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="modulo_ids[]" id="mod-{{ $m->id }}" value="{{ $m->id }}"
-                                @checked(in_array((int) $m->id, array_map('intval', (array) old('modulo_ids', [])), true))>
-                            <label class="form-check-label" for="mod-{{ $m->id }}">
-                                {{ $m->nome }}
-                                <span class="text-muted small">({{ \App\Models\Modulo::situacoes()[$m->situacao] ?? $m->situacao }})</span>
-                            </label>
+                            <input class="form-check-input" type="checkbox" name="menu_acessos[]" id="menu-{{ $key }}" value="{{ $key }}"
+                                @checked(in_array($key, (array) old('menu_acessos', []), true))>
+                            <label class="form-check-label" for="menu-{{ $key }}">{{ $rotulo }}</label>
                         </div>
-                    @empty
-                        <div class="small text-muted">Nenhum módulo cadastrado. Cadastre em <a href="{{ route('admin.modulos.index') }}">Módulos</a>.</div>
-                    @endforelse
+                    @endforeach
                 </div>
-                @error('modulo_ids')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                @error('modulo_ids.*')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-                <div class="form-text">Isso substitui o “resumo” manual e será usado para liberar acesso (próximo passo).</div>
+                @error('menu_acessos')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                @error('menu_acessos.*')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                <div class="form-text">Além de esconder do menu, o sistema bloqueia a rota se tentar acessar pelo link.</div>
             </div>
             <div class="mb-4">
                 <label class="form-label" for="cliente_desde">Cliente desde</label>

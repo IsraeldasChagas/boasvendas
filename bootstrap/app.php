@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureEmpresaMenuAccess;
 use App\Http\Middleware\EnsureEmpresaPainelAccess;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use Illuminate\Foundation\Application;
@@ -19,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
             'empresa.painel' => EnsureEmpresaPainelAccess::class,
+            'empresa.menu' => EnsureEmpresaMenuAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

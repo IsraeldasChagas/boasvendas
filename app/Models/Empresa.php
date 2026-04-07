@@ -33,6 +33,7 @@ class Empresa extends Model
     {
         return [
             'cliente_desde' => 'date',
+            'menu_acessos' => 'array',
         ];
     }
 
@@ -138,6 +139,61 @@ class Empresa extends Model
             'trial' => 'Trial',
             'suspensa' => 'Suspensa',
         ];
+    }
+
+    /** @return array<string, string> */
+    public static function telasMenuEmpresaRotulos(): array
+    {
+        return [
+            'pedidos' => 'Pedidos',
+            'produtos' => 'Produtos',
+            'categorias' => 'Categorias',
+            'adicionais' => 'Adicionais',
+            'clientes' => 'Clientes',
+            'fidelidade' => 'Fidelidade',
+            'entregas' => 'Entregas',
+            'financeiro' => 'Financeiro',
+            'caixa' => 'Caixa',
+            'relatorios' => 'Relatórios',
+            'venda_externa' => 'Venda externa',
+            'suporte' => 'Suporte',
+            'configuracoes' => 'Configurações',
+            'usuarios' => 'Usuários',
+        ];
+    }
+
+    /** @return list<string> */
+    public function telasMenuEmpresaLiberadas(): array
+    {
+        $raw = $this->menu_acessos;
+        if (! is_array($raw)) {
+            return [];
+        }
+
+        $valid = array_keys(self::telasMenuEmpresaRotulos());
+
+        return collect($raw)
+            ->map(fn ($v) => is_string($v) ? $v : '')
+            ->filter(fn ($v) => $v !== '' && in_array($v, $valid, true))
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    public function temTelaMenu(string $key): bool
+    {
+        // Dashboard sempre pode.
+        if ($key === 'dashboard') {
+            return true;
+        }
+
+        $libs = $this->telasMenuEmpresaLiberadas();
+        if ($libs === []) {
+            // Sem configuração: não bloqueia (compatibilidade).
+            return true;
+        }
+
+        return in_array($key, $libs, true);
     }
 
     /** PIX habilitado na loja: texto e/ou payload copia e cola. */

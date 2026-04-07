@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Empresa;
-use App\Models\Modulo;
 use App\Models\Plano;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -43,18 +42,16 @@ class EmpresaController extends Controller
     public function create(): View
     {
         $planos = Plano::query()->orderBy('ordem')->orderBy('nome')->get();
-        $modulos = Modulo::query()->orderBy('ordem')->orderBy('nome')->get();
 
-        return view('admin.empresas.create', compact('planos', 'modulos'));
+        return view('admin.empresas.create', compact('planos'));
     }
 
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validated($request);
         $admin = $this->validatedAdminUser($request);
-        $moduloIds = $this->validatedModulos($request);
 
-        DB::transaction(function () use ($data, $admin, $moduloIds) {
+        DB::transaction(function () use ($data, $admin) {
             $data['slug'] = $this->gerarSlugUnico((string) ($data['nome'] ?? 'loja'));
             $empresa = Empresa::query()->create($data);
 
@@ -66,8 +63,9 @@ class EmpresaController extends Controller
                 'role' => 'gestor',
             ]);
 
-            $empresa->modulos()->sync($moduloIds);
-            $empresa->update(['modulos_resumo' => $this->resumoModulos($moduloIds)]);
+            $empresa->update([
+                'modulos_resumo' => $this->resumoTelasMenu($empresa->menu_acessos),
+            ]);
         });
 
         return redirect()
@@ -85,22 +83,15 @@ class EmpresaController extends Controller
     public function edit(Empresa $empresa): View
     {
         $planos = Plano::query()->orderBy('ordem')->orderBy('nome')->get();
-        $modulos = Modulo::query()->orderBy('ordem')->orderBy('nome')->get();
-        $empresa->load('modulos');
 
-        return view('admin.empresas.edit', compact('empresa', 'planos', 'modulos'));
+        return view('admin.empresas.edit', compact('empresa', 'planos'));
     }
 
     public function update(Request $request, Empresa $empresa): RedirectResponse
     {
         $data = $this->validated($request);
-        $moduloIds = $this->validatedModulos($request);
-
-        DB::transaction(function () use ($empresa, $data, $moduloIds) {
-            $empresa->update($data);
-            $empresa->modulos()->sync($moduloIds);
-            $empresa->update(['modulos_resumo' => $this->resumoModulos($moduloIds)]);
-        });
+        $empresa->update($data);
+        $empresa->update(['modulos_resumo' => $this->resumoTelasMenu($empresa->menu_acessos)]);
 
         return redirect()
             ->route('admin.empresas.show', $empresa)
@@ -127,50 +118,10 @@ class EmpresaController extends Controller
             'cnpj' => ['nullable', 'string', 'max:32'],
             'plano_id' => ['nullable', 'integer', 'exists:planos,id'],
             'status' => ['required', 'string', Rule::in(array_keys(Empresa::statusRotulos()))],
-            'modulo_ids' => ['nullable', 'array'],
-            'modulo_ids.*' => ['integer', 'exists:modulos,id'],
+            'menu_acessos' => ['nullable', 'array'],
+            'menu_acessos.*' => ['string', Rule::in(array_keys(Empresa::telasMenuEmpresaRotulos()))],
             'cliente_desde' => ['nullable', 'date'],
         ]);
-    }
-
-    /**
-     * @return list<int>
-     */
-    private function validatedModulos(Request $request): array
-    {
-        $ids = $request->input('modulo_ids', []);
-        if (! is_array($ids)) {
-            return [];
-        }
-
-        return collect($ids)
-            ->map(fn ($id) => (int) $id)
-            ->filter(fn ($id) => $id > 0)
-            ->unique()
-            ->values()
-            ->all();
-    }
-
-    /**
-     * @param  list<int>  $moduloIds
-     */
-    private function resumoModulos(array $moduloIds): ?string
-    {
-        if ($moduloIds === []) {
-            return null;
-        }
-
-        $nomes = Modulo::query()
-            ->whereIn('id', $moduloIds)
-            ->orderBy('ordem')
-            ->orderBy('nome')
-            ->pluck('nome')
-            ->filter()
-            ->all();
-
-        $txt = implode(' + ', $nomes);
-
-        return $txt !== '' ? $txt : null;
     }
 
     private function gerarSlugUnico(string $nome): string
@@ -188,6 +139,32 @@ class EmpresaController extends Controller
         }
 
         return $slug;
+    }
+
+    private function resumoTelasMenu(mixed $menuAcessos): ?string
+    {
+        if (! is_array($menuAcessos) || $menuAcessos === []) {
+            return null;
+        }
+
+        $rotulos = Empresa::telasMenuEmpresaRotulos();
+        $sel = collect($menuAcessos)
+            ->map(fn ($v) => is_string($v) ? $v : '')
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $nomes = [];
+        foreach ($sel as $k) {
+            if (isset($rotulos[$k])) {
+                $nomes[] = $rotulos[$k];
+            }
+        }
+
+        $txt = implode(' + ', $nomes);
+
+        return $txt !== '' ? $txt : null;
     }
 
     /**

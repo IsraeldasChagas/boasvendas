@@ -82,7 +82,7 @@ Route::get('/carrinho', [PublicoController::class, 'legadoCarrinho'])->name('pub
 Route::get('/checkout', [PublicoController::class, 'legadoCheckout'])->name('publico.checkout.legado');
 Route::get('/acompanhar-pedido', [PublicoController::class, 'legadoAcompanhar'])->name('publico.acompanhar-pedido.legado');
 
-Route::middleware(['auth', 'empresa.painel'])->prefix('empresa')->name('empresa.')->group(function () {
+Route::middleware(['auth', 'empresa.painel', 'empresa.menu'])->prefix('empresa')->name('empresa.')->group(function () {
     Route::get('/dashboard', [EmpresaDashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/suporte/chamados', [EmpresaChamadoController::class, 'index'])->name('chamados.index');
