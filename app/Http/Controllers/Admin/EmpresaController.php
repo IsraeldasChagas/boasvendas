@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -53,6 +54,9 @@ class EmpresaController extends Controller
 
         DB::transaction(function () use ($data, $admin) {
             $data['slug'] = $this->gerarSlugUnico((string) ($data['nome'] ?? 'loja'));
+            if (! Schema::hasColumn('empresas', 'menu_acessos')) {
+                unset($data['menu_acessos']);
+            }
             $empresa = Empresa::query()->create($data);
 
             User::query()->create([
@@ -63,9 +67,11 @@ class EmpresaController extends Controller
                 'role' => 'gestor',
             ]);
 
-            $empresa->update([
-                'modulos_resumo' => $this->resumoTelasMenu($empresa->menu_acessos),
-            ]);
+            if (Schema::hasColumn('empresas', 'menu_acessos')) {
+                $empresa->update([
+                    'modulos_resumo' => $this->resumoTelasMenu($empresa->menu_acessos),
+                ]);
+            }
         });
 
         return redirect()
@@ -90,12 +96,17 @@ class EmpresaController extends Controller
     public function update(Request $request, Empresa $empresa): RedirectResponse
     {
         $data = $this->validated($request);
+        if (! Schema::hasColumn('empresas', 'menu_acessos')) {
+            unset($data['menu_acessos']);
+        }
         $empresa->update($data);
-        $empresa->update(['modulos_resumo' => $this->resumoTelasMenu($empresa->menu_acessos)]);
+        if (Schema::hasColumn('empresas', 'menu_acessos')) {
+            $empresa->update(['modulos_resumo' => $this->resumoTelasMenu($empresa->menu_acessos)]);
+        }
 
         return redirect()
             ->route('admin.empresas.show', $empresa)
-            ->with('status', 'Empresa atualizada.');
+            ->with('status', Schema::hasColumn('empresas', 'menu_acessos') ? 'Empresa atualizada.' : 'Empresa atualizada. (Aviso: menu por telas ainda não está disponível até rodar as migrations no servidor.)');
     }
 
     public function destroy(Empresa $empresa): RedirectResponse
