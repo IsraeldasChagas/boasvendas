@@ -18,7 +18,11 @@
                             <label class="form-label" for="foto">Foto do produto</label>
                             <input type="file" class="form-control @error('foto') is-invalid @enderror" id="foto" name="foto" accept="image/jpeg,image/png,image/webp,image/gif">
                             @error('foto')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            <div class="form-text">Opcional. JPG, PNG, WebP ou GIF, até 3&nbsp;MB. Aparece no cardápio online.</div>
+                            <div class="form-text">Opcional. JPG, PNG, WebP ou GIF, até 3&nbsp;MB. Aparece no cardápio online. No servidor rode <code>php artisan storage:link</code> uma vez se a foto não abrir após salvar.</div>
+                            <div id="foto-preview-wrap" class="mt-2 d-none">
+                                <span class="small text-muted d-block mb-1">Prévia</span>
+                                <img id="foto-preview" src="" alt="Prévia da foto" class="rounded border" width="160" height="160" style="max-height: 160px; width: auto; object-fit: cover;">
+                            </div>
                         </div>
                         <div class="col-12">
                             <label class="form-label" for="nome">Nome</label>
@@ -98,4 +102,7 @@
             </div>
         </div>
     </div>
+    @push('scripts')
+        @include('partials.empresa.produto-foto-preview')
+    @endpush
 @endsection

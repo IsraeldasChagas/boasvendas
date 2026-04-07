@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Support\Facades\Storage;
 
 class Produto extends Model
 {
@@ -51,12 +50,18 @@ class Produto extends Model
         return $this->belongsToMany(Adicional::class, 'adicional_produto')->withTimestamps();
     }
 
+    /**
+     * URL para exibir a foto (caminho relativo ao domínio, funciona mesmo se APP_URL estiver diferente).
+     * Exige link simbólico: php artisan storage:link (public/storage → storage/app/public).
+     */
     public function urlFoto(): ?string
     {
         if ($this->foto === null || $this->foto === '') {
             return null;
         }
 
-        return Storage::disk('public')->url($this->foto);
+        $path = ltrim(str_replace('\\', '/', $this->foto), '/');
+
+        return '/storage/'.$path;
     }
 }
