@@ -53,6 +53,59 @@ body.vf-body {
   transition: transform 0.25s ease;
 }
 
+/* Sidebar recolhida (desktop): só ícones */
+@media (min-width: 992px) {
+  .vf-app-wrapper.vf-sidebar-collapsed .vf-sidebar {
+    width: 76px;
+  }
+
+  .vf-app-wrapper.vf-sidebar-collapsed .vf-sidebar .nav-link {
+    justify-content: center;
+  }
+
+  .vf-app-wrapper.vf-sidebar-collapsed .vf-sidebar .nav-link i {
+    margin-right: 0;
+  }
+
+  .vf-app-wrapper.vf-sidebar-collapsed .vf-sidebar .nav-link,
+  .vf-app-wrapper.vf-sidebar-collapsed .vf-sidebar .vf-submenu-toggle {
+    gap: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .vf-app-wrapper.vf-sidebar-collapsed .vf-sidebar .nav-link {
+    font-size: 0;
+  }
+
+  .vf-app-wrapper.vf-sidebar-collapsed .vf-sidebar .nav-link i {
+    font-size: 1.05rem;
+  }
+
+  .vf-app-wrapper.vf-sidebar-collapsed .vf-sidebar .vf-sidebar-brand {
+    font-size: 0;
+    padding: 1.25rem 0.5rem;
+    text-align: center;
+  }
+
+  .vf-app-wrapper.vf-sidebar-collapsed .vf-sidebar .vf-sidebar-brand i {
+    font-size: 1.1rem;
+  }
+
+  .vf-app-wrapper.vf-sidebar-collapsed .vf-sidebar .vf-sidebar-brand span,
+  .vf-app-wrapper.vf-sidebar-collapsed .vf-sidebar .vf-sidebar-brand .small {
+    display: none !important;
+  }
+
+  .vf-app-wrapper.vf-sidebar-collapsed .vf-sidebar .vf-submenu-content {
+    display: none !important;
+  }
+
+  .vf-app-wrapper.vf-sidebar-collapsed .vf-sidebar .vf-submenu-chevron {
+    display: none !important;
+  }
+}
+
 .vf-sidebar .nav-link {
   color: #94a3b8;
   border-radius: var(--vf-radius);
