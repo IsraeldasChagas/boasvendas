@@ -40,8 +40,23 @@ class EnsureEmpresaMenuAccess
             return 'dashboard';
         }
 
-        if (str_starts_with($routeName, 'empresa.venda-externa.')) {
-            return 'venda_externa';
+        if (str_starts_with($routeName, 'empresa.venda-externa.dashboard')) {
+            return 've_dashboard';
+        }
+        if (str_starts_with($routeName, 'empresa.venda-externa.pontos')) {
+            return 've_pontos';
+        }
+        if (str_starts_with($routeName, 'empresa.venda-externa.remessas')) {
+            return 've_remessas';
+        }
+        if (str_starts_with($routeName, 'empresa.venda-externa.acertos')) {
+            return 've_acertos';
+        }
+        if (str_starts_with($routeName, 'empresa.venda-externa.fiados')) {
+            return 've_fiados';
+        }
+        if (str_starts_with($routeName, 'empresa.venda-externa.relatorios')) {
+            return 've_relatorios';
         }
 
         if (str_starts_with($routeName, 'empresa.pedidos.')) {
@@ -60,16 +75,39 @@ class EnsureEmpresaMenuAccess
             return 'clientes';
         }
         if (str_starts_with($routeName, 'empresa.fidelidade.')) {
-            return 'fidelidade';
+            if (str_starts_with($routeName, 'empresa.fidelidade.programa')) {
+                return 'fidelidade_programa';
+            }
+            if (str_starts_with($routeName, 'empresa.fidelidade.cartoes')) {
+                return 'fidelidade_cartoes';
+            }
+
+            return 'fidelidade_programa';
         }
         if (str_starts_with($routeName, 'empresa.entregas.')) {
             return 'entregas';
         }
         if (str_starts_with($routeName, 'empresa.financeiro.')) {
-            return 'financeiro';
+            if (str_starts_with($routeName, 'empresa.financeiro.contas-receber')) {
+                return 'financeiro_receber';
+            }
+            if (str_starts_with($routeName, 'empresa.financeiro.contas-pagar')) {
+                return 'financeiro_pagar';
+            }
+
+            return 'financeiro_visao';
         }
         if (str_starts_with($routeName, 'empresa.caixa.')) {
-            return 'caixa';
+            if (str_starts_with($routeName, 'empresa.caixa.conferencia')) {
+                return 'caixa_conferencia';
+            }
+            if (str_starts_with($routeName, 'empresa.caixa.movimento')
+                || str_starts_with($routeName, 'empresa.caixa.abrir')
+                || str_starts_with($routeName, 'empresa.caixa.fechar')) {
+                return 'caixa_operacoes';
+            }
+
+            return 'caixa_visao';
         }
         if (str_starts_with($routeName, 'empresa.relatorios.')) {
             return 'relatorios';

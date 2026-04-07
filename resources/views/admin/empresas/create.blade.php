@@ -48,12 +48,60 @@
             <div class="mb-4">
                 <label class="form-label">Telas do menu liberadas para a empresa</label>
                 <div class="border rounded p-3 bg-light" style="max-height: 14rem; overflow-y: auto;">
+                    @php $selMenu = (array) old('menu_acessos', []); @endphp
+                    <div class="small text-muted mb-2">Menu principal</div>
                     @foreach (\App\Models\Empresa::telasMenuEmpresaRotulos() as $key => $rotulo)
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="menu_acessos[]" id="menu-{{ $key }}" value="{{ $key }}"
-                                @checked(in_array($key, (array) old('menu_acessos', []), true))>
-                            <label class="form-check-label" for="menu-{{ $key }}">{{ $rotulo }}</label>
-                        </div>
+                        @if (!str_starts_with($key, 've_') && !str_starts_with($key, 'financeiro_') && !str_starts_with($key, 'caixa_') && !str_starts_with($key, 'fidelidade_'))
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="menu_acessos[]" id="menu-{{ $key }}" value="{{ $key }}"
+                                    @checked(in_array($key, $selMenu, true))>
+                                <label class="form-check-label" for="menu-{{ $key }}">{{ $rotulo }}</label>
+                            </div>
+                        @endif
+                    @endforeach
+                    <hr class="my-2">
+                    <div class="small text-muted mb-2">Fidelidade (submenu)</div>
+                    @foreach (\App\Models\Empresa::telasMenuEmpresaRotulos() as $key => $rotulo)
+                        @if (str_starts_with($key, 'fidelidade_'))
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="menu_acessos[]" id="menu-{{ $key }}" value="{{ $key }}"
+                                    @checked(in_array($key, $selMenu, true))>
+                                <label class="form-check-label" for="menu-{{ $key }}">{{ $rotulo }}</label>
+                            </div>
+                        @endif
+                    @endforeach
+                    <hr class="my-2">
+                    <div class="small text-muted mb-2">Financeiro (submenu)</div>
+                    @foreach (\App\Models\Empresa::telasMenuEmpresaRotulos() as $key => $rotulo)
+                        @if (str_starts_with($key, 'financeiro_'))
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="menu_acessos[]" id="menu-{{ $key }}" value="{{ $key }}"
+                                    @checked(in_array($key, $selMenu, true))>
+                                <label class="form-check-label" for="menu-{{ $key }}">{{ $rotulo }}</label>
+                            </div>
+                        @endif
+                    @endforeach
+                    <hr class="my-2">
+                    <div class="small text-muted mb-2">Caixa (submenu)</div>
+                    @foreach (\App\Models\Empresa::telasMenuEmpresaRotulos() as $key => $rotulo)
+                        @if (str_starts_with($key, 'caixa_'))
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="menu_acessos[]" id="menu-{{ $key }}" value="{{ $key }}"
+                                    @checked(in_array($key, $selMenu, true))>
+                                <label class="form-check-label" for="menu-{{ $key }}">{{ $rotulo }}</label>
+                            </div>
+                        @endif
+                    @endforeach
+                    <hr class="my-2">
+                    <div class="small text-muted mb-2">Venda externa (submenu)</div>
+                    @foreach (\App\Models\Empresa::telasMenuEmpresaRotulos() as $key => $rotulo)
+                        @if (str_starts_with($key, 've_'))
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="menu_acessos[]" id="menu-{{ $key }}" value="{{ $key }}"
+                                    @checked(in_array($key, $selMenu, true))>
+                                <label class="form-check-label" for="menu-{{ $key }}">{{ $rotulo }}</label>
+                            </div>
+                        @endif
                     @endforeach
                 </div>
                 @error('menu_acessos')<div class="text-danger small mt-1">{{ $message }}</div>@enderror

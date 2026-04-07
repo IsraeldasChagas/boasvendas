@@ -150,12 +150,22 @@ class Empresa extends Model
             'categorias' => 'Categorias',
             'adicionais' => 'Adicionais',
             'clientes' => 'Clientes',
-            'fidelidade' => 'Fidelidade',
+            'fidelidade_programa' => 'Fidelidade: Programa',
+            'fidelidade_cartoes' => 'Fidelidade: Cartões',
             'entregas' => 'Entregas',
-            'financeiro' => 'Financeiro',
-            'caixa' => 'Caixa',
+            'financeiro_visao' => 'Financeiro: Visão geral',
+            'financeiro_receber' => 'Financeiro: Contas a receber',
+            'financeiro_pagar' => 'Financeiro: Contas a pagar',
+            'caixa_visao' => 'Caixa: Visão geral',
+            'caixa_operacoes' => 'Caixa: Abrir/Movimentos/Fechar',
+            'caixa_conferencia' => 'Caixa: Conferência',
             'relatorios' => 'Relatórios',
-            'venda_externa' => 'Venda externa',
+            've_dashboard' => 'Venda externa: Dashboard',
+            've_pontos' => 'Venda externa: Pontos',
+            've_remessas' => 'Venda externa: Remessas',
+            've_acertos' => 'Venda externa: Acertos',
+            've_fiados' => 'Venda externa: Fiados',
+            've_relatorios' => 'Venda externa: Relatórios',
             'suporte' => 'Suporte',
             'configuracoes' => 'Configurações',
             'usuarios' => 'Usuários',
@@ -190,6 +200,21 @@ class Empresa extends Model
         $libs = $this->telasMenuEmpresaLiberadas();
         if ($libs === []) {
             // Sem configuração: não bloqueia (compatibilidade).
+            return true;
+        }
+
+        // Compatibilidade com chave antiga "venda_externa".
+        if (str_starts_with($key, 've_') && in_array('venda_externa', $libs, true)) {
+            return true;
+        }
+        // Compatibilidade com chaves antigas (top-level).
+        if (str_starts_with($key, 'financeiro_') && in_array('financeiro', $libs, true)) {
+            return true;
+        }
+        if (str_starts_with($key, 'caixa_') && in_array('caixa', $libs, true)) {
+            return true;
+        }
+        if (str_starts_with($key, 'fidelidade_') && in_array('fidelidade', $libs, true)) {
             return true;
         }
 

@@ -37,25 +37,85 @@
             <i class="bi bi-people"></i> Clientes
         </a>
     @endif
-    @if ($tem('fidelidade'))
-        <a class="nav-link {{ request()->routeIs('empresa.fidelidade.*') ? 'active' : '' }}" href="{{ route('empresa.fidelidade.programa') }}">
-            <i class="bi bi-award"></i> Fidelidade
-        </a>
+    @php
+        $fidItens = [
+            'fidelidade_programa' => ['active' => request()->routeIs('empresa.fidelidade.programa', 'empresa.fidelidade.programa.*'), 'url' => route('empresa.fidelidade.programa'), 'icon' => 'bi-award', 'label' => 'Programa'],
+            'fidelidade_cartoes' => ['active' => request()->routeIs('empresa.fidelidade.cartoes', 'empresa.fidelidade.cartoes.*'), 'url' => route('empresa.fidelidade.cartoes'), 'icon' => 'bi-ticket-perforated', 'label' => 'Cartões'],
+        ];
+        $temAlgumFid = false;
+        foreach (array_keys($fidItens) as $k) {
+            if ($tem($k)) {
+                $temAlgumFid = true;
+                break;
+            }
+        }
+    @endphp
+    @if ($temAlgumFid)
+        <div class="px-2 pt-2 pb-1 small text-white-50 text-uppercase">Fidelidade</div>
+        <div class="submenu">
+            @foreach ($fidItens as $k => $it)
+                @if ($tem($k))
+                    <a class="nav-link {{ $it['active'] ? 'active' : '' }}" href="{{ $it['url'] }}">
+                        <i class="bi {{ $it['icon'] }}"></i> {{ $it['label'] }}
+                    </a>
+                @endif
+            @endforeach
+        </div>
     @endif
     @if ($tem('entregas'))
         <a class="nav-link {{ request()->routeIs('empresa.entregas.*') ? 'active' : '' }}" href="{{ route('empresa.entregas.index') }}">
             <i class="bi bi-truck"></i> Entregas
         </a>
     @endif
-    @if ($tem('financeiro'))
-        <a class="nav-link {{ request()->routeIs('empresa.financeiro.*') ? 'active' : '' }}" href="{{ route('empresa.financeiro.index') }}">
-            <i class="bi bi-currency-dollar"></i> Financeiro
-        </a>
+    @php
+        $finItens = [
+            'financeiro_visao' => ['active' => request()->routeIs('empresa.financeiro.index'), 'url' => route('empresa.financeiro.index'), 'icon' => 'bi-currency-dollar', 'label' => 'Visão geral'],
+            'financeiro_receber' => ['active' => request()->routeIs('empresa.financeiro.contas-receber*'), 'url' => route('empresa.financeiro.contas-receber'), 'icon' => 'bi-arrow-down-circle', 'label' => 'Contas a receber'],
+            'financeiro_pagar' => ['active' => request()->routeIs('empresa.financeiro.contas-pagar*'), 'url' => route('empresa.financeiro.contas-pagar'), 'icon' => 'bi-arrow-up-circle', 'label' => 'Contas a pagar'],
+        ];
+        $temAlgumFin = false;
+        foreach (array_keys($finItens) as $k) {
+            if ($tem($k)) {
+                $temAlgumFin = true;
+                break;
+            }
+        }
+        $caixaItens = [
+            'caixa_visao' => ['active' => request()->routeIs('empresa.caixa.index'), 'url' => route('empresa.caixa.index'), 'icon' => 'bi-cash-stack', 'label' => 'Visão geral'],
+            'caixa_operacoes' => ['active' => request()->routeIs('empresa.caixa.abrir', 'empresa.caixa.movimento', 'empresa.caixa.fechar'), 'url' => route('empresa.caixa.index'), 'icon' => 'bi-lightning-charge', 'label' => 'Operações'],
+            'caixa_conferencia' => ['active' => request()->routeIs('empresa.caixa.conferencia'), 'url' => route('empresa.caixa.conferencia'), 'icon' => 'bi-clipboard-check', 'label' => 'Conferência'],
+        ];
+        $temAlgumCaixa = false;
+        foreach (array_keys($caixaItens) as $k) {
+            if ($tem($k)) {
+                $temAlgumCaixa = true;
+                break;
+            }
+        }
+    @endphp
+    @if ($temAlgumFin)
+        <div class="px-2 pt-2 pb-1 small text-white-50 text-uppercase">Financeiro</div>
+        <div class="submenu">
+            @foreach ($finItens as $k => $it)
+                @if ($tem($k))
+                    <a class="nav-link {{ $it['active'] ? 'active' : '' }}" href="{{ $it['url'] }}">
+                        <i class="bi {{ $it['icon'] }}"></i> {{ $it['label'] }}
+                    </a>
+                @endif
+            @endforeach
+        </div>
     @endif
-    @if ($tem('caixa'))
-        <a class="nav-link {{ request()->routeIs('empresa.caixa.*') ? 'active' : '' }}" href="{{ route('empresa.caixa.index') }}">
-            <i class="bi bi-cash-stack"></i> Caixa
-        </a>
+    @if ($temAlgumCaixa)
+        <div class="px-2 pt-2 pb-1 small text-white-50 text-uppercase">Caixa</div>
+        <div class="submenu">
+            @foreach ($caixaItens as $k => $it)
+                @if ($tem($k))
+                    <a class="nav-link {{ $it['active'] ? 'active' : '' }}" href="{{ $it['url'] }}">
+                        <i class="bi {{ $it['icon'] }}"></i> {{ $it['label'] }}
+                    </a>
+                @endif
+            @endforeach
+        </div>
     @endif
     @if ($tem('relatorios'))
         <a class="nav-link {{ request()->routeIs('empresa.relatorios.*') && !$isVe ? 'active' : '' }}" href="{{ route('empresa.relatorios.index') }}">
@@ -63,27 +123,33 @@
         </a>
     @endif
 
-    @if ($tem('venda_externa'))
+    @php
+        $veItens = [
+            've_dashboard' => ['active' => request()->routeIs('empresa.venda-externa.dashboard'), 'url' => route('empresa.venda-externa.dashboard'), 'icon' => 'bi-pin-map', 'label' => 'Dashboard'],
+            've_pontos' => ['active' => request()->routeIs('empresa.venda-externa.pontos', 'empresa.venda-externa.pontos.*'), 'url' => route('empresa.venda-externa.pontos'), 'icon' => 'bi-geo-alt', 'label' => 'Pontos'],
+            've_remessas' => ['active' => request()->routeIs('empresa.venda-externa.remessas.*'), 'url' => route('empresa.venda-externa.remessas.index'), 'icon' => 'bi-boxes', 'label' => 'Remessas'],
+            've_acertos' => ['active' => request()->routeIs('empresa.venda-externa.acertos', 'empresa.venda-externa.acertos.*'), 'url' => route('empresa.venda-externa.acertos'), 'icon' => 'bi-check2-circle', 'label' => 'Acertos'],
+            've_fiados' => ['active' => request()->routeIs('empresa.venda-externa.fiados', 'empresa.venda-externa.fiados.*'), 'url' => route('empresa.venda-externa.fiados'), 'icon' => 'bi-journal-text', 'label' => 'Fiados'],
+            've_relatorios' => ['active' => request()->routeIs('empresa.venda-externa.relatorios', 'empresa.venda-externa.relatorios.*'), 'url' => route('empresa.venda-externa.relatorios'), 'icon' => 'bi-pie-chart', 'label' => 'Relatórios VE'],
+        ];
+        $temAlgumVe = false;
+        foreach (array_keys($veItens) as $k) {
+            if ($tem($k)) {
+                $temAlgumVe = true;
+                break;
+            }
+        }
+    @endphp
+    @if ($temAlgumVe)
         <div class="px-2 pt-2 pb-1 small text-white-50 text-uppercase">Venda externa</div>
         <div class="submenu">
-            <a class="nav-link {{ request()->routeIs('empresa.venda-externa.dashboard') ? 'active' : '' }}" href="{{ route('empresa.venda-externa.dashboard') }}">
-                <i class="bi bi-pin-map"></i> Dashboard
-            </a>
-            <a class="nav-link {{ request()->routeIs('empresa.venda-externa.pontos', 'empresa.venda-externa.pontos.*') ? 'active' : '' }}" href="{{ route('empresa.venda-externa.pontos') }}">
-                <i class="bi bi-geo-alt"></i> Pontos
-            </a>
-            <a class="nav-link {{ request()->routeIs('empresa.venda-externa.remessas.*') ? 'active' : '' }}" href="{{ route('empresa.venda-externa.remessas.index') }}">
-                <i class="bi bi-boxes"></i> Remessas
-            </a>
-            <a class="nav-link {{ request()->routeIs('empresa.venda-externa.acertos', 'empresa.venda-externa.acertos.*') ? 'active' : '' }}" href="{{ route('empresa.venda-externa.acertos') }}">
-                <i class="bi bi-check2-circle"></i> Acertos
-            </a>
-            <a class="nav-link {{ request()->routeIs('empresa.venda-externa.fiados', 'empresa.venda-externa.fiados.*') ? 'active' : '' }}" href="{{ route('empresa.venda-externa.fiados') }}">
-                <i class="bi bi-journal-text"></i> Fiados
-            </a>
-            <a class="nav-link {{ request()->routeIs('empresa.venda-externa.relatorios', 'empresa.venda-externa.relatorios.*') ? 'active' : '' }}" href="{{ route('empresa.venda-externa.relatorios') }}">
-                <i class="bi bi-pie-chart"></i> Relatórios VE
-            </a>
+            @foreach ($veItens as $k => $it)
+                @if ($tem($k))
+                    <a class="nav-link {{ $it['active'] ? 'active' : '' }}" href="{{ $it['url'] }}">
+                        <i class="bi {{ $it['icon'] }}"></i> {{ $it['label'] }}
+                    </a>
+                @endif
+            @endforeach
         </div>
     @endif
 
