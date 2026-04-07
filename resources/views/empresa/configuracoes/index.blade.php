@@ -83,6 +83,11 @@
                             <p class="small text-muted mb-0 mt-1">Essa é a <strong>chave PIX</strong> que o cliente vai ver no checkout.</p>
                         </div>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="loja_pix_banco">Banco <span class="text-muted fw-normal">(opcional)</span></label>
+                        <input type="text" class="form-control form-control-sm @error('loja_pix_banco') is-invalid @enderror" name="loja_pix_banco" id="loja_pix_banco" value="{{ old('loja_pix_banco', $empresa->loja_pix_banco) }}" maxlength="120" placeholder="Ex.: Nubank, Itaú, Banco do Brasil…">
+                        @error('loja_pix_banco')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
                     <div class="mb-0">
                         <label class="form-label" for="loja_pix_copia_cola">Pix copia e cola <span class="text-muted fw-normal">(opcional)</span></label>
                         <textarea class="form-control form-control-sm font-monospace @error('loja_pix_copia_cola') is-invalid @enderror" name="loja_pix_copia_cola" id="loja_pix_copia_cola" rows="3" maxlength="8192" placeholder="Cole aqui o payload gerado no app do banco (gera o QR Code no checkout)">{{ old('loja_pix_copia_cola', $empresa->loja_pix_copia_cola) }}</textarea>

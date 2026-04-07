@@ -54,6 +54,7 @@ class ConfiguracaoController extends Controller
             'loja_pix_instrucoes' => ['nullable', 'string', 'max:4000'],
             'loja_pix_chave_tipo' => ['nullable', 'string', Rule::in(array_keys(Empresa::pixChaveTiposRotulos()))],
             'loja_pix_chave_valor' => ['nullable', 'string', 'max:255'],
+            'loja_pix_banco' => ['nullable', 'string', 'max:120'],
             'loja_pix_copia_cola' => ['nullable', 'string', 'max:8192'],
         ]);
 

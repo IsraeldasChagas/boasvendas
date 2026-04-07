@@ -18,6 +18,7 @@ class Empresa extends Model
         'loja_pix_instrucoes',
         'loja_pix_chave_tipo',
         'loja_pix_chave_valor',
+        'loja_pix_banco',
         'loja_pix_copia_cola',
         'email_contato',
         'cnpj',

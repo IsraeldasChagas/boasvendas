@@ -67,6 +67,9 @@
                                                     <input readonly type="text" id="field-pix-chave" class="form-control font-monospace" value="{{ $empresa->loja_pix_chave_valor }}">
                                                     <button type="button" class="btn btn-outline-primary" onclick="(function(){ var t=document.getElementById('field-pix-chave'); if(!t) return; navigator.clipboard.writeText(t.value).then(function(){ alert('Chave PIX copiada.'); }).catch(function(){ t.select(); document.execCommand('copy'); }); })();">Copiar</button>
                                                 </div>
+                                                @if (trim((string) $empresa->loja_pix_banco) !== '')
+                                                    <div class="small text-muted mt-1">Banco: {{ $empresa->loja_pix_banco }}</div>
+                                                @endif
                                             </div>
                                         @endif
                                         @if (trim((string) $empresa->loja_pix_instrucoes) !== '')
