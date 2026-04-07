@@ -35,7 +35,7 @@
         <div class="row g-3">
             @forelse ($produtos as $pr)
                 <div class="col-6 col-md-4 col-lg-3">
-                    <a href="{{ route('publico.produto', ['slug' => $slug, 'produto' => $pr->id]) }}" class="text-decoration-none text-dark">
+                    <a href="{{ route('publico.produto', ['slug' => $slug, 'produto_id' => $pr->id]) }}" class="text-decoration-none text-dark">
                         <div class="vf-card vf-product-card h-100 overflow-hidden">
                             <div class="ratio ratio-4x3 bg-primary-subtle d-flex align-items-center justify-content-center">
                                 <i class="bi bi-image text-primary opacity-50 fs-1"></i>

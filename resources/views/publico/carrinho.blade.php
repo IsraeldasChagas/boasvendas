@@ -31,7 +31,7 @@
                                         @php $p = $l['produto']; @endphp
                                         <tr>
                                             <td class="fw-medium">
-                                                <a href="{{ route('publico.produto', ['slug' => $slug, 'produto' => $p->id]) }}" class="text-decoration-none text-dark">{{ $p->nome }}</a>
+                                                <a href="{{ route('publico.produto', ['slug' => $slug, 'produto_id' => $p->id]) }}" class="text-decoration-none text-dark">{{ $p->nome }}</a>
                                             </td>
                                             <td class="text-center">
                                                 <input type="number" class="form-control form-control-sm text-center" name="quantidade[{{ $p->id }}]" value="{{ $l['quantidade'] }}" min="0" max="99">

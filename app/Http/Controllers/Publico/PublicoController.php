@@ -19,10 +19,16 @@ class PublicoController extends Controller
 {
     private function empresaLojaAtiva(string $slug): Empresa
     {
-        return Empresa::query()
+        $empresa = Empresa::query()
             ->where('slug', $slug)
             ->where('status', '!=', 'suspensa')
-            ->firstOrFail();
+            ->first();
+
+        if (! $empresa) {
+            abort(404, 'Não encontramos esta loja. Verifique o link ou se o estabelecimento ainda está ativo.');
+        }
+
+        return $empresa;
     }
 
     private function carrinhoKey(string $slug): string
@@ -141,17 +147,21 @@ class PublicoController extends Controller
         return view('publico.loja', compact('slug', 'empresa', 'produtos', 'categorias'));
     }
 
-    public function produto(string $slug, string $produto): View
+    public function produto(string $slug, string $produto_id): View
     {
         $empresa = $this->empresaLojaAtiva($slug);
 
         $produtoModel = Produto::query()
             ->where('empresa_id', $empresa->id)
-            ->where('id', $produto)
+            ->where('id', $produto_id)
             ->where('ativo', true)
             ->where('visivel_loja', true)
             ->with('categoria')
-            ->firstOrFail();
+            ->first();
+
+        if (! $produtoModel) {
+            abort(404, 'Este produto não está disponível na vitrine ou foi removido.');
+        }
 
         return view('publico.produto', [
             'slug' => $slug,
@@ -176,7 +186,11 @@ class PublicoController extends Controller
             ->where('id', $data['produto_id'])
             ->where('ativo', true)
             ->where('visivel_loja', true)
-            ->firstOrFail();
+            ->first();
+
+        if (! $p) {
+            abort(404, 'Produto não encontrado ou indisponível na loja.');
+        }
 
         if ($p->estoque !== null && $p->estoque < $qty) {
             return back()->with('warning', 'Quantidade indisponível em estoque para este produto.');
@@ -349,7 +363,11 @@ class PublicoController extends Controller
             ->where('empresa_id', $empresa->id)
             ->where('codigo_publico', $codigo)
             ->with('itens')
-            ->firstOrFail();
+            ->first();
+
+        if (! $pedido) {
+            abort(404, 'Pedido não encontrado nesta loja. Confira o código (ex.: BV-XXXXXX).');
+        }
 
         return view('publico.pedido-show', compact('slug', 'empresa', 'pedido'));
     }

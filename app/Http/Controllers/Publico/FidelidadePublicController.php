@@ -57,10 +57,16 @@ class FidelidadePublicController extends Controller
 
     private function empresaPorSlug(string $slug): Empresa
     {
-        return Empresa::query()
+        $empresa = Empresa::query()
             ->where('slug', $slug)
             ->where('status', '!=', 'suspensa')
             ->with('fidelidadePrograma')
-            ->firstOrFail();
+            ->first();
+
+        if (! $empresa) {
+            abort(404, 'Não encontramos esta loja. Verifique o link ou se o estabelecimento ainda está ativo.');
+        }
+
+        return $empresa;
     }
 }

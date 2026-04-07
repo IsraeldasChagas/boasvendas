@@ -50,8 +50,8 @@ Route::get('/loja/{slug}/fidelidade', [FidelidadePublicController::class, 'show'
 Route::post('/loja/{slug}/fidelidade', [FidelidadePublicController::class, 'consultar'])
     ->middleware('throttle:30,1')
     ->name('publico.fidelidade.consultar');
-Route::get('/loja/{slug}/produto/{produto}', [PublicoController::class, 'produto'])
-    ->whereNumber('produto')
+Route::get('/loja/{slug}/produto/{produto_id}', [PublicoController::class, 'produto'])
+    ->whereNumber('produto_id')
     ->name('publico.produto');
 Route::post('/loja/{slug}/carrinho/adicionar', [PublicoController::class, 'carrinhoAdicionar'])
     ->middleware('throttle:60,1')
