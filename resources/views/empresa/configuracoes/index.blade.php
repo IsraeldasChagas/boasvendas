@@ -59,11 +59,29 @@
 
                 <div class="vf-card p-4 mb-3">
                     <h2 class="h6 fw-bold mb-3">PIX na loja online</h2>
-                    <p class="small text-muted mb-3">Preencha ao menos um dos campos abaixo para a opção <strong>PIX</strong> aparecer no checkout. O cliente verá as informações e o QR Code (quando houver código copia e cola).</p>
+                    <p class="small text-muted mb-3">Para a opção <strong>PIX</strong> aparecer no checkout, preencha a <strong>chave PIX</strong> (abaixo) e/ou o <strong>Pix copia e cola</strong> (QR Code), e/ou um texto de instruções.</p>
                     <div class="mb-3">
                         <label class="form-label" for="loja_pix_instrucoes">Texto para o cliente <span class="text-muted fw-normal">(opcional)</span></label>
                         <textarea class="form-control form-control-sm @error('loja_pix_instrucoes') is-invalid @enderror" name="loja_pix_instrucoes" id="loja_pix_instrucoes" rows="4" maxlength="4000" placeholder="Ex.: Nome na chave, telefone para envio do comprovante…">{{ old('loja_pix_instrucoes', $empresa->loja_pix_instrucoes) }}</textarea>
                         @error('loja_pix_instrucoes')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label" for="loja_pix_chave_tipo">Tipo da chave PIX</label>
+                            <select class="form-select form-select-sm @error('loja_pix_chave_tipo') is-invalid @enderror" name="loja_pix_chave_tipo" id="loja_pix_chave_tipo">
+                                <option value="">— Selecione —</option>
+                                @foreach (\App\Models\Empresa::pixChaveTiposRotulos() as $val => $rot)
+                                    <option value="{{ $val }}" @selected(old('loja_pix_chave_tipo', $empresa->loja_pix_chave_tipo) === $val)>{{ $rot }}</option>
+                                @endforeach
+                            </select>
+                            @error('loja_pix_chave_tipo')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label" for="loja_pix_chave_valor">Chave PIX</label>
+                            <input type="text" class="form-control form-control-sm @error('loja_pix_chave_valor') is-invalid @enderror" name="loja_pix_chave_valor" id="loja_pix_chave_valor" value="{{ old('loja_pix_chave_valor', $empresa->loja_pix_chave_valor) }}" maxlength="255" placeholder="Ex.: 11999999999 / seu@email.com / CPF / chave aleatória">
+                            @error('loja_pix_chave_valor')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <p class="small text-muted mb-0 mt-1">Essa é a <strong>chave PIX</strong> que o cliente vai ver no checkout.</p>
+                        </div>
                     </div>
                     <div class="mb-0">
                         <label class="form-label" for="loja_pix_copia_cola">Pix copia e cola <span class="text-muted fw-normal">(opcional)</span></label>

@@ -16,6 +16,8 @@ class Empresa extends Model
         'nome',
         'slug',
         'loja_pix_instrucoes',
+        'loja_pix_chave_tipo',
+        'loja_pix_chave_valor',
         'loja_pix_copia_cola',
         'email_contato',
         'cnpj',
@@ -130,9 +132,29 @@ class Empresa extends Model
     public function lojaPixConfiguradaParaCheckout(): bool
     {
         $i = trim((string) $this->loja_pix_instrucoes);
+        $t = trim((string) $this->loja_pix_chave_tipo);
+        $v = trim((string) $this->loja_pix_chave_valor);
         $c = trim((string) $this->loja_pix_copia_cola);
 
-        return $i !== '' || $c !== '';
+        return $i !== '' || (($t !== '' || $v !== '') && $v !== '') || $c !== '';
+    }
+
+    public static function pixChaveTiposRotulos(): array
+    {
+        return [
+            'cpf' => 'CPF',
+            'cnpj' => 'CNPJ',
+            'email' => 'E-mail',
+            'telefone' => 'Telefone',
+            'aleatoria' => 'Chave aleatória',
+        ];
+    }
+
+    public function lojaPixChaveRotuloTipo(): string
+    {
+        $t = (string) $this->loja_pix_chave_tipo;
+
+        return self::pixChaveTiposRotulos()[$t] ?? ($t !== '' ? $t : 'Chave');
     }
 
     /** @return array<string, string> valor => rótulo para o checkout público */

@@ -60,6 +60,15 @@
                                 <h3 class="h6 fw-bold mb-2">Pague com PIX</h3>
                                 <div class="row g-3 align-items-start">
                                     <div class="{{ $empresa->lojaPixQrCodeDataUri() ? 'col-md-7' : 'col-12' }}">
+                                        @if (trim((string) $empresa->loja_pix_chave_valor) !== '')
+                                            <div class="mb-3">
+                                                <label class="form-label small mb-1" for="field-pix-chave">Chave PIX ({{ $empresa->lojaPixChaveRotuloTipo() }})</label>
+                                                <div class="input-group input-group-sm" style="max-width: 28rem;">
+                                                    <input readonly type="text" id="field-pix-chave" class="form-control font-monospace" value="{{ $empresa->loja_pix_chave_valor }}">
+                                                    <button type="button" class="btn btn-outline-primary" onclick="(function(){ var t=document.getElementById('field-pix-chave'); if(!t) return; navigator.clipboard.writeText(t.value).then(function(){ alert('Chave PIX copiada.'); }).catch(function(){ t.select(); document.execCommand('copy'); }); })();">Copiar</button>
+                                                </div>
+                                            </div>
+                                        @endif
                                         @if (trim((string) $empresa->loja_pix_instrucoes) !== '')
                                             <div class="small mb-3" style="white-space: pre-wrap;">{{ $empresa->loja_pix_instrucoes }}</div>
                                         @endif

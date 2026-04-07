@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Empresa;
 
 use App\Http\Controllers\Controller;
+use App\Models\Empresa;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -51,6 +52,8 @@ class ConfiguracaoController extends Controller
             'email_contato' => ['nullable', 'email', 'max:255'],
             'cnpj' => ['nullable', 'string', 'max:32'],
             'loja_pix_instrucoes' => ['nullable', 'string', 'max:4000'],
+            'loja_pix_chave_tipo' => ['nullable', 'string', Rule::in(array_keys(Empresa::pixChaveTiposRotulos()))],
+            'loja_pix_chave_valor' => ['nullable', 'string', 'max:255'],
             'loja_pix_copia_cola' => ['nullable', 'string', 'max:8192'],
         ]);
 
