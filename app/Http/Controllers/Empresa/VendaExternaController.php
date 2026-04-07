@@ -13,6 +13,7 @@ use App\Models\VeVendaExternaRegistro;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -296,24 +297,13 @@ class VendaExternaController extends Controller
 
         $this->mergeRemessaPontoVazio($request);
 
-        $data = $this->validatedRemessa($request, $empresa->id);
+        [$data, $entregaAcerto] = $this->validatedEntregaForm($request, $empresa->id);
         $data['empresa_id'] = $empresa->id;
 
-        if (
-            Schema::hasColumn('ve_remessas', 'produto_id')
-            && (empty($data['titulo']) || trim((string) $data['titulo']) === '')
-            && ! empty($data['produto_id'])
-        ) {
-            $produtoNome = Produto::query()
-                ->where('empresa_id', $empresa->id)
-                ->whereKey($data['produto_id'])
-                ->value('nome');
-            if (is_string($produtoNome) && trim($produtoNome) !== '') {
-                $data['titulo'] = $produtoNome;
-            }
-        }
-
-        VeRemessa::query()->create($data);
+        DB::transaction(function () use ($data, $entregaAcerto, $empresa) {
+            $remessa = VeRemessa::query()->create($data);
+            $this->aplicarAcertoNaEntrega($remessa, $entregaAcerto, $empresa->id);
+        });
 
         return redirect()->route('empresa.venda-externa.remessas.index')->with('status', 'Entrega cadastrada.');
     }
@@ -362,23 +352,13 @@ class VendaExternaController extends Controller
 
         $this->mergeRemessaPontoVazio($request);
 
-        $data = $this->validatedRemessa($request, $empresa->id);
+        [$data, $entregaAcerto] = $this->validatedEntregaForm($request, $empresa->id);
 
-        if (
-            Schema::hasColumn('ve_remessas', 'produto_id')
-            && (empty($data['titulo']) || trim((string) $data['titulo']) === '')
-            && ! empty($data['produto_id'])
-        ) {
-            $produtoNome = Produto::query()
-                ->where('empresa_id', $empresa->id)
-                ->whereKey($data['produto_id'])
-                ->value('nome');
-            if (is_string($produtoNome) && trim($produtoNome) !== '') {
-                $data['titulo'] = $produtoNome;
-            }
-        }
-
-        $veRemessa->update($data);
+        DB::transaction(function () use ($veRemessa, $data, $entregaAcerto, $empresa) {
+            $veRemessa->update($data);
+            $veRemessa->refresh();
+            $this->aplicarAcertoNaEntrega($veRemessa, $entregaAcerto, $empresa->id);
+        });
 
         return redirect()->route('empresa.venda-externa.remessas.show', $veRemessa)->with('status', 'Entrega atualizada.');
     }
@@ -403,25 +383,66 @@ class VendaExternaController extends Controller
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array{0: array<string, mixed>, 1: string}
      */
-    private function validatedRemessa(Request $request, int $empresaId): array
+    private function validatedEntregaForm(Request $request, int $empresaId): array
     {
         $rules = [
-            'titulo' => ['nullable', 'string', 'max:255'],
-            've_ponto_id' => ['nullable', 'integer', Rule::exists('ve_pontos', 'id')->where('empresa_id', $empresaId)],
-            'status' => ['required', Rule::in([
-                VeRemessa::STATUS_PREPARACAO,
-                VeRemessa::STATUS_EM_CAMPO,
-                VeRemessa::STATUS_ENCERRADA,
-            ])],
+            'entrega_acerto' => ['required', Rule::in(['acertado', 'nao_acertado'])],
+            've_ponto_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('ve_pontos', 'id')->where('empresa_id', $empresaId),
+                Rule::requiredIf(fn () => $request->string('entrega_acerto')->value() === 'acertado'),
+            ],
         ];
 
         if (Schema::hasColumn('ve_remessas', 'produto_id')) {
-            $rules['produto_id'] = ['nullable', 'integer', Rule::exists('produtos', 'id')->where('empresa_id', $empresaId)];
+            $rules['produto_id'] = ['required', 'integer', Rule::exists('produtos', 'id')->where('empresa_id', $empresaId)];
         }
 
-        return $request->validate($rules);
+        $validated = $request->validate($rules);
+
+        $entregaAcerto = $validated['entrega_acerto'];
+        unset($validated['entrega_acerto']);
+
+        $validated['status'] = VeRemessa::STATUS_EM_CAMPO;
+
+        if (Schema::hasColumn('ve_remessas', 'produto_id') && ! empty($validated['produto_id'])) {
+            $nome = Produto::query()
+                ->where('empresa_id', $empresaId)
+                ->whereKey($validated['produto_id'])
+                ->value('nome');
+            $validated['titulo'] = is_string($nome) ? $nome : null;
+        } else {
+            $validated['titulo'] = null;
+        }
+
+        return [$validated, $entregaAcerto];
+    }
+
+    private function aplicarAcertoNaEntrega(VeRemessa $remessa, string $entregaAcerto, int $empresaId): void
+    {
+        VeAcerto::query()
+            ->where('empresa_id', $empresaId)
+            ->where('ve_remessa_id', $remessa->id)
+            ->where('status', VeAcerto::STATUS_CONCLUIDO)
+            ->delete();
+
+        if ($entregaAcerto !== 'acertado') {
+            return;
+        }
+
+        VeAcerto::query()->create([
+            'empresa_id' => $empresaId,
+            've_ponto_id' => $remessa->ve_ponto_id,
+            've_remessa_id' => $remessa->id,
+            'data_acerto' => now()->toDateString(),
+            'valor_vendas' => null,
+            'valor_repasse' => null,
+            'status' => VeAcerto::STATUS_CONCLUIDO,
+            'observacoes' => null,
+        ]);
     }
 
     public function acertosIndex(Request $request): View|RedirectResponse

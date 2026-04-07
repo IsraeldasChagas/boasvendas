@@ -15,6 +15,12 @@
             @if ($remessa->exists)
                 @method('PUT')
             @endif
+            @php
+                $defaultAcerto = 'nao_acertado';
+                if ($remessa->exists) {
+                    $defaultAcerto = $remessa->estaAcertada() ? 'acertado' : 'nao_acertado';
+                }
+            @endphp
             <div class="mb-3">
                 <label class="form-label" for="produto_id">Produto</label>
                 <select class="form-select @error('produto_id') is-invalid @enderror" id="produto_id" name="produto_id">
@@ -27,11 +33,6 @@
                 <div class="form-text">Bem simples: selecione o produto que você está entregando para o parceiro revender.</div>
             </div>
             <div class="mb-3">
-                <label class="form-label" for="titulo">Referência (opcional)</label>
-                <input type="text" class="form-control @error('titulo') is-invalid @enderror" id="titulo" name="titulo" value="{{ old('titulo', $remessa->titulo) }}" placeholder="Ex.: 20 unidades, reposição semanal…">
-                @error('titulo')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            </div>
-            <div class="mb-3">
                 <label class="form-label" for="ve_ponto_id">Parceiro (opcional)</label>
                 <select class="form-select @error('ve_ponto_id') is-invalid @enderror" id="ve_ponto_id" name="ve_ponto_id">
                     <option value="">— Nenhum —</option>
@@ -40,15 +41,15 @@
                     @endforeach
                 </select>
                 @error('ve_ponto_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                <div class="form-text">Para marcar como <strong>Acertado</strong>, o parceiro é obrigatório.</div>
             </div>
             <div class="mb-4">
-                <label class="form-label" for="status">Status</label>
-                <select class="form-select @error('status') is-invalid @enderror" id="status" name="status" required>
-                    @foreach (\App\Models\VeRemessa::rotulosStatus() as $val => $rotulo)
-                        <option value="{{ $val }}" @selected(old('status', $remessa->status ?: \App\Models\VeRemessa::STATUS_PREPARACAO) === $val)>{{ $rotulo }}</option>
-                    @endforeach
+                <label class="form-label" for="entrega_acerto">Status</label>
+                <select class="form-select @error('entrega_acerto') is-invalid @enderror" id="entrega_acerto" name="entrega_acerto" required>
+                    <option value="nao_acertado" @selected(old('entrega_acerto', $defaultAcerto) === 'nao_acertado')>Não acertado</option>
+                    <option value="acertado" @selected(old('entrega_acerto', $defaultAcerto) === 'acertado')>Acertado</option>
                 </select>
-                @error('status')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                @error('entrega_acerto')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
             <div class="d-flex flex-wrap gap-2">
                 <button type="submit" class="btn btn-primary">Salvar</button>
