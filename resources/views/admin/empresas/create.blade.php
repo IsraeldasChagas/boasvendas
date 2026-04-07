@@ -55,6 +55,32 @@
                 <input type="date" class="form-control @error('cliente_desde') is-invalid @enderror" id="cliente_desde" name="cliente_desde" value="{{ old('cliente_desde') }}">
                 @error('cliente_desde')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
+
+            <hr class="my-4">
+
+            <h3 class="h6 fw-bold mb-3">Usuário administrador da empresa</h3>
+            <p class="small text-muted mb-3">Esse usuário será criado com perfil <strong>Gestor</strong> e poderá acessar o painel da empresa.</p>
+            <div class="mb-3">
+                <label class="form-label" for="admin_name">Nome do administrador</label>
+                <input type="text" class="form-control @error('admin_name') is-invalid @enderror" id="admin_name" name="admin_name" value="{{ old('admin_name') }}" required>
+                @error('admin_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="admin_email">E-mail do administrador</label>
+                <input type="email" class="form-control @error('admin_email') is-invalid @enderror" id="admin_email" name="admin_email" value="{{ old('admin_email') }}" required>
+                @error('admin_email')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+            <div class="row g-2 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label" for="admin_password">Senha</label>
+                    <input type="password" class="form-control @error('admin_password') is-invalid @enderror" id="admin_password" name="admin_password" required>
+                    @error('admin_password')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="admin_password_confirmation">Confirmar senha</label>
+                    <input type="password" class="form-control" id="admin_password_confirmation" name="admin_password_confirmation" required>
+                </div>
+            </div>
             <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-primary">Salvar</button>
                 <a href="{{ route('admin.empresas.index') }}" class="btn btn-outline-secondary">Cancelar</a>

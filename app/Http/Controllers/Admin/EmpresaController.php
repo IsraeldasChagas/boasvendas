@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Empresa;
 use App\Models\Plano;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
 class EmpresaController extends Controller
@@ -44,11 +47,24 @@ class EmpresaController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        Empresa::query()->create($this->validated($request));
+        $data = $this->validated($request);
+        $admin = $this->validatedAdminUser($request);
+
+        DB::transaction(function () use ($data, $admin) {
+            $empresa = Empresa::query()->create($data);
+
+            User::query()->create([
+                'name' => $admin['admin_name'],
+                'email' => $admin['admin_email'],
+                'password' => $admin['admin_password'],
+                'empresa_id' => $empresa->id,
+                'role' => 'gestor',
+            ]);
+        });
 
         return redirect()
             ->route('admin.empresas.index')
-            ->with('status', 'Empresa cadastrada.');
+            ->with('status', 'Empresa cadastrada e usuário administrador criado.');
     }
 
     public function show(Empresa $empresa): View
@@ -97,5 +113,23 @@ class EmpresaController extends Controller
             'modulos_resumo' => ['nullable', 'string', 'max:255'],
             'cliente_desde' => ['nullable', 'date'],
         ]);
+    }
+
+    /**
+     * @return array{admin_name:string,admin_email:string,admin_password:string}
+     */
+    private function validatedAdminUser(Request $request): array
+    {
+        $validated = $request->validate([
+            'admin_name' => ['required', 'string', 'max:255'],
+            'admin_email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')],
+            'admin_password' => ['required', 'string', Password::defaults(), 'confirmed'],
+        ]);
+
+        return [
+            'admin_name' => $validated['admin_name'],
+            'admin_email' => $validated['admin_email'],
+            'admin_password' => $validated['admin_password'],
+        ];
     }
 }
