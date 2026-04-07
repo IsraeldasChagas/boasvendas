@@ -18,7 +18,6 @@ use App\Models\Categoria;
 use App\Models\Produto;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
@@ -38,8 +37,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Config::set('app.name', config('vendaffacil.site_name'));
-
         Paginator::useBootstrapFive();
 
         Route::bind('produto', function (string $value) {

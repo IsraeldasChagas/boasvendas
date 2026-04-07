@@ -11,9 +11,12 @@ return [
     | framework needs to place the application's name in a notification or
     | other UI elements where an application name needs to be displayed.
     |
+    | O nome visível no site usa VENDAFFACIL_SITE_NAME (padrão Vendaffacil), não APP_NAME,
+    | para não herdar valores legados tipo "Boas Vendas" após config:cache.
+    |
     */
 
-    'name' => env('APP_NAME', 'Vendaffacil'),
+    'name' => env('VENDAFFACIL_SITE_NAME', 'Vendaffacil'),
 
     /*
     |--------------------------------------------------------------------------
