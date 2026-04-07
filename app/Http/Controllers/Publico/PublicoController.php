@@ -716,21 +716,12 @@ class PublicoController extends Controller
     }
 
     /**
-     * Serve foto guardada em storage/app/public (legado) quando não há symlink public/storage.
+     * Serve foto do produto (public/uploads ou storage/app/public legado).
      */
     public function produtoFoto(Produto $produto): BinaryFileResponse
     {
-        if ($produto->foto === null || $produto->foto === '') {
-            abort(404);
-        }
-
-        $rel = ltrim(str_replace('\\', '/', $produto->foto), '/');
-        if (! str_starts_with($rel, 'produtos/')) {
-            abort(404);
-        }
-
-        $full = storage_path('app/public/'.$rel);
-        if (! is_file($full)) {
+        $full = $produto->resolveFotoAbsolutePath();
+        if ($full === null || ! is_file($full)) {
             abort(404);
         }
 

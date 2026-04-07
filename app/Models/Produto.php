@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Produto extends Model
 {
@@ -58,25 +59,63 @@ class Produto extends Model
     }
 
     /**
-     * URL da foto: prioriza arquivo em public/uploads (hospedagem sem storage:link);
-     * se ainda estiver só em storage/app/public, usa rota que envia o arquivo via PHP.
+     * Caminho absoluto no disco do arquivo de foto (public/uploads ou storage/app/public).
      */
-    public function urlFoto(): ?string
+    public function resolveFotoAbsolutePath(): ?string
     {
         if ($this->foto === null || $this->foto === '') {
             return null;
         }
 
-        $path = ltrim(str_replace('\\', '/', $this->foto), '/');
-
-        if (is_file(public_path('uploads/'.$path))) {
-            return asset('uploads/'.$path);
+        $rel = ltrim(str_replace('\\', '/', (string) $this->foto), '/');
+        if ($rel === '' || Str::contains($rel, '..')) {
+            return null;
         }
 
-        if (is_file(storage_path('app/public/'.$path))) {
-            return '/media/produto/'.$this->id;
+        $candidates = [
+            public_path('uploads/'.$rel),
+            public_path($rel),
+        ];
+
+        if (Str::startsWith($rel, 'uploads/')) {
+            $candidates[] = public_path($rel);
+            $candidates[] = public_path('uploads/'.ltrim(Str::after($rel, 'uploads/'), '/'));
+        }
+
+        foreach (array_unique($candidates) as $full) {
+            if ($full && @is_file($full)) {
+                return $full;
+            }
+        }
+
+        if (Str::startsWith($rel, 'produtos/')) {
+            $storage = storage_path('app/public/'.$rel);
+            if (@is_file($storage)) {
+                return $storage;
+            }
         }
 
         return null;
+    }
+
+    /**
+     * URL da foto: arquivo em public usa asset(); legado em storage usa /media/produto/{id}.
+     */
+    public function urlFoto(): ?string
+    {
+        $abs = $this->resolveFotoAbsolutePath();
+        if ($abs === null) {
+            return null;
+        }
+
+        $publicRoot = realpath(public_path());
+        $real = realpath($abs);
+        if ($publicRoot !== false && $real !== false && str_starts_with($real, $publicRoot)) {
+            $rel = ltrim(str_replace('\\', '/', substr($real, strlen($publicRoot))), '/');
+
+            return asset($rel);
+        }
+
+        return url('/media/produto/'.$this->id);
     }
 }
