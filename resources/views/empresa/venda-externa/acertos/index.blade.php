@@ -61,45 +61,65 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse ($acertos as $a)
-                        <tr>
-                            <td class="small">{{ $a->data_acerto?->format('d/m/Y') ?? '—' }}</td>
-                            <td class="small">{{ $a->ponto?->nome ?? '—' }}</td>
-                            <td class="small">
-                                @if ($a->remessa)
-                                    <a href="{{ route('empresa.venda-externa.remessas.show', $a->remessa) }}">E-{{ $a->remessa->id }}</a>
-                                    <span class="text-muted d-block" style="font-size: 0.7rem;">{{ \Illuminate\Support\Str::limit($a->remessa->tituloExibicao(), 28) }}</span>
-                                @else
-                                    —
-                                @endif
-                            </td>
-                            <td class="text-end small">
-                                @if ($a->valor_repasse_unitario !== null)
-                                    R$ {{ number_format((float) $a->valor_repasse_unitario, 2, ',', '.') }}
-                                @else
-                                    —
-                                @endif
-                            </td>
-                            <td class="text-end small">
-                                @if ($a->quantidade !== null)
-                                    {{ rtrim(rtrim(number_format((float) $a->quantidade, 3, ',', '.'), '0'), ',') }}
-                                @else
-                                    —
-                                @endif
-                            </td>
-                            <td class="text-end small">
-                                @if ($a->valor_repasse !== null)
-                                    R$ {{ number_format((float) $a->valor_repasse, 2, ',', '.') }}
-                                @else
-                                    —
-                                @endif
-                            </td>
-                            <td><span class="vf-badge {{ $a->classeBadgeStatus() }}">{{ $a->status === \App\Models\VeAcerto::STATUS_CONCLUIDO ? 'Acertado' : 'Não acertado' }}</span></td>
-                            <td class="text-end text-nowrap">
-                                <a href="{{ route('empresa.venda-externa.acertos.show', $a) }}" class="btn btn-sm btn-outline-primary">Abrir</a>
-                                <a href="{{ route('empresa.venda-externa.acertos.edit', $a) }}" class="btn btn-sm btn-outline-secondary">Editar</a>
-                            </td>
-                        </tr>
+                    @forelse ($itens as $item)
+                        @if ($item['tipo'] === 'acerto')
+                            @php $a = $item['acerto']; @endphp
+                            <tr>
+                                <td class="small">{{ $a->data_acerto?->format('d/m/Y') ?? '—' }}</td>
+                                <td class="small">{{ $a->ponto?->nome ?? '—' }}</td>
+                                <td class="small">
+                                    @if ($a->remessa)
+                                        <a href="{{ route('empresa.venda-externa.remessas.show', $a->remessa) }}">E-{{ $a->remessa->id }}</a>
+                                        <span class="text-muted d-block" style="font-size: 0.7rem;">{{ \Illuminate\Support\Str::limit($a->remessa->tituloExibicao(), 28) }}</span>
+                                    @else
+                                        —
+                                    @endif
+                                </td>
+                                <td class="text-end small">
+                                    @if ($a->valor_repasse_unitario !== null)
+                                        R$ {{ number_format((float) $a->valor_repasse_unitario, 2, ',', '.') }}
+                                    @else
+                                        —
+                                    @endif
+                                </td>
+                                <td class="text-end small">
+                                    @if ($a->quantidade !== null)
+                                        {{ rtrim(rtrim(number_format((float) $a->quantidade, 3, ',', '.'), '0'), ',') }}
+                                    @else
+                                        —
+                                    @endif
+                                </td>
+                                <td class="text-end small">
+                                    @if ($a->valor_repasse !== null)
+                                        R$ {{ number_format((float) $a->valor_repasse, 2, ',', '.') }}
+                                    @else
+                                        —
+                                    @endif
+                                </td>
+                                <td><span class="vf-badge {{ $a->classeBadgeStatus() }}">{{ $a->status === \App\Models\VeAcerto::STATUS_CONCLUIDO ? 'Acertado' : 'Não acertado' }}</span></td>
+                                <td class="text-end text-nowrap">
+                                    <a href="{{ route('empresa.venda-externa.acertos.show', $a) }}" class="btn btn-sm btn-outline-primary">Abrir</a>
+                                    <a href="{{ route('empresa.venda-externa.acertos.edit', $a) }}" class="btn btn-sm btn-outline-secondary">Editar</a>
+                                </td>
+                            </tr>
+                        @else
+                            @php $r = $item['remessa']; @endphp
+                            <tr>
+                                <td class="small text-muted">{{ $r->created_at?->format('d/m/Y') ?? '—' }}</td>
+                                <td class="small">{{ $r->ponto?->nome ?? '—' }}</td>
+                                <td class="small">
+                                    <a href="{{ route('empresa.venda-externa.remessas.show', $r) }}">E-{{ $r->id }}</a>
+                                    <span class="text-muted d-block" style="font-size: 0.7rem;">{{ \Illuminate\Support\Str::limit($r->tituloExibicao(), 28) }}</span>
+                                </td>
+                                <td class="text-end small text-muted">—</td>
+                                <td class="text-end small text-muted">—</td>
+                                <td class="text-end small text-muted">—</td>
+                                <td><span class="vf-badge bg-warning-subtle text-warning">Não acertado</span></td>
+                                <td class="text-end text-nowrap">
+                                    <a href="{{ route('empresa.venda-externa.acertos.create', ['ve_remessa_id' => $r->id]) }}" class="btn btn-sm btn-primary">Registrar acerto</a>
+                                </td>
+                            </tr>
+                        @endif
                     @empty
                         <tr>
                             <td colspan="8" class="border-0"></td>
