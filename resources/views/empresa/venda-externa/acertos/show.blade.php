@@ -22,7 +22,7 @@
                     <div>
                         <h2 class="h5 fw-bold mb-1">Acerto #{{ $acerto->id }}</h2>
                         <div class="small text-muted">
-                            Ponto: <strong>{{ $acerto->ponto?->nome ?? '—' }}</strong>
+                            Parceiro: <strong>{{ $acerto->ponto?->nome ?? '—' }}</strong>
                             @if ($acerto->ponto?->regiao)
                                 <span class="text-muted">({{ $acerto->ponto->regiao }})</span>
                             @endif
@@ -40,9 +40,9 @@
                 <dl class="row small mb-0">
                     <dt class="col-sm-4">Data do acerto</dt>
                     <dd class="col-sm-8">{{ $acerto->data_acerto?->format('d/m/Y') ?? '—' }}</dd>
-                    <dt class="col-sm-4">Vendas</dt>
-                    <dd class="col-sm-8">{{ $acerto->valor_vendas !== null ? 'R$ '.number_format((float) $acerto->valor_vendas, 2, ',', '.') : '—' }}</dd>
-                    <dt class="col-sm-4">Repasse</dt>
+                    <dt class="col-sm-4">Repasse unitário</dt>
+                    <dd class="col-sm-8">{{ $acerto->valor_repasse_unitario !== null ? 'R$ '.number_format((float) $acerto->valor_repasse_unitario, 2, ',', '.') : '—' }}</dd>
+                    <dt class="col-sm-4">Repasse total</dt>
                     <dd class="col-sm-8">{{ $acerto->valor_repasse !== null ? 'R$ '.number_format((float) $acerto->valor_repasse, 2, ',', '.') : '—' }}</dd>
                 </dl>
                 @if ($acerto->observacoes)

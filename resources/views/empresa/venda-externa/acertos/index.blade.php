@@ -53,8 +53,8 @@
                         <th>Data</th>
                         <th>Parceiro</th>
                         <th>Remessa</th>
-                        <th class="text-end">Vendas</th>
-                        <th class="text-end">Repasse</th>
+                        <th class="text-end">Repasse unit.</th>
+                        <th class="text-end">Repasse total</th>
                         <th>Status</th>
                         <th class="text-end">Ações</th>
                     </tr>
@@ -73,8 +73,8 @@
                                 @endif
                             </td>
                             <td class="text-end small">
-                                @if ($a->valor_vendas !== null)
-                                    R$ {{ number_format((float) $a->valor_vendas, 2, ',', '.') }}
+                                @if ($a->valor_repasse_unitario !== null)
+                                    R$ {{ number_format((float) $a->valor_repasse_unitario, 2, ',', '.') }}
                                 @else
                                     —
                                 @endif

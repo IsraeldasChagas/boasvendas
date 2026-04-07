@@ -16,7 +16,7 @@
                 @method('PUT')
             @endif
             <div class="mb-3">
-                <label class="form-label" for="ve_ponto_id">Ponto</label>
+                <label class="form-label" for="ve_ponto_id">Parceiro</label>
                 <select class="form-select @error('ve_ponto_id') is-invalid @enderror" id="ve_ponto_id" name="ve_ponto_id" required>
                     <option value="">Selecione…</option>
                     @foreach ($pontos as $pt)
@@ -54,12 +54,12 @@
             </div>
             <div class="row g-3 mb-3">
                 <div class="col-md-6">
-                    <label class="form-label" for="valor_vendas">Vendas (R$)</label>
-                    <input type="number" step="0.01" min="0" class="form-control @error('valor_vendas') is-invalid @enderror" id="valor_vendas" name="valor_vendas" value="{{ old('valor_vendas', $acerto->valor_vendas) }}">
-                    @error('valor_vendas')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    <label class="form-label" for="valor_repasse_unitario">Repasse unitário (R$)</label>
+                    <input type="number" step="0.01" min="0" class="form-control @error('valor_repasse_unitario') is-invalid @enderror" id="valor_repasse_unitario" name="valor_repasse_unitario" value="{{ old('valor_repasse_unitario', $acerto->valor_repasse_unitario) }}">
+                    @error('valor_repasse_unitario')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label" for="valor_repasse">Repasse (R$)</label>
+                    <label class="form-label" for="valor_repasse">Repasse total (R$)</label>
                     <input type="number" step="0.01" min="0" class="form-control @error('valor_repasse') is-invalid @enderror" id="valor_repasse" name="valor_repasse" value="{{ old('valor_repasse', $acerto->valor_repasse) }}">
                     @error('valor_repasse')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>

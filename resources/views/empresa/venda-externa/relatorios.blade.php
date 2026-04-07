@@ -51,9 +51,9 @@
         <div class="col-6 col-xl-3">
             <div class="vf-card vf-card-stat h-100">
                 <div>
-                    <div class="small text-muted">Vendas em acertos</div>
+                    <div class="small text-muted">Repasse em acertos</div>
                     <div class="h5 mb-0 text-info">R$ {{ number_format($totalVendasDeclaradasAcertos, 2, ',', '.') }}</div>
-                    <div class="small text-muted mt-1">Soma de valor em acertos (data do acerto)</div>
+                    <div class="small text-muted mt-1">Soma do repasse total (data do acerto)</div>
                 </div>
                 <div class="icon-wrap bg-info-subtle text-info"><i class="bi bi-check2-circle"></i></div>
             </div>
@@ -103,7 +103,7 @@
                 <p class="small text-muted mb-2">
                     Barras por semana terminando em <strong>{{ $fim->copy()->endOfWeek()->format('d/m/Y') }}</strong>:
                     <span class="text-success">registros de venda</span> (por data de venda) ×
-                    <span style="color:#2563eb;">vendas declaradas em acertos</span> (por data do acerto).
+                    <span style="color:#2563eb;">repasse em acertos</span> (por data do acerto).
                 </p>
                 @php $somaR = array_sum($chartSerieRegistros); $somaA = array_sum($chartSerieAcertos); @endphp
                 @if ($somaR <= 0 && $somaA <= 0)
@@ -151,9 +151,9 @@
                         <thead>
                             <tr>
                                 <th>Data</th>
-                                <th>Ponto</th>
-                                <th class="text-end">Vendas</th>
-                                <th class="text-end">Repasse</th>
+                                <th>Parceiro</th>
+                                <th class="text-end">Repasse unit.</th>
+                                <th class="text-end">Repasse total</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
@@ -164,7 +164,7 @@
                                         <a href="{{ route('empresa.venda-externa.acertos.show', $a) }}">{{ $a->data_acerto?->format('d/m/Y') ?? '—' }}</a>
                                     </td>
                                     <td class="small">{{ $a->ponto?->nome ?? '—' }}</td>
-                                    <td class="text-end small">{{ $a->valor_vendas !== null ? 'R$ '.number_format((float) $a->valor_vendas, 2, ',', '.') : '—' }}</td>
+                                    <td class="text-end small">{{ $a->valor_repasse_unitario !== null ? 'R$ '.number_format((float) $a->valor_repasse_unitario, 2, ',', '.') : '—' }}</td>
                                     <td class="text-end small">{{ $a->valor_repasse !== null ? 'R$ '.number_format((float) $a->valor_repasse, 2, ',', '.') : '—' }}</td>
                                     <td><span class="vf-badge {{ $a->classeBadgeStatus() }}">{{ $a->rotuloStatus() }}</span></td>
                                 </tr>

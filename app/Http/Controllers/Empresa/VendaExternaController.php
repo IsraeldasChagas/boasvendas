@@ -433,7 +433,7 @@ class VendaExternaController extends Controller
             return;
         }
 
-        VeAcerto::query()->create([
+        $payload = [
             'empresa_id' => $empresaId,
             've_ponto_id' => $remessa->ve_ponto_id,
             've_remessa_id' => $remessa->id,
@@ -442,7 +442,11 @@ class VendaExternaController extends Controller
             'valor_repasse' => null,
             'status' => VeAcerto::STATUS_CONCLUIDO,
             'observacoes' => null,
-        ]);
+        ];
+        if (Schema::hasColumn('ve_acertos', 'valor_repasse_unitario')) {
+            $payload['valor_repasse_unitario'] = null;
+        }
+        VeAcerto::query()->create($payload);
     }
 
     public function acertosIndex(Request $request): View|RedirectResponse
@@ -577,7 +581,7 @@ class VendaExternaController extends Controller
      */
     private function validatedAcerto(Request $request, int $empresaId): array
     {
-        return $request->validate([
+        $rules = [
             've_ponto_id' => ['required', 'integer', Rule::exists('ve_pontos', 'id')->where('empresa_id', $empresaId)],
             've_remessa_id' => ['nullable', 'integer', Rule::exists('ve_remessas', 'id')->where('empresa_id', $empresaId)],
             'data_acerto' => [
@@ -585,11 +589,20 @@ class VendaExternaController extends Controller
                 'date',
                 Rule::requiredIf(fn () => $request->input('status') === VeAcerto::STATUS_CONCLUIDO),
             ],
-            'valor_vendas' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
+            'valor_repasse_unitario' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'valor_repasse' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'status' => ['required', Rule::in([VeAcerto::STATUS_ABERTO, VeAcerto::STATUS_CONCLUIDO])],
             'observacoes' => ['nullable', 'string', 'max:5000'],
-        ]);
+        ];
+
+        if (! Schema::hasColumn('ve_acertos', 'valor_repasse_unitario')) {
+            unset($rules['valor_repasse_unitario']);
+        }
+
+        $data = $request->validate($rules);
+        $data['valor_vendas'] = null;
+
+        return $data;
     }
 
     private function mergeFiadoPontoVazio(Request $request): void
@@ -808,7 +821,7 @@ class VendaExternaController extends Controller
             ->where('empresa_id', $empresaId)
             ->whereNotNull('data_acerto')
             ->whereBetween('data_acerto', [$inicio->toDateString(), $fim->toDateString()])
-            ->sum('valor_vendas');
+            ->sum('valor_repasse');
 
         $totalRepasseAcertos = (float) VeAcerto::query()
             ->where('empresa_id', $empresaId)
@@ -850,7 +863,7 @@ class VendaExternaController extends Controller
                 ->where('empresa_id', $empresaId)
                 ->whereNotNull('data_acerto')
                 ->whereBetween('data_acerto', [$ws->toDateString(), $we->toDateString()])
-                ->sum('valor_vendas');
+                ->sum('valor_repasse');
         }
 
         $chartMax = max(1.0, ...$chartSerieRegistros, ...$chartSerieAcertos);
@@ -950,8 +963,8 @@ class VendaExternaController extends Controller
                 'status',
                 'ponto',
                 'remessa_id',
-                'valor_vendas',
-                'valor_repasse',
+                'valor_repasse_unitario',
+                'valor_repasse_total',
                 'observacoes',
             ], ';');
 
@@ -962,7 +975,7 @@ class VendaExternaController extends Controller
                     $a->status,
                     $a->ponto?->nome ?? '',
                     $a->ve_remessa_id ?? '',
-                    $a->valor_vendas !== null ? number_format((float) $a->valor_vendas, 2, '.', '') : '',
+                    $a->valor_repasse_unitario !== null ? number_format((float) $a->valor_repasse_unitario, 2, '.', '') : '',
                     $a->valor_repasse !== null ? number_format((float) $a->valor_repasse, 2, '.', '') : '',
                     preg_replace('/\s+/', ' ', trim((string) $a->observacoes)),
                 ], ';');
