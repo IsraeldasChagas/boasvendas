@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Empresa;
 
 use App\Http\Controllers\Controller;
+use App\Models\Adicional;
 use App\Models\Categoria;
 use App\Models\Empresa;
 use App\Models\Produto;
@@ -67,7 +68,14 @@ class ProdutoController extends Controller
             ->orderBy('nome')
             ->get();
 
-        return view('empresa.produtos.create', compact('empresa', 'categorias'));
+        $adicionais = Adicional::query()
+            ->where('empresa_id', $empresa->id)
+            ->where('ativo', true)
+            ->orderBy('ordem')
+            ->orderBy('nome')
+            ->get();
+
+        return view('empresa.produtos.create', compact('empresa', 'categorias', 'adicionais'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -80,7 +88,8 @@ class ProdutoController extends Controller
         $data = $this->validated($request, $empresa);
         $data['empresa_id'] = $empresa->id;
 
-        Produto::query()->create($data);
+        $produto = Produto::query()->create($data);
+        $this->syncAdicionaisDoProduto($produto, $empresa, $request);
 
         return redirect()
             ->route('empresa.produtos.index')
@@ -106,7 +115,16 @@ class ProdutoController extends Controller
             ->orderBy('nome')
             ->get();
 
-        return view('empresa.produtos.edit', compact('empresa', 'produto', 'categorias'));
+        $adicionais = Adicional::query()
+            ->where('empresa_id', $empresa->id)
+            ->where('ativo', true)
+            ->orderBy('ordem')
+            ->orderBy('nome')
+            ->get();
+
+        $produto->load('adicionais');
+
+        return view('empresa.produtos.edit', compact('empresa', 'produto', 'categorias', 'adicionais'));
     }
 
     public function update(Request $request, Produto $produto): RedirectResponse
@@ -117,6 +135,7 @@ class ProdutoController extends Controller
         }
 
         $produto->update($this->validated($request, $empresa, $produto));
+        $this->syncAdicionaisDoProduto($produto, $empresa, $request);
 
         return redirect()
             ->route('empresa.produtos.index')
@@ -164,11 +183,43 @@ class ProdutoController extends Controller
             'descricao' => ['nullable', 'string', 'max:10000'],
             'visivel_loja' => ['sometimes', 'boolean'],
             'ativo' => ['sometimes', 'boolean'],
+            'permite_adicionais' => ['sometimes', 'boolean'],
+            'adicional_ids' => ['nullable', 'array'],
+            'adicional_ids.*' => [
+                'integer',
+                Rule::exists('adicionais', 'id')->where(fn ($q) => $q->where('empresa_id', $empresa->id)->where('ativo', true)),
+            ],
         ]);
 
         $data['visivel_loja'] = $request->boolean('visivel_loja');
         $data['ativo'] = $request->boolean('ativo');
+        $data['permite_adicionais'] = $request->boolean('permite_adicionais');
 
         return $data;
+    }
+
+    private function syncAdicionaisDoProduto(Produto $produto, Empresa $empresa, Request $request): void
+    {
+        if (! $produto->permite_adicionais) {
+            $produto->adicionais()->detach();
+
+            return;
+        }
+
+        $ids = collect($request->input('adicional_ids', []))
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
+
+        $valid = Adicional::query()
+            ->where('empresa_id', $empresa->id)
+            ->where('ativo', true)
+            ->whereIn('id', $ids)
+            ->pluck('id')
+            ->all();
+
+        $produto->adicionais()->sync($valid);
     }
 }

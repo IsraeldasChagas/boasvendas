@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Produto extends Model
 {
@@ -19,6 +20,7 @@ class Produto extends Model
         'descricao',
         'visivel_loja',
         'ativo',
+        'permite_adicionais',
     ];
 
     protected function casts(): array
@@ -28,6 +30,7 @@ class Produto extends Model
             'estoque' => 'integer',
             'visivel_loja' => 'boolean',
             'ativo' => 'boolean',
+            'permite_adicionais' => 'boolean',
         ];
     }
 
@@ -39,5 +42,10 @@ class Produto extends Model
     public function categoria(): BelongsTo
     {
         return $this->belongsTo(Categoria::class, 'categoria_id');
+    }
+
+    public function adicionais(): BelongsToMany
+    {
+        return $this->belongsToMany(Adicional::class, 'adicional_produto')->withTimestamps();
     }
 }

@@ -54,6 +54,11 @@ class Empresa extends Model
         return $this->hasMany(Produto::class, 'empresa_id');
     }
 
+    public function adicionais(): HasMany
+    {
+        return $this->hasMany(Adicional::class, 'empresa_id');
+    }
+
     public function categorias(): HasMany
     {
         return $this->hasMany(Categoria::class, 'empresa_id');

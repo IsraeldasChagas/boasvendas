@@ -32,17 +32,18 @@
                                         <tr>
                                             <td class="fw-medium">
                                                 <a href="{{ route('publico.produto', ['slug' => $slug, 'produto_id' => $p->id]) }}" class="text-decoration-none text-dark">{{ $p->nome }}</a>
+                                                @include('partials.opcoes-pedido-item', ['opcoesLinha' => $l['opcoes'] === [] ? null : ['adicionais' => $l['opcoes']]])
                                             </td>
                                             <td class="text-center">
-                                                <input type="number" class="form-control form-control-sm text-center" name="quantidade[{{ $p->id }}]" value="{{ $l['quantidade'] }}" min="0" max="99">
+                                                <input type="number" class="form-control form-control-sm text-center" name="quantidade[{{ $l['line_index'] }}]" value="{{ $l['quantidade'] }}" min="0" max="99">
                                             </td>
-                                            <td class="text-end">R$ {{ number_format((float) $p->preco, 2, ',', '.') }}</td>
+                                            <td class="text-end">R$ {{ number_format((float) $l['preco_unitario'], 2, ',', '.') }}</td>
                                             <td class="text-end fw-semibold">R$ {{ number_format($l['subtotal'], 2, ',', '.') }}</td>
                                             <td class="text-end">
                                                 <button type="submit"
                                                     formaction="{{ route('publico.carrinho.remover', ['slug' => $slug]) }}"
-                                                    name="produto_id"
-                                                    value="{{ $p->id }}"
+                                                    name="line_index"
+                                                    value="{{ $l['line_index'] }}"
                                                     class="btn btn-sm btn-outline-danger"
                                                     title="Remover"
                                                     onclick="return confirm('Remover este item?');">

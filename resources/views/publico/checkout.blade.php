@@ -62,9 +62,12 @@
                         <h2 class="h6 fw-bold mb-3">Pedido</h2>
                         <ul class="list-unstyled small mb-3">
                             @foreach ($linhas as $l)
-                                <li class="d-flex justify-content-between py-1 border-bottom">
-                                    <span>{{ $l['produto']->nome }} × {{ $l['quantidade'] }}</span>
-                                    <span>R$ {{ number_format($l['subtotal'], 2, ',', '.') }}</span>
+                                <li class="py-1 border-bottom">
+                                    <div class="d-flex justify-content-between">
+                                        <span>{{ $l['produto']->nome }} × {{ $l['quantidade'] }}</span>
+                                        <span>R$ {{ number_format($l['subtotal'], 2, ',', '.') }}</span>
+                                    </div>
+                                    @include('partials.opcoes-pedido-item', ['opcoesLinha' => $l['opcoes'] === [] ? null : ['adicionais' => $l['opcoes']]])
                                 </li>
                             @endforeach
                             <li class="d-flex justify-content-between py-1"><span>Entrega</span><span>R$ {{ number_format($taxa, 2, ',', '.') }}</span></li>

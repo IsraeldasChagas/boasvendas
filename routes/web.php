@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\PlanoController as AdminPlanoController;
 use App\Http\Controllers\Admin\SuporteController as AdminSuporteController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Empresa\AdicionalController;
 use App\Http\Controllers\Empresa\CaixaController;
 use App\Http\Controllers\Empresa\CategoriaController;
 use App\Http\Controllers\Empresa\ChamadoController as EmpresaChamadoController;
@@ -100,6 +101,13 @@ Route::middleware(['auth', 'empresa.painel'])->prefix('empresa')->name('empresa.
     Route::get('/produtos/{produto}/editar', [ProdutoController::class, 'edit'])->name('produtos.edit');
     Route::put('/produtos/{produto}', [ProdutoController::class, 'update'])->name('produtos.update');
     Route::delete('/produtos/{produto}', [ProdutoController::class, 'destroy'])->name('produtos.destroy');
+
+    Route::get('/adicionais', [AdicionalController::class, 'index'])->name('adicionais.index');
+    Route::get('/adicionais/novo', [AdicionalController::class, 'create'])->name('adicionais.create');
+    Route::post('/adicionais', [AdicionalController::class, 'store'])->name('adicionais.store');
+    Route::get('/adicionais/{adicional}/editar', [AdicionalController::class, 'edit'])->name('adicionais.edit');
+    Route::put('/adicionais/{adicional}', [AdicionalController::class, 'update'])->name('adicionais.update');
+    Route::delete('/adicionais/{adicional}', [AdicionalController::class, 'destroy'])->name('adicionais.destroy');
 
     Route::get('/categorias', [CategoriaController::class, 'index'])->name('categorias.index');
     Route::get('/categorias/nova', [CategoriaController::class, 'create'])->name('categorias.create');

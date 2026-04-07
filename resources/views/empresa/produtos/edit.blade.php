@@ -56,6 +56,33 @@
                     @error('descricao')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="col-12">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" name="permite_adicionais" id="permite_adicionais" value="1" {{ old('permite_adicionais', $produto->permite_adicionais) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="permite_adicionais">Permitir adicionais / retirar ingredientes na loja</label>
+                    </div>
+                    <p class="small text-muted mb-2">Opções vinculadas (cadastro em <a href="{{ route('empresa.adicionais.index') }}">Adicionais</a>).</p>
+                    <div class="border rounded p-3 bg-light mb-2" style="max-height: 12rem; overflow-y: auto;">
+                        @php $sel = old('adicional_ids', $produto->adicionais->pluck('id')->all()); @endphp
+                        @forelse ($adicionais as $ad)
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="adicional_ids[]" id="ad_{{ $ad->id }}" value="{{ $ad->id }}"
+                                    @checked(in_array($ad->id, $sel, true))>
+                                <label class="form-check-label" for="ad_{{ $ad->id }}">
+                                    {{ $ad->nome }}
+                                    @if ($ad->tipo === \App\Models\Adicional::TIPO_RETIRAR)
+                                        <span class="text-muted small">(retirar)</span>
+                                    @else
+                                        <span class="text-muted small">(+ R$ {{ number_format((float) $ad->preco, 2, ',', '.') }})</span>
+                                    @endif
+                                </label>
+                            </div>
+                        @empty
+                            <span class="small text-muted">Nenhum adicional cadastrado.</span>
+                        @endforelse
+                    </div>
+                    @error('adicional_ids')<div class="text-danger small">{{ $message }}</div>@enderror
+                </div>
+                <div class="col-12">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="visivel_loja" id="visivel_loja" value="1" {{ old('visivel_loja', $produto->visivel_loja) ? 'checked' : '' }}>
                         <label class="form-check-label" for="visivel_loja">Visível na loja pública</label>

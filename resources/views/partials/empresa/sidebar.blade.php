@@ -19,6 +19,9 @@
         <a class="nav-link {{ request()->routeIs('empresa.categorias.*') ? 'active' : '' }}" href="{{ route('empresa.categorias.index') }}">
             <i class="bi bi-grid"></i> Categorias
         </a>
+        <a class="nav-link {{ request()->routeIs('empresa.adicionais.*') ? 'active' : '' }}" href="{{ route('empresa.adicionais.index') }}">
+            <i class="bi bi-plus-square-dotted"></i> Adicionais
+        </a>
         <a class="nav-link {{ request()->routeIs('empresa.clientes.*') ? 'active' : '' }}" href="{{ route('empresa.clientes.index') }}">
             <i class="bi bi-people"></i> Clientes
         </a>

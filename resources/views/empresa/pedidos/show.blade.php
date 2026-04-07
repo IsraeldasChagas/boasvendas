@@ -31,7 +31,10 @@
                         <tbody>
                             @foreach ($pedido->itens as $it)
                                 <tr>
-                                    <td>{{ $it->nome_produto }}</td>
+                                    <td>
+                                        {{ $it->nome_produto }}
+                                        @include('partials.opcoes-pedido-item', ['opcoesLinha' => $it->opcoes_linha])
+                                    </td>
                                     <td class="text-center">{{ $it->quantidade }}</td>
                                     <td class="text-end">R$ {{ number_format((float) $it->subtotal, 2, ',', '.') }}</td>
                                 </tr>

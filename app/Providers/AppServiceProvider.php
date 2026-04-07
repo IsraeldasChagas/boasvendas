@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Adicional;
 use App\Models\Categoria;
 use App\Models\Cliente;
 use App\Models\FidelidadeCartao;
@@ -43,6 +44,20 @@ class AppServiceProvider extends ServiceProvider
         }
 
         Paginator::useBootstrapFive();
+
+        Route::bind('adicional', function (string $value) {
+            if (! auth()->check()) {
+                abort(404);
+            }
+
+            $empresaId = auth()->user()->empresa_id;
+            abort_unless($empresaId, 404);
+
+            return Adicional::query()
+                ->where('id', $value)
+                ->where('empresa_id', $empresaId)
+                ->firstOrFail();
+        });
 
         Route::bind('produto', function (string $value) {
             if (! auth()->check()) {
@@ -220,8 +235,23 @@ class AppServiceProvider extends ServiceProvider
                 return;
             }
             $raw = session('loja_carrinho.'.$slug, []);
-            $count = is_array($raw) ? array_sum($raw) : 0;
-            $view->with('carrinhoContagem', (int) $count);
+            $count = 0;
+            if (is_array($raw) && $raw !== []) {
+                if (isset($raw[0]) && is_array($raw[0]) && array_key_exists('produto_id', $raw[0])) {
+                    foreach ($raw as $line) {
+                        if (is_array($line)) {
+                            $count += (int) ($line['quantidade'] ?? 0);
+                        }
+                    }
+                } else {
+                    foreach ($raw as $qty) {
+                        if (is_numeric($qty)) {
+                            $count += (int) $qty;
+                        }
+                    }
+                }
+            }
+            $view->with('carrinhoContagem', $count);
         });
 
         RedirectIfAuthenticated::redirectUsing(function (Request $request) {

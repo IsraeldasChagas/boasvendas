@@ -16,6 +16,7 @@ class PedidoItem extends Model
         'preco_unitario',
         'quantidade',
         'subtotal',
+        'opcoes_linha',
     ];
 
     protected function casts(): array
@@ -23,6 +24,7 @@ class PedidoItem extends Model
         return [
             'preco_unitario' => 'decimal:2',
             'subtotal' => 'decimal:2',
+            'opcoes_linha' => 'array',
         ];
     }
 

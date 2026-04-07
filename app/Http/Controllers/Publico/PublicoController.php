@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Publico;
 
 use App\Http\Controllers\Controller;
+use App\Models\Adicional;
 use App\Models\Categoria;
 use App\Models\Empresa;
 use App\Models\Pedido;
@@ -36,60 +37,177 @@ class PublicoController extends Controller
         return 'loja_carrinho.'.$slug;
     }
 
-    /** @return array<int, int> produto_id => quantidade */
-    private function getCarrinhoBruto(string $slug): array
+    /**
+     * @return list<array{produto_id: int, quantidade: int, adicional_ids: list<int>}>
+     */
+    private function getCarrinhoLines(string $slug): array
     {
         $raw = session($this->carrinhoKey($slug), []);
-
-        return is_array($raw) ? $raw : [];
-    }
-
-    /** @param  array<int, int>  $items */
-    private function setCarrinhoBruto(string $slug, array $items): void
-    {
-        session([$this->carrinhoKey($slug) => $items]);
-    }
-
-    /**
-     * @return list<array{produto: Produto, quantidade: int, subtotal: float}>
-     */
-    private function linhasCarrinho(Empresa $empresa, string $slug): array
-    {
-        $bruto = $this->getCarrinhoBruto($slug);
-        if ($bruto === []) {
+        if (! is_array($raw) || $raw === []) {
             return [];
         }
 
-        $ids = array_keys($bruto);
+        if (isset($raw[0]) && is_array($raw[0]) && array_key_exists('produto_id', $raw[0])) {
+            $out = [];
+            foreach ($raw as $line) {
+                if (! is_array($line) || ! isset($line['produto_id'])) {
+                    continue;
+                }
+                $out[] = [
+                    'produto_id' => (int) $line['produto_id'],
+                    'quantidade' => max(0, (int) ($line['quantidade'] ?? 0)),
+                    'adicional_ids' => $this->normalizarIdsAdicionais($line['adicional_ids'] ?? []),
+                ];
+            }
+
+            return array_values(array_filter($out, fn ($l) => $l['quantidade'] > 0));
+        }
+
+        $lines = [];
+        foreach ($raw as $pid => $qty) {
+            if (! is_numeric($pid)) {
+                continue;
+            }
+            $q = (int) $qty;
+            if ($q < 1) {
+                continue;
+            }
+            $lines[] = [
+                'produto_id' => (int) $pid,
+                'quantidade' => $q,
+                'adicional_ids' => [],
+            ];
+        }
+
+        return $lines;
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function normalizarIdsAdicionais(mixed $ids): array
+    {
+        if (! is_array($ids)) {
+            return [];
+        }
+
+        return collect($ids)
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0)
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @param  list<int>  $adicionalIdsOrdenados
+     */
+    private function fingerprintLinha(int $produtoId, array $adicionalIdsOrdenados): string
+    {
+        return $produtoId.'|'.implode(',', $adicionalIdsOrdenados);
+    }
+
+    private function setCarrinhoLines(string $slug, array $lines): void
+    {
+        session([$this->carrinhoKey($slug) => array_values($lines)]);
+    }
+
+    /**
+     * @return list<array{
+     *   line_index: int,
+     *   produto: Produto,
+     *   quantidade: int,
+     *   adicional_ids: list<int>,
+     *   opcoes: list<array{id:int,nome:string,tipo:string,preco:float}>,
+     *   preco_unitario: float,
+     *   subtotal: float
+     * }>
+     */
+    private function linhasCarrinho(Empresa $empresa, string $slug): array
+    {
+        $linesRaw = $this->getCarrinhoLines($slug);
+        if ($linesRaw === []) {
+            $this->setCarrinhoLines($slug, []);
+
+            return [];
+        }
+
+        $pids = collect($linesRaw)->pluck('produto_id')->unique()->filter()->all();
         $produtos = Produto::query()
             ->where('empresa_id', $empresa->id)
-            ->whereIn('id', $ids)
+            ->whereIn('id', $pids)
             ->where('ativo', true)
             ->where('visivel_loja', true)
+            ->with(['adicionais' => fn ($q) => $q->where('adicionais.ativo', true)])
             ->get()
             ->keyBy('id');
 
+        $novasLinhasSessao = [];
         $linhas = [];
-        $novoBruto = [];
-        foreach ($bruto as $pid => $qty) {
-            $pid = (int) $pid;
-            $qty = max(0, (int) $qty);
+        $idx = 0;
+
+        foreach ($linesRaw as $line) {
+            $pid = (int) $line['produto_id'];
+            $qty = max(0, (int) $line['quantidade']);
+            $idsReq = $this->normalizarIdsAdicionais($line['adicional_ids'] ?? []);
             if ($qty < 1) {
                 continue;
             }
+
             $p = $produtos->get($pid);
             if (! $p) {
                 continue;
             }
-            $novoBruto[$pid] = $qty;
-            $preco = (float) $p->preco;
+
+            $idsPermitidos = $p->permite_adicionais
+                ? $p->adicionais->pluck('id')->map(fn ($id) => (int) $id)->all()
+                : [];
+
+            $idsOk = array_values(array_filter($idsReq, fn ($id) => in_array($id, $idsPermitidos, true)));
+
+            $opcoes = [];
+            $extraUnit = 0.0;
+            foreach ($idsOk as $aid) {
+                $ad = $p->adicionais->firstWhere('id', $aid);
+                if (! $ad) {
+                    continue;
+                }
+                $precoAd = (float) $ad->preco;
+                if ($ad->tipo === Adicional::TIPO_ACRESCENTAR) {
+                    $extraUnit += $precoAd;
+                }
+                $opcoes[] = [
+                    'id' => (int) $ad->id,
+                    'nome' => $ad->nome,
+                    'tipo' => $ad->tipo,
+                    'preco' => round($precoAd, 2),
+                ];
+            }
+
+            $base = (float) $p->preco;
+            $precoUnit = round($base + $extraUnit, 2);
+            $subtotal = round($precoUnit * $qty, 2);
+
+            $novasLinhasSessao[] = [
+                'produto_id' => $pid,
+                'quantidade' => $qty,
+                'adicional_ids' => $idsOk,
+            ];
+
             $linhas[] = [
+                'line_index' => $idx,
                 'produto' => $p,
                 'quantidade' => $qty,
-                'subtotal' => round($preco * $qty, 2),
+                'adicional_ids' => $idsOk,
+                'opcoes' => $opcoes,
+                'preco_unitario' => $precoUnit,
+                'subtotal' => $subtotal,
             ];
+            $idx++;
         }
-        $this->setCarrinhoBruto($slug, $novoBruto);
+
+        $this->setCarrinhoLines($slug, $novasLinhasSessao);
 
         return $linhas;
     }
@@ -126,7 +244,10 @@ class PublicoController extends Controller
         $query = $empresa->produtos()
             ->where('ativo', true)
             ->where('visivel_loja', true)
-            ->with('categoria');
+            ->with('categoria')
+            ->withCount(['adicionais as adicionais_loja_count' => function ($q) {
+                $q->where('adicionais.ativo', true);
+            }]);
 
         if ($request->filled('categoria_id')) {
             $query->where('categoria_id', $request->integer('categoria_id'));
@@ -156,7 +277,12 @@ class PublicoController extends Controller
             ->where('id', $produto_id)
             ->where('ativo', true)
             ->where('visivel_loja', true)
-            ->with('categoria')
+            ->with([
+                'categoria',
+                'adicionais' => fn ($q) => $q->where('adicionais.ativo', true)
+                    ->orderBy('adicionais.ordem')
+                    ->orderBy('adicionais.nome'),
+            ])
             ->first();
 
         if (! $produtoModel) {
@@ -177,6 +303,8 @@ class PublicoController extends Controller
         $data = $request->validate([
             'produto_id' => ['required', 'integer'],
             'quantidade' => ['nullable', 'integer', 'min:1', 'max:99'],
+            'adicional_ids' => ['nullable', 'array'],
+            'adicional_ids.*' => ['integer'],
         ]);
 
         $qty = $data['quantidade'] ?? 1;
@@ -186,25 +314,58 @@ class PublicoController extends Controller
             ->where('id', $data['produto_id'])
             ->where('ativo', true)
             ->where('visivel_loja', true)
+            ->with(['adicionais' => fn ($q) => $q->where('adicionais.ativo', true)])
             ->first();
 
         if (! $p) {
             abort(404, 'Produto não encontrado ou indisponível na loja.');
         }
 
+        $idsReq = $this->normalizarIdsAdicionais($data['adicional_ids'] ?? []);
+        if (! $p->permite_adicionais && $idsReq !== []) {
+            return back()->with('warning', 'Este produto não permite personalização.');
+        }
+
+        $idsPermitidos = $p->adicionais->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $idsOk = $this->normalizarIdsAdicionais(array_values(array_intersect($idsPermitidos, $idsReq)));
+
+        if (count($idsOk) !== count($idsReq)) {
+            return back()->with('warning', 'Uma das opções escolhidas não é válida para este produto.');
+        }
+
         if ($p->estoque !== null && $p->estoque < $qty) {
             return back()->with('warning', 'Quantidade indisponível em estoque para este produto.');
         }
 
-        $bruto = $this->getCarrinhoBruto($slug);
-        $pid = (int) $p->id;
-        $bruto[$pid] = ($bruto[$pid] ?? 0) + $qty;
+        $lines = $this->getCarrinhoLines($slug);
+        $fp = $this->fingerprintLinha((int) $p->id, $idsOk);
+        $found = false;
+        foreach ($lines as $i => $line) {
+            $lineFp = $this->fingerprintLinha(
+                (int) $line['produto_id'],
+                $this->normalizarIdsAdicionais($line['adicional_ids'] ?? [])
+            );
+            if ($lineFp === $fp) {
+                $lines[$i]['quantidade'] = (int) $lines[$i]['quantidade'] + $qty;
+                $found = true;
+                break;
+            }
+        }
 
-        if ($p->estoque !== null && $bruto[$pid] > $p->estoque) {
+        if (! $found) {
+            $lines[] = [
+                'produto_id' => (int) $p->id,
+                'quantidade' => $qty,
+                'adicional_ids' => $idsOk,
+            ];
+        }
+
+        $totalMesmoProduto = collect($lines)->where('produto_id', (int) $p->id)->sum('quantidade');
+        if ($p->estoque !== null && $totalMesmoProduto > $p->estoque) {
             return back()->with('warning', 'Não há estoque suficiente para a quantidade desejada.');
         }
 
-        $this->setCarrinhoBruto($slug, $bruto);
+        $this->setCarrinhoLines($slug, array_values($lines));
 
         return redirect()
             ->route('publico.carrinho', ['slug' => $slug])
@@ -231,14 +392,16 @@ class PublicoController extends Controller
             'quantidade.*' => ['integer', 'min:0', 'max:99'],
         ]);
 
-        $bruto = [];
-        foreach ($data['quantidade'] as $pid => $q) {
-            $q = (int) $q;
-            if ($q > 0) {
-                $bruto[(int) $pid] = $q;
+        $lines = $this->getCarrinhoLines($slug);
+        foreach ($data['quantidade'] as $idx => $q) {
+            $idx = (int) $idx;
+            if (! isset($lines[$idx])) {
+                continue;
             }
+            $lines[$idx]['quantidade'] = (int) $q;
         }
-        $this->setCarrinhoBruto($slug, $bruto);
+        $lines = array_values(array_filter($lines, fn ($l) => $l['quantidade'] > 0));
+        $this->setCarrinhoLines($slug, $lines);
 
         return redirect()
             ->route('publico.carrinho', ['slug' => $slug])
@@ -250,12 +413,15 @@ class PublicoController extends Controller
         $this->empresaLojaAtiva($slug);
 
         $data = $request->validate([
-            'produto_id' => ['required', 'integer'],
+            'line_index' => ['required', 'integer', 'min:0'],
         ]);
 
-        $bruto = $this->getCarrinhoBruto($slug);
-        unset($bruto[(int) $data['produto_id']]);
-        $this->setCarrinhoBruto($slug, $bruto);
+        $lines = $this->getCarrinhoLines($slug);
+        $i = (int) $data['line_index'];
+        if (isset($lines[$i])) {
+            array_splice($lines, $i, 1);
+        }
+        $this->setCarrinhoLines($slug, array_values($lines));
 
         return redirect()
             ->route('publico.carrinho', ['slug' => $slug])
@@ -335,9 +501,10 @@ class PublicoController extends Controller
                     'pedido_id' => $pedido->id,
                     'produto_id' => $p->id,
                     'nome_produto' => $p->nome,
-                    'preco_unitario' => $p->preco,
+                    'preco_unitario' => $l['preco_unitario'],
                     'quantidade' => $l['quantidade'],
                     'subtotal' => $l['subtotal'],
+                    'opcoes_linha' => $l['opcoes'] === [] ? null : ['adicionais' => $l['opcoes']],
                 ]);
 
                 if ($p->estoque !== null) {
@@ -348,7 +515,7 @@ class PublicoController extends Controller
             return $pedido;
         });
 
-        $this->setCarrinhoBruto($slug, []);
+        $this->setCarrinhoLines($slug, []);
 
         return redirect()
             ->route('publico.pedido.show', ['slug' => $slug, 'codigo' => $pedido->codigo_publico])
