@@ -43,16 +43,24 @@
             'fidelidade_cartoes' => ['active' => request()->routeIs('empresa.fidelidade.cartoes', 'empresa.fidelidade.cartoes.*'), 'url' => route('empresa.fidelidade.cartoes'), 'icon' => 'bi-ticket-perforated', 'label' => 'Cartões'],
         ];
         $temAlgumFid = false;
+        $fidAtivo = false;
         foreach (array_keys($fidItens) as $k) {
             if ($tem($k)) {
                 $temAlgumFid = true;
-                break;
+                if (($fidItens[$k]['active'] ?? false) === true) {
+                    $fidAtivo = true;
+                }
             }
         }
     @endphp
     @if ($temAlgumFid)
-        <div class="px-2 pt-2 pb-1 small text-white-50 text-uppercase">Fidelidade</div>
-        <div class="submenu">
+        <button type="button" class="nav-link vf-submenu-toggle {{ $fidAtivo ? 'active' : '' }}" data-vf-submenu-toggle aria-expanded="{{ $fidAtivo ? 'true' : 'false' }}">
+            <span class="d-flex align-items-center gap-2">
+                <i class="bi bi-award"></i> Fidelidade
+            </span>
+            <i class="bi bi-chevron-right vf-submenu-chevron"></i>
+        </button>
+        <div class="submenu vf-submenu-content {{ $fidAtivo ? '' : 'd-none' }}">
             @foreach ($fidItens as $k => $it)
                 @if ($tem($k))
                     <a class="nav-link {{ $it['active'] ? 'active' : '' }}" href="{{ $it['url'] }}">
@@ -74,10 +82,13 @@
             'financeiro_pagar' => ['active' => request()->routeIs('empresa.financeiro.contas-pagar*'), 'url' => route('empresa.financeiro.contas-pagar'), 'icon' => 'bi-arrow-up-circle', 'label' => 'Contas a pagar'],
         ];
         $temAlgumFin = false;
+        $finAtivo = false;
         foreach (array_keys($finItens) as $k) {
             if ($tem($k)) {
                 $temAlgumFin = true;
-                break;
+                if (($finItens[$k]['active'] ?? false) === true) {
+                    $finAtivo = true;
+                }
             }
         }
         $caixaItens = [
@@ -86,16 +97,24 @@
             'caixa_conferencia' => ['active' => request()->routeIs('empresa.caixa.conferencia'), 'url' => route('empresa.caixa.conferencia'), 'icon' => 'bi-clipboard-check', 'label' => 'Conferência'],
         ];
         $temAlgumCaixa = false;
+        $caixaAtivo = false;
         foreach (array_keys($caixaItens) as $k) {
             if ($tem($k)) {
                 $temAlgumCaixa = true;
-                break;
+                if (($caixaItens[$k]['active'] ?? false) === true) {
+                    $caixaAtivo = true;
+                }
             }
         }
     @endphp
     @if ($temAlgumFin)
-        <div class="px-2 pt-2 pb-1 small text-white-50 text-uppercase">Financeiro</div>
-        <div class="submenu">
+        <button type="button" class="nav-link vf-submenu-toggle {{ $finAtivo ? 'active' : '' }}" data-vf-submenu-toggle aria-expanded="{{ $finAtivo ? 'true' : 'false' }}">
+            <span class="d-flex align-items-center gap-2">
+                <i class="bi bi-currency-dollar"></i> Financeiro
+            </span>
+            <i class="bi bi-chevron-right vf-submenu-chevron"></i>
+        </button>
+        <div class="submenu vf-submenu-content {{ $finAtivo ? '' : 'd-none' }}">
             @foreach ($finItens as $k => $it)
                 @if ($tem($k))
                     <a class="nav-link {{ $it['active'] ? 'active' : '' }}" href="{{ $it['url'] }}">
@@ -106,8 +125,13 @@
         </div>
     @endif
     @if ($temAlgumCaixa)
-        <div class="px-2 pt-2 pb-1 small text-white-50 text-uppercase">Caixa</div>
-        <div class="submenu">
+        <button type="button" class="nav-link vf-submenu-toggle {{ $caixaAtivo ? 'active' : '' }}" data-vf-submenu-toggle aria-expanded="{{ $caixaAtivo ? 'true' : 'false' }}">
+            <span class="d-flex align-items-center gap-2">
+                <i class="bi bi-cash-stack"></i> Caixa
+            </span>
+            <i class="bi bi-chevron-right vf-submenu-chevron"></i>
+        </button>
+        <div class="submenu vf-submenu-content {{ $caixaAtivo ? '' : 'd-none' }}">
             @foreach ($caixaItens as $k => $it)
                 @if ($tem($k))
                     <a class="nav-link {{ $it['active'] ? 'active' : '' }}" href="{{ $it['url'] }}">
@@ -133,16 +157,25 @@
             've_relatorios' => ['active' => request()->routeIs('empresa.venda-externa.relatorios', 'empresa.venda-externa.relatorios.*'), 'url' => route('empresa.venda-externa.relatorios'), 'icon' => 'bi-pie-chart', 'label' => 'Relatórios VE'],
         ];
         $temAlgumVe = false;
+        $veAtivo = false;
         foreach (array_keys($veItens) as $k) {
             if ($tem($k)) {
                 $temAlgumVe = true;
+                if (($veItens[$k]['active'] ?? false) === true) {
+                    $veAtivo = true;
+                }
                 break;
             }
         }
     @endphp
     @if ($temAlgumVe)
-        <div class="px-2 pt-2 pb-1 small text-white-50 text-uppercase">Venda externa</div>
-        <div class="submenu">
+        <button type="button" class="nav-link vf-submenu-toggle {{ $veAtivo ? 'active' : '' }}" data-vf-submenu-toggle aria-expanded="{{ $veAtivo ? 'true' : 'false' }}">
+            <span class="d-flex align-items-center gap-2">
+                <i class="bi bi-pin-map"></i> Venda externa
+            </span>
+            <i class="bi bi-chevron-right vf-submenu-chevron"></i>
+        </button>
+        <div class="submenu vf-submenu-content {{ $veAtivo ? '' : 'd-none' }}">
             @foreach ($veItens as $k => $it)
                 @if ($tem($k))
                     <a class="nav-link {{ $it['active'] ? 'active' : '' }}" href="{{ $it['url'] }}">

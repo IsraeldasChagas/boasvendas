@@ -81,6 +81,22 @@ body.vf-body {
   font-size: 0.85rem;
 }
 
+.vf-sidebar .vf-submenu-toggle {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  justify-content: space-between;
+}
+
+.vf-sidebar .vf-submenu-chevron {
+  transition: transform 0.15s ease;
+}
+
+.vf-sidebar .vf-submenu-toggle[aria-expanded="true"] .vf-submenu-chevron {
+  transform: rotate(90deg);
+}
+
 .vf-sidebar-brand {
   padding: 1.25rem 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
