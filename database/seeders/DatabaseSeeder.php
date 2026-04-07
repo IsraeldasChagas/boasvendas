@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
 
     /**
      * Usuários de demonstração (senha: password).
+     * Também criados pela migration `2026_04_07_120000_ensure_demo_users` (sem precisar de db:seed).
      * Master: defina o mesmo e-mail em VENDAFFACIL_ADMIN_EMAILS no .env
      */
     public function run(): void
