@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-title Enviar Venda Facil para GitHub
+title Enviar Vendaffacil para GitHub
 cd /d "%~dp0"
 
 echo Executando enviarproGithub.ps1 ...
