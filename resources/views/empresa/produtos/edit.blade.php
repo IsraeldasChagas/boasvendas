@@ -11,7 +11,7 @@
         <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
             <div>
                 <h2 class="h5 fw-bold mb-1">{{ $produto->nome }}</h2>
-                <p class="small text-muted mb-0">{{ $produto->sku }}</p>
+                <p class="small text-muted mb-0">Código interno: <code class="user-select-all">{{ $produto->sku }}</code></p>
             </div>
             <span class="vf-badge {{ $produto->ativo ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }}">{{ $produto->ativo ? 'Ativo' : 'Inativo' }}</span>
         </div>
@@ -19,15 +19,10 @@
             @csrf
             @method('PUT')
             <div class="row g-3">
-                <div class="col-md-8">
+                <div class="col-12">
                     <label class="form-label" for="nome">Nome</label>
                     <input type="text" class="form-control @error('nome') is-invalid @enderror" id="nome" name="nome" value="{{ old('nome', $produto->nome) }}" required>
                     @error('nome')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label" for="sku">SKU</label>
-                    <input type="text" class="form-control @error('sku') is-invalid @enderror" id="sku" name="sku" value="{{ old('sku', $produto->sku) }}" required>
-                    @error('sku')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
                 <div class="col-md-6">
                     <label class="form-label" for="categoria_id">Categoria</label>

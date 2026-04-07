@@ -14,16 +14,11 @@
                 <form action="{{ route('empresa.produtos.store') }}" method="post">
                     @csrf
                     <div class="row g-3">
-                        <div class="col-md-8">
+                        <div class="col-12">
                             <label class="form-label" for="nome">Nome</label>
                             <input type="text" class="form-control @error('nome') is-invalid @enderror" id="nome" name="nome" value="{{ old('nome') }}" placeholder="Ex.: X-Burger" required>
                             @error('nome')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label" for="sku">SKU</label>
-                            <input type="text" class="form-control @error('sku') is-invalid @enderror" id="sku" name="sku" value="{{ old('sku') }}" placeholder="Ex.: SKU-001" required>
-                            @error('sku')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            <div class="form-text">Único dentro da sua empresa.</div>
+                            <div class="form-text">O <strong>código interno</strong> (identificação no estoque) será gerado automaticamente ao salvar.</div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label" for="categoria_id">Categoria</label>

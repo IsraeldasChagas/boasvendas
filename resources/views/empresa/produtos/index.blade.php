@@ -34,7 +34,7 @@
         <div class="row g-2 align-items-end">
             <div class="col-md-4 col-lg-3">
                 <label class="form-label small text-muted mb-1" for="filtro-q">Buscar</label>
-                <input type="search" class="form-control form-control-sm" id="filtro-q" name="q" value="{{ request('q') }}" placeholder="Nome, SKU, categoria…">
+                <input type="search" class="form-control form-control-sm" id="filtro-q" name="q" value="{{ request('q') }}" placeholder="Nome, código interno, categoria…">
             </div>
             <div class="col-md-3 col-lg-2">
                 <label class="form-label small text-muted mb-1" for="filtro-ativo">Status</label>
@@ -54,7 +54,7 @@
     <div class="vf-card p-0 overflow-hidden">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 vf-table">
-                <thead><tr><th>SKU</th><th>Nome</th><th>Categoria</th><th>Preço</th><th>Estoque</th><th>Status</th><th class="text-end">Ações</th></tr></thead>
+                <thead><tr><th>Cód. interno</th><th>Nome</th><th>Categoria</th><th>Preço</th><th>Estoque</th><th>Status</th><th class="text-end">Ações</th></tr></thead>
                 <tbody>
                     @forelse ($produtos as $pr)
                         <tr>

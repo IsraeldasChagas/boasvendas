@@ -9,6 +9,7 @@ use App\Models\Empresa;
 use App\Models\Produto;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -87,6 +88,7 @@ class ProdutoController extends Controller
 
         $data = $this->validated($request, $empresa);
         $data['empresa_id'] = $empresa->id;
+        $data['sku'] = $this->gerarCodigoInternoUnico($empresa);
 
         $produto = Produto::query()->create($data);
         $this->syncAdicionaisDoProduto($produto, $empresa, $request);
@@ -161,17 +163,7 @@ class ProdutoController extends Controller
      */
     private function validated(Request $request, Empresa $empresa, ?Produto $produto = null): array
     {
-        $skuRules = [
-            'required',
-            'string',
-            'max:64',
-            Rule::unique('produtos', 'sku')
-                ->where(fn ($q) => $q->where('empresa_id', $empresa->id))
-                ->ignore($produto?->id),
-        ];
-
         $data = $request->validate([
-            'sku' => $skuRules,
             'nome' => ['required', 'string', 'max:255'],
             'categoria_id' => [
                 'nullable',
@@ -221,5 +213,20 @@ class ProdutoController extends Controller
             ->all();
 
         $produto->adicionais()->sync($valid);
+    }
+
+    /** Garante SKU único por empresa (coluna `sku` no banco). */
+    private function gerarCodigoInternoUnico(Empresa $empresa): string
+    {
+        do {
+            $sku = 'CI-'.strtoupper(Str::random(8));
+        } while (
+            Produto::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('sku', $sku)
+                ->exists()
+        );
+
+        return $sku;
     }
 }

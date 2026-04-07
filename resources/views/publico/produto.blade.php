@@ -20,9 +20,6 @@
                 </div>
             </div>
             <div class="col-md-6">
-                @if ($produto->sku)
-                    <span class="vf-badge bg-primary-subtle text-primary">SKU {{ $produto->sku }}</span>
-                @endif
                 <h1 class="h3 fw-bold mt-2">{{ $produto->nome }}</h1>
                 <p class="text-muted" style="white-space: pre-wrap;">{{ $produto->descricao !== null && $produto->descricao !== '' ? $produto->descricao : 'Sem descrição cadastrada.' }}</p>
                 @php
