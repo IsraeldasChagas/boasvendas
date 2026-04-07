@@ -164,7 +164,7 @@ class Empresa extends Model
             'relatorios' => 'Relatórios',
             've_dashboard' => 'Venda externa: Dashboard',
             've_pontos' => 'Venda externa: Pontos',
-            've_remessas' => 'Venda externa: Remessas',
+            've_remessas' => 'Venda externa: Entregas',
             've_acertos' => 'Venda externa: Acertos',
             've_fiados' => 'Venda externa: Fiados',
             've_relatorios' => 'Venda externa: Relatórios',

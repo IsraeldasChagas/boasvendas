@@ -54,7 +54,7 @@
         </form>
         @if ($ponto->exists)
             <hr class="my-4">
-            <form action="{{ route('empresa.venda-externa.pontos.destroy', $ponto) }}" method="post" onsubmit="return confirm('Excluir este ponto? Remessas e fiados vinculados ficarão sem ponto; vendas registradas serão apagadas.');">
+            <form action="{{ route('empresa.venda-externa.pontos.destroy', $ponto) }}" method="post" onsubmit="return confirm('Excluir este ponto? Entregas e fiados vinculados ficarão sem ponto; vendas registradas serão apagadas.');">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="btn btn-outline-danger btn-sm">Excluir ponto</button>

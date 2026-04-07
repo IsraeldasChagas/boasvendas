@@ -152,7 +152,7 @@
         $veItens = [
             've_dashboard' => ['active' => request()->routeIs('empresa.venda-externa.dashboard'), 'url' => route('empresa.venda-externa.dashboard'), 'icon' => 'bi-pin-map', 'label' => 'Dashboard'],
             've_pontos' => ['active' => request()->routeIs('empresa.venda-externa.pontos', 'empresa.venda-externa.pontos.*'), 'url' => route('empresa.venda-externa.pontos'), 'icon' => 'bi-geo-alt', 'label' => 'Pontos'],
-            've_remessas' => ['active' => request()->routeIs('empresa.venda-externa.remessas.*'), 'url' => route('empresa.venda-externa.remessas.index'), 'icon' => 'bi-boxes', 'label' => 'Remessas'],
+            've_remessas' => ['active' => request()->routeIs('empresa.venda-externa.remessas.*'), 'url' => route('empresa.venda-externa.remessas.index'), 'icon' => 'bi-boxes', 'label' => 'Entregas'],
             've_acertos' => ['active' => request()->routeIs('empresa.venda-externa.acertos', 'empresa.venda-externa.acertos.*'), 'url' => route('empresa.venda-externa.acertos'), 'icon' => 'bi-check2-circle', 'label' => 'Acertos'],
             've_fiados' => ['active' => request()->routeIs('empresa.venda-externa.fiados', 'empresa.venda-externa.fiados.*'), 'url' => route('empresa.venda-externa.fiados'), 'icon' => 'bi-journal-text', 'label' => 'Fiados'],
             've_relatorios' => ['active' => request()->routeIs('empresa.venda-externa.relatorios', 'empresa.venda-externa.relatorios.*'), 'url' => route('empresa.venda-externa.relatorios'), 'icon' => 'bi-pie-chart', 'label' => 'Relatórios VE'],

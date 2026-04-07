@@ -171,7 +171,7 @@
                 <div class="d-grid gap-2">
                     <a href="{{ route('empresa.chamados.index') }}" class="btn btn-outline-secondary btn-sm text-start"><i class="bi bi-headset me-2"></i>Meus chamados</a>
                     <a href="{{ route('empresa.produtos.create') }}" class="btn btn-outline-primary btn-sm text-start"><i class="bi bi-plus-lg me-2"></i>Novo produto</a>
-                    <a href="{{ route('empresa.venda-externa.remessas.index') }}" class="btn btn-outline-primary btn-sm text-start"><i class="bi bi-boxes me-2"></i>Nova remessa</a>
+                    <a href="{{ route('empresa.venda-externa.remessas.index') }}" class="btn btn-outline-primary btn-sm text-start"><i class="bi bi-boxes me-2"></i>Entregas (parceiro)</a>
                     <a href="{{ route('empresa.caixa.index') }}" class="btn btn-outline-success btn-sm text-start"><i class="bi bi-cash-stack me-2"></i>Abrir caixa</a>
                 </div>
             </div>

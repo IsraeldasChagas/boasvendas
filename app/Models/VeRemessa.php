@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class VeRemessa extends Model
 {
@@ -18,6 +19,7 @@ class VeRemessa extends Model
     protected $fillable = [
         'empresa_id',
         've_ponto_id',
+        'produto_id',
         'titulo',
         'status',
     ];
@@ -30,6 +32,21 @@ class VeRemessa extends Model
     public function ponto(): BelongsTo
     {
         return $this->belongsTo(VePonto::class, 've_ponto_id');
+    }
+
+    public function produto(): BelongsTo
+    {
+        return $this->belongsTo(Produto::class, 'produto_id');
+    }
+
+    public function acertos(): HasMany
+    {
+        return $this->hasMany(VeAcerto::class, 've_remessa_id');
+    }
+
+    public function estaAcertada(): bool
+    {
+        return $this->acertos()->where('status', VeAcerto::STATUS_CONCLUIDO)->exists();
     }
 
     public static function rotulosStatus(): array

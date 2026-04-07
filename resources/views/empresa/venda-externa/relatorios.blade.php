@@ -83,13 +83,13 @@
     <div class="row g-3 mb-2">
         <div class="col-6 col-md-3">
             <div class="vf-card p-3 h-100">
-                <div class="small text-muted">Remessas criadas</div>
+                <div class="small text-muted">Entregas criadas</div>
                 <div class="h4 mb-0 fw-bold">{{ $remessasCriadasPeriodo }}</div>
             </div>
         </div>
         <div class="col-6 col-md-3">
             <div class="vf-card p-3 h-100">
-                <div class="small text-muted">Remessas encerradas</div>
+                <div class="small text-muted">Entregas encerradas</div>
                 <div class="h4 mb-0 fw-bold">{{ $remessasEncerradasPeriodo }}</div>
                 <div class="small text-muted mt-1">Atualizadas no período</div>
             </div>
@@ -253,7 +253,7 @@
                             <td class="text-end small">{{ $r->created_at && $r->updated_at ? $r->created_at->diffInDays($r->updated_at) : '—' }}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="7" class="text-center text-muted py-4">Nenhuma remessa com movimento neste período.</td></tr>
+                        <tr><td colspan="7" class="text-center text-muted py-4">Nenhuma entrega com movimento neste período.</td></tr>
                     @endforelse
                 </tbody>
             </table>

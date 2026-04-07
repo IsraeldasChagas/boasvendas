@@ -28,7 +28,7 @@
         <div class="col-6 col-xl-3">
             <div class="vf-card vf-card-stat">
                 <div>
-                    <div class="small text-muted">Remessas em campo</div>
+                    <div class="small text-muted">Entregas em campo</div>
                     <div class="h4 mb-0 fw-bold">{{ $remessasEmCampo }}</div>
                 </div>
                 <div class="icon-wrap bg-warning-subtle text-warning"><i class="bi bi-box-seam"></i></div>
@@ -106,7 +106,7 @@
             </div>
             <div class="d-grid gap-2">
                 <a href="{{ route('empresa.venda-externa.pontos') }}" class="btn btn-outline-secondary btn-sm">Ver pontos</a>
-                <a href="{{ route('empresa.venda-externa.remessas.index') }}" class="btn btn-outline-primary btn-sm">Ver remessas</a>
+                <a href="{{ route('empresa.venda-externa.remessas.index') }}" class="btn btn-outline-primary btn-sm">Ver entregas</a>
                 <a href="{{ route('empresa.venda-externa.fiados') }}" class="btn btn-outline-danger btn-sm">Abrir fiados</a>
             </div>
         </div>

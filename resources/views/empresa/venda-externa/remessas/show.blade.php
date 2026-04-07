@@ -1,10 +1,10 @@
 @extends('layouts.empresa')
 
-@section('title', 'Remessa #'.$remessa->id)
+@section('title', 'Entrega #'.$remessa->id)
 
 @section('content')
     @include('partials.components.breadcrumb', ['items' => [
-        ['label' => 'Remessas', 'url' => route('empresa.venda-externa.remessas.index')],
+        ['label' => 'Entregas', 'url' => route('empresa.venda-externa.remessas.index')],
         ['label' => '#'.$remessa->id, 'url' => route('empresa.venda-externa.remessas.show', $remessa)],
     ]])
 
@@ -38,8 +38,8 @@
                     <span class="vf-badge {{ $remessa->classeBadgeStatus() }} align-self-start">{{ $remessa->rotuloStatus() }}</span>
                 </div>
                 <div class="border rounded p-3 bg-light-subtle">
-                    <h3 class="h6 fw-bold mb-2">Itens da remessa</h3>
-                    <p class="small text-muted mb-0">O lançamento de produtos, quantidades enviadas e acerto de consignação será adicionado em uma próxima etapa. Por enquanto use o título e o status para acompanhar cada remessa.</p>
+                    <h3 class="h6 fw-bold mb-2">Itens da entrega</h3>
+                    <p class="small text-muted mb-0">Aqui é só a entrega do produto para o parceiro revender. (Produtos/quantidades e acerto serão adicionados numa próxima etapa.) Por enquanto use o título e o status para acompanhar cada entrega.</p>
                 </div>
             </div>
         </div>
@@ -47,12 +47,12 @@
             <div class="vf-card p-3 mb-3">
                 <h3 class="h6 fw-bold mb-3">Ações</h3>
                 <div class="d-grid gap-2">
-                    <a href="{{ route('empresa.venda-externa.remessas.edit', $remessa) }}" class="btn btn-primary btn-sm">Editar remessa</a>
+                    <a href="{{ route('empresa.venda-externa.remessas.edit', $remessa) }}" class="btn btn-primary btn-sm">Editar entrega</a>
                     <a href="{{ route('empresa.venda-externa.remessas.index') }}" class="btn btn-outline-secondary btn-sm">Voltar à lista</a>
-                    <form action="{{ route('empresa.venda-externa.remessas.destroy', $remessa) }}" method="post" onsubmit="return confirm('Excluir esta remessa?');">
+                    <form action="{{ route('empresa.venda-externa.remessas.destroy', $remessa) }}" method="post" onsubmit="return confirm('Excluir esta entrega?');">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-outline-danger btn-sm w-100">Excluir remessa</button>
+                        <button type="submit" class="btn btn-outline-danger btn-sm w-100">Excluir entrega</button>
                     </form>
                 </div>
             </div>

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Empresa;
 
 use App\Http\Controllers\Controller;
+use App\Models\Empresa;
+use App\Models\Produto;
 use App\Models\VeAcerto;
 use App\Models\VeFiado;
 use App\Models\VePonto;
@@ -11,6 +13,7 @@ use App\Models\VeVendaExternaRegistro;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -218,16 +221,28 @@ class VendaExternaController extends Controller
 
         $query = VeRemessa::query()
             ->where('empresa_id', $empresaId)
-            ->with('ponto')
+            ->with(['ponto', 'produto'])
+            ->withCount(['acertos as acertos_concluidos_count' => function ($q) {
+                $q->where('status', VeAcerto::STATUS_CONCLUIDO);
+            }])
             ->orderByDesc('created_at');
 
-        if ($request->filled('q')) {
-            $needle = '%'.$request->string('q')->trim()->value().'%';
-            $query->where('titulo', 'like', $needle);
+        if ($request->filled('produto_id')) {
+            $query->where('produto_id', $request->integer('produto_id'));
         }
 
         if ($request->filled('status')) {
-            $query->where('status', $request->string('status')->value());
+            $status = $request->string('status')->value();
+            if ($status === 'acertado') {
+                $query->whereHas('acertos', function ($q) {
+                    $q->where('status', VeAcerto::STATUS_CONCLUIDO);
+                });
+            }
+            if ($status === 'nao_acertado') {
+                $query->whereDoesntHave('acertos', function ($q) {
+                    $q->where('status', VeAcerto::STATUS_CONCLUIDO);
+                });
+            }
         }
 
         if ($request->filled('ve_ponto_id')) {
@@ -241,7 +256,13 @@ class VendaExternaController extends Controller
             ->orderBy('nome')
             ->get();
 
-        return view('empresa.venda-externa.remessas.index', compact('empresa', 'remessas', 'pontosFiltro'));
+        $produtosFiltro = Produto::query()
+            ->where('empresa_id', $empresaId)
+            ->orderBy('nome')
+            ->limit(500)
+            ->get();
+
+        return view('empresa.venda-externa.remessas.index', compact('empresa', 'remessas', 'pontosFiltro', 'produtosFiltro'));
     }
 
     public function remessasCreate(Request $request): View|RedirectResponse
@@ -257,7 +278,13 @@ class VendaExternaController extends Controller
             ->orderBy('nome')
             ->get();
 
-        return view('empresa.venda-externa.remessas.form', compact('empresa', 'remessa', 'pontos'));
+        $produtos = Produto::query()
+            ->where('empresa_id', $empresa->id)
+            ->orderBy('nome')
+            ->limit(500)
+            ->get();
+
+        return view('empresa.venda-externa.remessas.form', compact('empresa', 'remessa', 'pontos', 'produtos'));
     }
 
     public function remessasStore(Request $request): RedirectResponse
@@ -272,9 +299,23 @@ class VendaExternaController extends Controller
         $data = $this->validatedRemessa($request, $empresa->id);
         $data['empresa_id'] = $empresa->id;
 
+        if (
+            Schema::hasColumn('ve_remessas', 'produto_id')
+            && (empty($data['titulo']) || trim((string) $data['titulo']) === '')
+            && ! empty($data['produto_id'])
+        ) {
+            $produtoNome = Produto::query()
+                ->where('empresa_id', $empresa->id)
+                ->whereKey($data['produto_id'])
+                ->value('nome');
+            if (is_string($produtoNome) && trim($produtoNome) !== '') {
+                $data['titulo'] = $produtoNome;
+            }
+        }
+
         VeRemessa::query()->create($data);
 
-        return redirect()->route('empresa.venda-externa.remessas.index')->with('status', 'Remessa cadastrada.');
+        return redirect()->route('empresa.venda-externa.remessas.index')->with('status', 'Entrega cadastrada.');
     }
 
     public function remessasShow(Request $request, VeRemessa $veRemessa): View|RedirectResponse
@@ -284,7 +325,7 @@ class VendaExternaController extends Controller
             abort(403);
         }
 
-        $veRemessa->load('ponto');
+        $veRemessa->load(['ponto', 'produto']);
         $remessa = $veRemessa;
 
         return view('empresa.venda-externa.remessas.show', compact('empresa', 'remessa'));
@@ -303,7 +344,13 @@ class VendaExternaController extends Controller
             ->orderBy('nome')
             ->get();
 
-        return view('empresa.venda-externa.remessas.form', compact('empresa', 'remessa', 'pontos'));
+        $produtos = Produto::query()
+            ->where('empresa_id', $empresa->id)
+            ->orderBy('nome')
+            ->limit(500)
+            ->get();
+
+        return view('empresa.venda-externa.remessas.form', compact('empresa', 'remessa', 'pontos', 'produtos'));
     }
 
     public function remessasUpdate(Request $request, VeRemessa $veRemessa): RedirectResponse
@@ -315,9 +362,25 @@ class VendaExternaController extends Controller
 
         $this->mergeRemessaPontoVazio($request);
 
-        $veRemessa->update($this->validatedRemessa($request, $empresa->id));
+        $data = $this->validatedRemessa($request, $empresa->id);
 
-        return redirect()->route('empresa.venda-externa.remessas.show', $veRemessa)->with('status', 'Remessa atualizada.');
+        if (
+            Schema::hasColumn('ve_remessas', 'produto_id')
+            && (empty($data['titulo']) || trim((string) $data['titulo']) === '')
+            && ! empty($data['produto_id'])
+        ) {
+            $produtoNome = Produto::query()
+                ->where('empresa_id', $empresa->id)
+                ->whereKey($data['produto_id'])
+                ->value('nome');
+            if (is_string($produtoNome) && trim($produtoNome) !== '') {
+                $data['titulo'] = $produtoNome;
+            }
+        }
+
+        $veRemessa->update($data);
+
+        return redirect()->route('empresa.venda-externa.remessas.show', $veRemessa)->with('status', 'Entrega atualizada.');
     }
 
     public function remessasDestroy(Request $request, VeRemessa $veRemessa): RedirectResponse
@@ -329,7 +392,7 @@ class VendaExternaController extends Controller
 
         $veRemessa->delete();
 
-        return redirect()->route('empresa.venda-externa.remessas.index')->with('status', 'Remessa excluída.');
+        return redirect()->route('empresa.venda-externa.remessas.index')->with('status', 'Entrega excluída.');
     }
 
     private function mergeRemessaPontoVazio(Request $request): void
@@ -344,7 +407,7 @@ class VendaExternaController extends Controller
      */
     private function validatedRemessa(Request $request, int $empresaId): array
     {
-        return $request->validate([
+        $rules = [
             'titulo' => ['nullable', 'string', 'max:255'],
             've_ponto_id' => ['nullable', 'integer', Rule::exists('ve_pontos', 'id')->where('empresa_id', $empresaId)],
             'status' => ['required', Rule::in([
@@ -352,7 +415,13 @@ class VendaExternaController extends Controller
                 VeRemessa::STATUS_EM_CAMPO,
                 VeRemessa::STATUS_ENCERRADA,
             ])],
-        ]);
+        ];
+
+        if (Schema::hasColumn('ve_remessas', 'produto_id')) {
+            $rules['produto_id'] = ['nullable', 'integer', Rule::exists('produtos', 'id')->where('empresa_id', $empresaId)];
+        }
+
+        return $request->validate($rules);
     }
 
     public function acertosIndex(Request $request): View|RedirectResponse
@@ -658,7 +727,7 @@ class VendaExternaController extends Controller
     }
 
     /**
-     * @return array{empresa: \App\Models\Empresa, inicio: Carbon, fim: Carbon}|RedirectResponse
+     * @return array{empresa: Empresa, inicio: Carbon, fim: Carbon}|RedirectResponse
      */
     private function resolveVeRelatoriosPeriodo(Request $request): array|RedirectResponse
     {
