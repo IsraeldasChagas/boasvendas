@@ -7,7 +7,8 @@ $ErrorActionPreference = "Continue"
 $RepoRoot = if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
 Set-Location -LiteralPath $RepoRoot
 
-$RemoteUrl = "https://github.com/IsraeldasChagas/vendaffacil.git"
+# Mesmo repositório que o servidor usa em `git pull` (public_html/vendaffacil).
+$RemoteUrl = "https://github.com/IsraeldasChagas/boasvendas.git"
 $DefaultCommitMessage = "Atualização"
 
 # Estado para o resumo final (sempre exibido no finally)
