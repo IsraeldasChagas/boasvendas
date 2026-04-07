@@ -60,12 +60,13 @@
                             <textarea class="form-control @error('descricao') is-invalid @enderror" id="descricao" name="descricao" rows="3">{{ old('descricao', $produto->descricao) }}</textarea>
                             @error('descricao')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
-                        <div class="col-12">
-                            <label class="form-label" for="ingredientes_texto">Ingredientes do prato <span class="text-muted fw-normal">(opcional)</span></label>
-                            <textarea class="form-control @error('ingredientes_texto') is-invalid @enderror" id="ingredientes_texto" name="ingredientes_texto" rows="4" placeholder="Um por linha">{{ old('ingredientes_texto', $produto->ingredientes->pluck('nome')->implode("\n")) }}</textarea>
-                            @error('ingredientes_texto')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            <div class="form-text">Na loja o cliente poderá pedir para retirar até o número máximo abaixo.</div>
-                        </div>
+                        @php
+                            $ingredientesLinhas = old('ingrediente_nomes', $produto->ingredientes->pluck('nome')->all());
+                            if (! is_array($ingredientesLinhas)) {
+                                $ingredientesLinhas = [];
+                            }
+                        @endphp
+                        @include('partials.empresa.produto-ingredientes-form', ['linhas' => $ingredientesLinhas])
                         <div class="col-md-4">
                             <label class="form-label" for="max_ingredientes_retirar">Máx. ingredientes para retirar</label>
                             <input type="number" class="form-control @error('max_ingredientes_retirar') is-invalid @enderror" id="max_ingredientes_retirar" name="max_ingredientes_retirar" value="{{ old('max_ingredientes_retirar', $produto->max_ingredientes_retirar) }}" min="0" placeholder="Ex.: 2">

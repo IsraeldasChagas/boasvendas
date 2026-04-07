@@ -206,14 +206,15 @@ class ProdutoController extends Controller
                 'integer',
                 Rule::exists('adicionais', 'id')->where(fn ($q) => $q->where('empresa_id', $empresa->id)->where('ativo', true)),
             ],
-            'ingredientes_texto' => ['nullable', 'string', 'max:5000'],
+            'ingrediente_nomes' => ['nullable', 'array'],
+            'ingrediente_nomes.*' => ['nullable', 'string', 'max:120'],
         ]);
 
         $data['visivel_loja'] = $request->boolean('visivel_loja');
         $data['ativo'] = $request->boolean('ativo');
         $data['permite_adicionais'] = $request->boolean('permite_adicionais');
 
-        unset($data['foto'], $data['ingredientes_texto']);
+        unset($data['foto'], $data['ingrediente_nomes']);
 
         return $data;
     }
@@ -223,11 +224,9 @@ class ProdutoController extends Controller
      */
     private function listaIngredientesDoRequest(Request $request): array
     {
-        $texto = (string) $request->input('ingredientes_texto', '');
-
-        return collect(preg_split('/\r\n|\r|\n/', $texto))
-            ->map(function (string $linha) {
-                $t = trim(strip_tags($linha));
+        return collect($request->input('ingrediente_nomes', []))
+            ->map(function ($n) {
+                $t = trim(strip_tags((string) $n));
 
                 return $t !== '' ? Str::limit($t, 120, '') : '';
             })
