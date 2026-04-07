@@ -64,6 +64,22 @@ class User extends Authenticatable
         return $emails->contains(strtolower($this->email));
     }
 
+    /**
+     * Pode usar o painel master (/admin): lista no .env ou contas demo (mesmo sem empresa_id).
+     * Evita login a cair em /empresa quando VENDAFFACIL_ADMIN_EMAILS/cache está errado no servidor.
+     */
+    public function acessaPainelMaster(): bool
+    {
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        return in_array(strtolower(trim((string) $this->email)), [
+            'master@vendaffacil.com.br',
+            'admin@vendaffacil.com.br',
+        ], true);
+    }
+
     /** @return array<string, string> */
     public static function rolesEquipe(): array
     {

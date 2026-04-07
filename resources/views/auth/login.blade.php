@@ -4,7 +4,7 @@
 
 @section('content')
     <h2 class="h4 fw-bold mb-3">Entrar</h2>
-    <p class="small text-muted mb-4">Entre com seu e-mail e senha. Contas de <strong>master</strong> usam o painel em <span class="text-nowrap">/admin</span>; demais usuários vão para o painel da empresa.</p>
+    <p class="small text-muted mb-4">Use <strong>master@vendaffacil.com.br</strong> para o painel <span class="text-nowrap">/admin</span> (master) e <strong>empresa@vendaffacil.com.br</strong> para o painel da empresa.</p>
     <form action="{{ route('login.authenticate') }}" method="post">
         @csrf
         <div class="mb-3">

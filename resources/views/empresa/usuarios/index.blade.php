@@ -59,7 +59,7 @@
                             </td>
                             <td class="text-end text-nowrap">
                                 <a href="{{ route('empresa.usuarios.edit', ['usuario' => $u]) }}" class="btn btn-sm btn-outline-primary">Editar</a>
-                                @if ((int) $u->id !== (int) auth()->id() && ! $u->isAdmin())
+                                @if ((int) $u->id !== (int) auth()->id() && ! $u->acessaPainelMaster())
                                     <form action="{{ route('empresa.usuarios.destroy', ['usuario' => $u]) }}" method="post" class="d-inline" onsubmit="return confirm('Remover este usuário da empresa?');">
                                         @csrf
                                         @method('DELETE')

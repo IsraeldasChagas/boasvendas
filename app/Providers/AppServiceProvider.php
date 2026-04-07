@@ -2,25 +2,25 @@
 
 namespace App\Providers;
 
-use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
-use Illuminate\Http\Request;
+use App\Models\Categoria;
 use App\Models\Cliente;
 use App\Models\FidelidadeCartao;
 use App\Models\FinanceiroTitulo;
-use App\Models\VePonto;
-use App\Models\VeAcerto;
-use App\Models\VeFiado;
-use App\Models\VeRemessa;
+use App\Models\Pedido;
+use App\Models\Produto;
 use App\Models\SuporteTicket;
 use App\Models\User;
-use App\Models\Pedido;
-use App\Models\Categoria;
-use App\Models\Produto;
+use App\Models\VeAcerto;
+use App\Models\VeFiado;
+use App\Models\VePonto;
+use App\Models\VeRemessa;
+use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
+use Illuminate\Http\Request;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Pagination\Paginator;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -221,7 +221,7 @@ class AppServiceProvider extends ServiceProvider
 
         RedirectIfAuthenticated::redirectUsing(function (Request $request) {
             $user = Auth::user();
-            if ($user && $user->isAdmin()) {
+            if ($user && $user->acessaPainelMaster()) {
                 return route('admin.dashboard');
             }
 

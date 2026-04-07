@@ -15,7 +15,7 @@ class AuthController extends Controller
     {
         if (Auth::check()) {
             return redirect()->route(
-                Auth::user()->isAdmin() ? 'admin.dashboard' : 'empresa.dashboard'
+                Auth::user()->acessaPainelMaster() ? 'admin.dashboard' : 'empresa.dashboard'
             );
         }
 
@@ -42,7 +42,7 @@ class AuthController extends Controller
         $user = Auth::user();
 
         return redirect()->route(
-            $user->isAdmin() ? 'admin.dashboard' : 'empresa.dashboard'
+            $user->acessaPainelMaster() ? 'admin.dashboard' : 'empresa.dashboard'
         );
     }
 

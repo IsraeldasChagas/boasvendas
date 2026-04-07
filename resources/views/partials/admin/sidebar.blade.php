@@ -1,7 +1,7 @@
 <aside class="vf-sidebar" data-vf-sidebar>
     <div class="vf-sidebar-brand text-white">
-        <i class="bi bi-shield-lock me-1"></i>Boa<span class="text-success">Vendas</span>
-        <div class="small text-white-50 fw-normal mt-1">Master / SaaS</div>
+        <i class="bi bi-shield-lock me-1"></i>{{ config('app.name') }}
+        <div class="small text-white-50 fw-normal mt-1">Painel master · SaaS</div>
     </div>
     <nav class="nav flex-column px-2 py-3">
         <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">

@@ -111,7 +111,7 @@ class UsuarioController extends Controller
                 ->with('warning', 'Você não pode remover a própria conta.');
         }
 
-        if ($usuario->isAdmin()) {
+        if ($usuario->acessaPainelMaster()) {
             return redirect()
                 ->route('empresa.usuarios.index')
                 ->with('warning', 'Este usuário é administrador da plataforma e não pode ser removido aqui.');

@@ -12,7 +12,7 @@ class EnsureUserIsAdmin
     {
         $user = $request->user();
 
-        if (! $user || ! $user->isAdmin()) {
+        if (! $user || ! $user->acessaPainelMaster()) {
             abort(403, 'Acesso restrito ao painel master.');
         }
 

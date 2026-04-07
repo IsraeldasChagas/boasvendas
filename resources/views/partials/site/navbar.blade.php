@@ -14,7 +14,7 @@
                 <li class="nav-item"><a class="nav-link" href="{{ route('publico.loja', ['slug' => 'demo']) }}">Ver loja demo</a></li>
                 <li class="nav-item ms-lg-2">
                     @auth
-                        <a class="btn btn-outline-primary btn-sm" href="{{ Auth::user()->isAdmin() ? route('admin.dashboard') : route('empresa.dashboard') }}">Painel</a>
+                        <a class="btn btn-outline-primary btn-sm" href="{{ Auth::user()->acessaPainelMaster() ? route('admin.dashboard') : route('empresa.dashboard') }}">Painel</a>
                     @else
                         <a class="btn btn-outline-primary btn-sm" href="{{ route('login') }}">Entrar</a>
                     @endauth
