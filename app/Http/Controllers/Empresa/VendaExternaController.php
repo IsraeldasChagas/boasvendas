@@ -516,6 +516,21 @@ class VendaExternaController extends Controller
         $data = $this->validatedAcerto($request, $empresa->id);
         $data['empresa_id'] = $empresa->id;
 
+        if (
+            Schema::hasColumn('ve_acertos', 'valor_repasse_unitario')
+            && empty($data['valor_repasse_unitario'])
+            && ! empty($data['ve_remessa_id'])
+        ) {
+            $precoProduto = VeRemessa::query()
+                ->where('empresa_id', $empresa->id)
+                ->whereKey($data['ve_remessa_id'])
+                ->with('produto')
+                ->first()?->produto?->preco;
+            if ($precoProduto !== null) {
+                $data['valor_repasse_unitario'] = $precoProduto;
+            }
+        }
+
         VeAcerto::query()->create($data);
 
         return redirect()->route('empresa.venda-externa.acertos')->with('status', 'Acerto registrado.');
@@ -562,7 +577,24 @@ class VendaExternaController extends Controller
 
         $this->mergeAcertoRemessaVazio($request);
 
-        $veAcerto->update($this->validatedAcerto($request, $empresa->id));
+        $data = $this->validatedAcerto($request, $empresa->id);
+
+        if (
+            Schema::hasColumn('ve_acertos', 'valor_repasse_unitario')
+            && empty($data['valor_repasse_unitario'])
+            && ! empty($data['ve_remessa_id'])
+        ) {
+            $precoProduto = VeRemessa::query()
+                ->where('empresa_id', $empresa->id)
+                ->whereKey($data['ve_remessa_id'])
+                ->with('produto')
+                ->first()?->produto?->preco;
+            if ($precoProduto !== null) {
+                $data['valor_repasse_unitario'] = $precoProduto;
+            }
+        }
+
+        $veAcerto->update($data);
 
         return redirect()->route('empresa.venda-externa.acertos.show', $veAcerto)->with('status', 'Acerto atualizado.');
     }

@@ -117,6 +117,10 @@
                 const nome = opt.getAttribute('data-produto-nome') || '';
                 if (precoRaw !== null && precoRaw !== '') {
                     elPreco.textContent = 'R$ ' + fmtBr(precoRaw);
+                    const inputRepasseUnit = document.getElementById('valor_repasse_unitario');
+                    if (inputRepasseUnit && inputRepasseUnit.value === '') {
+                        inputRepasseUnit.value = parseFloat(precoRaw).toFixed(2);
+                    }
                 } else {
                     elPreco.textContent = '— (vincule um produto na entrega ou cadastre o preço no produto)';
                 }
