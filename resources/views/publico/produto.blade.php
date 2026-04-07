@@ -57,9 +57,6 @@
                         @if ($temPersonalizar)
                             <div class="vf-card p-3 mb-3">
                                 <h2 class="h6 fw-bold mb-2">Personalizar</h2>
-                                @if ($temRetirarIng)
-                                    <p class="small text-muted mb-3 border-start border-3 border-secondary-subtle ps-2">Retirar ingredientes é opcional e <strong>não reduz</strong> o valor do produto.</p>
-                                @endif
                                 @if ($produto->permite_adicionais && $acres->isNotEmpty())
                                     <p class="small text-muted mb-2">Acrescentar</p>
                                     @foreach ($acres as $ad)
@@ -85,14 +82,6 @@
                                 @endif
                             </div>
                         @endif
-
-                        <div class="mb-3">
-                            <label class="form-label small text-muted mb-1" for="obs_prod">Observações <span class="text-muted">(opcional)</span></label>
-                            @if ($temRetirarIng)
-                                <p class="small text-muted mb-2">A retirada de ingredientes (em Personalizar) <strong>não diminui</strong> o preço; use este campo para outras observações (ponto da carne, entrega, etc.).</p>
-                            @endif
-                            <textarea class="form-control" id="obs_prod" name="observacao" rows="2" maxlength="500" placeholder="Ex.: ponto da carne, detalhes da entrega…">{{ old('observacao') }}</textarea>
-                        </div>
 
                         <div class="d-flex flex-wrap gap-2 align-items-end">
                             <div>
