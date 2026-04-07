@@ -174,6 +174,8 @@ class EmpresaController extends Controller
         }
 
         $txt = implode(' + ', $nomes);
+        // Coluna `modulos_resumo` é varchar(255); evita erro "Data too long".
+        $txt = Str::limit($txt, 255, '');
 
         return $txt !== '' ? $txt : null;
     }
