@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
@@ -51,6 +52,7 @@ class EmpresaController extends Controller
         $admin = $this->validatedAdminUser($request);
 
         DB::transaction(function () use ($data, $admin) {
+            $data['slug'] = $this->gerarSlugUnico((string) ($data['nome'] ?? 'loja'));
             $empresa = Empresa::query()->create($data);
 
             User::query()->create([
@@ -113,6 +115,23 @@ class EmpresaController extends Controller
             'modulos_resumo' => ['nullable', 'string', 'max:255'],
             'cliente_desde' => ['nullable', 'date'],
         ]);
+    }
+
+    private function gerarSlugUnico(string $nome): string
+    {
+        $base = Str::slug($nome);
+        $base = $base !== '' ? $base : 'loja';
+        $base = substr($base, 0, 50);
+
+        $slug = $base;
+        $i = 2;
+        while (Empresa::query()->where('slug', $slug)->exists()) {
+            $suf = '-'.$i;
+            $slug = substr($base, 0, max(1, 64 - strlen($suf))).$suf;
+            $i++;
+        }
+
+        return $slug;
     }
 
     /**
