@@ -26,6 +26,7 @@ class Empresa extends Model
         'plano_id',
         'status',
         'modulos_resumo',
+        'menu_acessos',
         'cliente_desde',
     ];
 
