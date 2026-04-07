@@ -1,5 +1,6 @@
 @php
     $isVe = request()->routeIs('empresa.venda-externa.*');
+    $empresa = Auth::user()?->empresa;
 @endphp
 <aside class="vf-sidebar" data-vf-sidebar>
     <div class="vf-sidebar-brand text-white">
