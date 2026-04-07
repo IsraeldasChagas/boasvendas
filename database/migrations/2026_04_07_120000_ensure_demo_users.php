@@ -31,7 +31,9 @@ return new class extends Migration
             ]);
         }
 
-        $empresaId = DB::table('empresas')->where('slug', 'demo')->value('id');
+        $empresaId = DB::table('empresas')->where('slug', 'demo')->value('id')
+            ?? DB::table('empresas')->where('nome', 'Lanchonete Demo')->value('id');
+
         if (! $empresaId) {
             return;
         }
