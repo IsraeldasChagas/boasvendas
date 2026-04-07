@@ -105,10 +105,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center text-muted py-5">
-                                Nenhum acerto.
-                                <a href="{{ route('empresa.venda-externa.acertos.create') }}">Registrar</a>
-                            </td>
+                            <td colspan="8" class="border-0"></td>
                         </tr>
                     @endforelse
                 </tbody>
