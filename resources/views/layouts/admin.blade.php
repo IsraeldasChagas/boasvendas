@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="#020617">
     <link rel="manifest" href="{{ asset('pwa/manifest.json') }}">
     <title>@yield('title', 'Master') — {{ config('app.name') }}</title>
@@ -18,6 +19,12 @@
         <div class="vf-main">
             @include('partials.admin.topbar', ['title' => trim($__env->yieldContent('title')) ?: 'Master'])
             <div class="vf-content">
+                @if (session('error'))
+                    <div class="alert alert-warning alert-dismissible fade show mb-3" role="alert">
+                        {{ session('error') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                    </div>
+                @endif
                 @yield('content')
             </div>
         </div>
