@@ -42,19 +42,44 @@
                     <div class="vf-card p-3 mb-3">
                         <h2 class="h6 fw-bold mb-3">Pagamento</h2>
                         @php
-                            $formasCheckout = collect(\App\Models\Pedido::formasPagamentoRotulos())->except([\App\Models\Pedido::PAGAMENTO_CARTAO]);
+                            $formasCheckout = collect($empresa->formasPagamentoLojaPublica());
+                            $primeiraForma = $formasCheckout->keys()->first() ?? \App\Models\Pedido::PAGAMENTO_CARTAO_CREDITO_MAQUININHA;
                         @endphp
                         <div class="d-flex flex-column gap-2">
                             @foreach ($formasCheckout as $val => $rotulo)
                                 <div class="form-check">
-                                    <input class="form-check-input vf-pay-opt" type="radio" name="forma_pagamento" id="pay-{{ $val }}" value="{{ $val }}" data-pay="{{ $val }}" @checked(old('forma_pagamento', \App\Models\Pedido::PAGAMENTO_PIX) === $val)>
+                                    <input class="form-check-input vf-pay-opt" type="radio" name="forma_pagamento" id="pay-{{ $val }}" value="{{ $val }}" data-pay="{{ $val }}" @checked(old('forma_pagamento', $primeiraForma) === $val)>
                                     <label class="form-check-label" for="pay-{{ $val }}">{{ $rotulo }}</label>
                                 </div>
                             @endforeach
                         </div>
                         @error('forma_pagamento')<div class="text-danger small mt-2">{{ $message }}</div>@enderror
 
-                        <div id="vf-pay-dinheiro-extra" class="mt-3 p-3 rounded border bg-light {{ old('forma_pagamento', \App\Models\Pedido::PAGAMENTO_PIX) === \App\Models\Pedido::PAGAMENTO_DINHEIRO ? '' : 'd-none' }}">
+                        @if ($empresa->lojaPixConfiguradaParaCheckout())
+                            <div id="vf-pay-pix-extra" class="mt-3 p-3 rounded border bg-light {{ old('forma_pagamento', $primeiraForma) === \App\Models\Pedido::PAGAMENTO_PIX ? '' : 'd-none' }}">
+                                <h3 class="h6 fw-bold mb-2">Pague com PIX</h3>
+                                <div class="row g-3 align-items-start">
+                                    <div class="{{ $empresa->lojaPixQrCodeDataUri() ? 'col-md-7' : 'col-12' }}">
+                                        @if (trim((string) $empresa->loja_pix_instrucoes) !== '')
+                                            <div class="small mb-3" style="white-space: pre-wrap;">{{ $empresa->loja_pix_instrucoes }}</div>
+                                        @endif
+                                        @if (trim((string) $empresa->loja_pix_copia_cola) !== '')
+                                            <label class="form-label small mb-1" for="field-pix-copia">Pix copia e cola</label>
+                                            <textarea readonly class="form-control form-control-sm font-monospace" rows="4" id="field-pix-copia">{{ $empresa->loja_pix_copia_cola }}</textarea>
+                                            <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="btn-copia-pix" onclick="(function(){ var t=document.getElementById('field-pix-copia'); if(!t) return; t.select(); navigator.clipboard.writeText(t.value).then(function(){ alert('Código PIX copiado.'); }).catch(function(){ document.execCommand('copy'); }); })();">Copiar código PIX</button>
+                                        @endif
+                                    </div>
+                                    @if ($empresa->lojaPixQrCodeDataUri())
+                                        <div class="col-md-5 text-center">
+                                            <p class="small text-muted mb-2 mb-md-0">Escaneie com o app do banco ou a câmera do celular</p>
+                                            <img src="{{ $empresa->lojaPixQrCodeDataUri() }}" alt="QR Code PIX" class="img-fluid border rounded bg-white p-2 mx-auto d-block" style="max-width: 220px;">
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+
+                        <div id="vf-pay-dinheiro-extra" class="mt-3 p-3 rounded border bg-light {{ old('forma_pagamento', $primeiraForma) === \App\Models\Pedido::PAGAMENTO_DINHEIRO ? '' : 'd-none' }}">
                             <label class="form-label small mb-1" for="pagamento_troco_para">Vai pagar com quanto em dinheiro? <span class="text-muted">(opcional)</span></label>
                             <div class="input-group input-group-sm" style="max-width: 14rem;">
                                 <span class="input-group-text">R$</span>
@@ -66,7 +91,7 @@
                     </div>
                     <div class="vf-card p-3">
                         <h2 class="h6 fw-bold mb-2">Observações</h2>
-                        <textarea class="form-control @error('observacoes') is-invalid @enderror" name="observacoes" rows="2" placeholder="Ex.: sem cebola" maxlength="1000">{{ old('observacoes') }}</textarea>
+                        <textarea class="form-control @error('observacoes') is-invalid @enderror" name="observacoes" rows="2" placeholder="Ex.: portão ou interfone, ponto de referência, melhor horário para entrega…" maxlength="1000">{{ old('observacoes') }}</textarea>
                         @error('observacoes')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                 </div>
@@ -97,12 +122,19 @@
         <script>
             (function () {
                 var din = '{{ \App\Models\Pedido::PAGAMENTO_DINHEIRO }}';
-                var box = document.getElementById('vf-pay-dinheiro-extra');
-                if (!box) return;
+                var pix = '{{ \App\Models\Pedido::PAGAMENTO_PIX }}';
+                var boxDin = document.getElementById('vf-pay-dinheiro-extra');
+                var boxPix = document.getElementById('vf-pay-pix-extra');
                 document.querySelectorAll('.vf-pay-opt').forEach(function (r) {
                     r.addEventListener('change', function () {
-                        if (this.value === din) box.classList.remove('d-none');
-                        else box.classList.add('d-none');
+                        if (boxDin) {
+                            if (this.value === din) boxDin.classList.remove('d-none');
+                            else boxDin.classList.add('d-none');
+                        }
+                        if (boxPix) {
+                            if (this.value === pix) boxPix.classList.remove('d-none');
+                            else boxPix.classList.add('d-none');
+                        }
                     });
                 });
             })();

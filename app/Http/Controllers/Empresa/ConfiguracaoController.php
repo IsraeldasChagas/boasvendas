@@ -50,6 +50,8 @@ class ConfiguracaoController extends Controller
             ],
             'email_contato' => ['nullable', 'email', 'max:255'],
             'cnpj' => ['nullable', 'string', 'max:32'],
+            'loja_pix_instrucoes' => ['nullable', 'string', 'max:4000'],
+            'loja_pix_copia_cola' => ['nullable', 'string', 'max:8192'],
         ]);
 
         $empresa->update($data);

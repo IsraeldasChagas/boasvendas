@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\GeradorQrCodePix;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -14,6 +15,8 @@ class Empresa extends Model
     protected $fillable = [
         'nome',
         'slug',
+        'loja_pix_instrucoes',
+        'loja_pix_copia_cola',
         'email_contato',
         'cnpj',
         'plano_id',
@@ -121,5 +124,35 @@ class Empresa extends Model
             'trial' => 'Trial',
             'suspensa' => 'Suspensa',
         ];
+    }
+
+    /** PIX habilitado na loja: texto e/ou payload copia e cola. */
+    public function lojaPixConfiguradaParaCheckout(): bool
+    {
+        $i = trim((string) $this->loja_pix_instrucoes);
+        $c = trim((string) $this->loja_pix_copia_cola);
+
+        return $i !== '' || $c !== '';
+    }
+
+    /** @return array<string, string> valor => rótulo para o checkout público */
+    public function formasPagamentoLojaPublica(): array
+    {
+        $opcoes = collect(Pedido::formasPagamentoRotulos())
+            ->except([Pedido::PAGAMENTO_CARTAO, Pedido::PAGAMENTO_ENTREGA]);
+
+        if (! $this->lojaPixConfiguradaParaCheckout()) {
+            $opcoes = $opcoes->except([Pedido::PAGAMENTO_PIX]);
+        }
+
+        return $opcoes->all();
+    }
+
+    /** QR em data URI (SVG) a partir do Pix copia e cola; null se não houver payload. */
+    public function lojaPixQrCodeDataUri(): ?string
+    {
+        $p = trim((string) $this->loja_pix_copia_cola);
+
+        return $p !== '' ? GeradorQrCodePix::dataUriSvg($p) : null;
     }
 }

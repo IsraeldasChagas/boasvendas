@@ -58,8 +58,19 @@
                 </div>
 
                 <div class="vf-card p-4 mb-3">
-                    <h2 class="h6 fw-bold mb-2">Delivery e pedidos online</h2>
-                    <p class="small text-muted mb-0">Opções como aceitar pedidos na loja pública e exigir geolocalização serão configuráveis aqui quando o fluxo de checkout estiver integrado a estes dados.</p>
+                    <h2 class="h6 fw-bold mb-3">PIX na loja online</h2>
+                    <p class="small text-muted mb-3">Preencha ao menos um dos campos abaixo para a opção <strong>PIX</strong> aparecer no checkout. O cliente verá as informações e o QR Code (quando houver código copia e cola).</p>
+                    <div class="mb-3">
+                        <label class="form-label" for="loja_pix_instrucoes">Texto para o cliente <span class="text-muted fw-normal">(opcional)</span></label>
+                        <textarea class="form-control form-control-sm @error('loja_pix_instrucoes') is-invalid @enderror" name="loja_pix_instrucoes" id="loja_pix_instrucoes" rows="4" maxlength="4000" placeholder="Ex.: Nome na chave, telefone para envio do comprovante…">{{ old('loja_pix_instrucoes', $empresa->loja_pix_instrucoes) }}</textarea>
+                        @error('loja_pix_instrucoes')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label" for="loja_pix_copia_cola">Pix copia e cola <span class="text-muted fw-normal">(opcional)</span></label>
+                        <textarea class="form-control form-control-sm font-monospace @error('loja_pix_copia_cola') is-invalid @enderror" name="loja_pix_copia_cola" id="loja_pix_copia_cola" rows="3" maxlength="8192" placeholder="Cole aqui o payload gerado no app do banco (gera o QR Code no checkout)">{{ old('loja_pix_copia_cola', $empresa->loja_pix_copia_cola) }}</textarea>
+                        @error('loja_pix_copia_cola')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        <p class="small text-muted mb-0 mt-1">Sem esse código não há QR automático; ainda pode usar só o texto acima.</p>
+                    </div>
                 </div>
             </div>
 

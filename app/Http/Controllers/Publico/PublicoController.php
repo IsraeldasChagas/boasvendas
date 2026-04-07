@@ -546,7 +546,7 @@ class PublicoController extends Controller
         $taxaVal = $this->taxaEntregaValor($empresa);
         $totalPedido = round($subtotalVal + $taxaVal, 2);
 
-        $formasCheckout = array_keys(collect(Pedido::formasPagamentoRotulos())->except([Pedido::PAGAMENTO_CARTAO])->all());
+        $formasCheckout = array_keys($empresa->formasPagamentoLojaPublica());
 
         $data = $request->validate([
             'cliente_nome' => ['required', 'string', 'max:120'],
@@ -572,6 +572,12 @@ class PublicoController extends Controller
         $pagamentoTrocoPara = null;
         if ($data['forma_pagamento'] === Pedido::PAGAMENTO_DINHEIRO && $trocoPara !== null && $trocoPara !== '') {
             $pagamentoTrocoPara = round((float) $trocoPara, 2);
+        }
+
+        if ($data['forma_pagamento'] === Pedido::PAGAMENTO_PIX && ! $empresa->lojaPixConfiguradaParaCheckout()) {
+            return back()
+                ->withInput()
+                ->withErrors(['forma_pagamento' => 'A loja ainda não configurou o PIX. Escolha outra forma de pagamento.']);
         }
 
         foreach ($linhas as $l) {
