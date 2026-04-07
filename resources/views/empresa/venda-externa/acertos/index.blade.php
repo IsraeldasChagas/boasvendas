@@ -25,14 +25,12 @@
             <div class="col-md-3 col-lg-2">
                 <label class="form-label small text-muted mb-1" for="ac-st">Status</label>
                 <select class="form-select form-select-sm" id="ac-st" name="status">
-                    <option value="">Todos</option>
-                    @foreach (\App\Models\VeAcerto::rotulosStatus() as $val => $rotulo)
-                        <option value="{{ $val }}" @selected(request('status') === $val)>{{ $rotulo }}</option>
-                    @endforeach
+                    <option value="{{ \App\Models\VeAcerto::STATUS_ABERTO }}" @selected($statusFiltro === \App\Models\VeAcerto::STATUS_ABERTO)>Não acertado</option>
+                    <option value="{{ \App\Models\VeAcerto::STATUS_CONCLUIDO }}" @selected($statusFiltro === \App\Models\VeAcerto::STATUS_CONCLUIDO)>Acertado</option>
                 </select>
             </div>
             <div class="col-md-4 col-lg-3">
-                <label class="form-label small text-muted mb-1" for="ac-pt">Ponto</label>
+                <label class="form-label small text-muted mb-1" for="ac-pt">Parceiro</label>
                 <select class="form-select form-select-sm" id="ac-pt" name="ve_ponto_id">
                     <option value="">Todos</option>
                     @foreach ($pontosFiltro as $pt)
@@ -53,7 +51,7 @@
                 <thead>
                     <tr>
                         <th>Data</th>
-                        <th>Ponto</th>
+                        <th>Parceiro</th>
                         <th>Remessa</th>
                         <th class="text-end">Vendas</th>
                         <th class="text-end">Repasse</th>
@@ -88,7 +86,7 @@
                                     —
                                 @endif
                             </td>
-                            <td><span class="vf-badge {{ $a->classeBadgeStatus() }}">{{ $a->rotuloStatus() }}</span></td>
+                            <td><span class="vf-badge {{ $a->classeBadgeStatus() }}">{{ $a->status === \App\Models\VeAcerto::STATUS_CONCLUIDO ? 'Acertado' : 'Não acertado' }}</span></td>
                             <td class="text-end text-nowrap">
                                 <a href="{{ route('empresa.venda-externa.acertos.show', $a) }}" class="btn btn-sm btn-outline-primary">Abrir</a>
                                 <a href="{{ route('empresa.venda-externa.acertos.edit', $a) }}" class="btn btn-sm btn-outline-secondary">Editar</a>

@@ -461,9 +461,11 @@ class VendaExternaController extends Controller
             ->orderByDesc('data_acerto')
             ->orderByDesc('created_at');
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->string('status')->value());
+        $statusFiltro = $request->string('status')->value();
+        if ($statusFiltro === '' || ! in_array($statusFiltro, [VeAcerto::STATUS_ABERTO, VeAcerto::STATUS_CONCLUIDO], true)) {
+            $statusFiltro = VeAcerto::STATUS_ABERTO;
         }
+        $query->where('status', $statusFiltro);
 
         if ($request->filled('ve_ponto_id')) {
             $query->where('ve_ponto_id', $request->integer('ve_ponto_id'));
@@ -476,7 +478,7 @@ class VendaExternaController extends Controller
             ->orderBy('nome')
             ->get();
 
-        return view('empresa.venda-externa.acertos.index', compact('empresa', 'acertos', 'pontosFiltro'));
+        return view('empresa.venda-externa.acertos.index', compact('empresa', 'acertos', 'pontosFiltro', 'statusFiltro'));
     }
 
     public function acertosCreate(Request $request): View|RedirectResponse
