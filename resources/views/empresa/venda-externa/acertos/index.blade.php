@@ -24,7 +24,7 @@
         <div class="row g-2 align-items-end">
             <div class="col-md-3 col-lg-2">
                 <label class="form-label small text-muted mb-1" for="ac-st">Status</label>
-                <select class="form-select form-select-sm" id="ac-st" name="status">
+                <select class="form-select form-select-sm" id="ac-st" name="ac_status">
                     <option value="{{ \App\Models\VeAcerto::STATUS_ABERTO }}" @selected($statusFiltro === \App\Models\VeAcerto::STATUS_ABERTO)>Não acertado</option>
                     <option value="{{ \App\Models\VeAcerto::STATUS_CONCLUIDO }}" @selected($statusFiltro === \App\Models\VeAcerto::STATUS_CONCLUIDO)>Acertado</option>
                 </select>
@@ -52,7 +52,7 @@
                     <tr>
                         <th>Data</th>
                         <th>Parceiro</th>
-                        <th>Remessa</th>
+                        <th>Entrega</th>
                         <th class="text-end">Repasse unit.</th>
                         <th class="text-end">Qtd.</th>
                         <th class="text-end">Repasse total</th>
@@ -67,11 +67,8 @@
                             <td class="small">{{ $a->ponto?->nome ?? '—' }}</td>
                             <td class="small">
                                 @if ($a->remessa)
-                                    <a href="{{ route('empresa.venda-externa.remessas.show', $a->remessa) }}">R-{{ $a->remessa->id }}</a>
+                                    <a href="{{ route('empresa.venda-externa.remessas.show', $a->remessa) }}">E-{{ $a->remessa->id }}</a>
                                     <span class="text-muted d-block" style="font-size: 0.7rem;">{{ \Illuminate\Support\Str::limit($a->remessa->tituloExibicao(), 28) }}</span>
-                                    @if ($a->remessa->produto && $a->remessa->produto->preco !== null)
-                                        <span class="text-muted d-block" style="font-size: 0.7rem;">Preço unit. produto: R$ {{ number_format((float) $a->remessa->produto->preco, 2, ',', '.') }}</span>
-                                    @endif
                                 @else
                                     —
                                 @endif

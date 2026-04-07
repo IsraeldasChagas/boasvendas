@@ -460,19 +460,30 @@ class VendaExternaController extends Controller
 
         $query = VeAcerto::query()
             ->where('empresa_id', $empresaId)
-            ->with(['ponto', 'remessa.produto'])
+            ->with(['ponto', 'remessa'])
             ->orderByRaw('CASE WHEN data_acerto IS NULL THEN 1 ELSE 0 END ASC')
             ->orderByDesc('data_acerto')
             ->orderByDesc('created_at');
 
-        $statusFiltro = $request->string('status')->value();
+        // `ac_status` evita conflito com outras convenções; `status` mantém URLs antigas.
+        $rawStatus = $request->input('ac_status', $request->input('status'));
+        $statusFiltro = is_scalar($rawStatus) ? trim((string) $rawStatus) : '';
         if ($statusFiltro === '' || ! in_array($statusFiltro, [VeAcerto::STATUS_ABERTO, VeAcerto::STATUS_CONCLUIDO], true)) {
             $statusFiltro = VeAcerto::STATUS_ABERTO;
         }
-        $query->where('status', $statusFiltro);
 
-        if ($request->filled('ve_ponto_id')) {
-            $query->where('ve_ponto_id', $request->integer('ve_ponto_id'));
+        if ($statusFiltro === VeAcerto::STATUS_ABERTO) {
+            $query->where(function ($q): void {
+                $q->where('status', VeAcerto::STATUS_ABERTO)
+                    ->orWhereNull('status');
+            });
+        } else {
+            $query->where('status', VeAcerto::STATUS_CONCLUIDO);
+        }
+
+        $pontoId = $request->input('ve_ponto_id');
+        if ($pontoId !== null && $pontoId !== '' && (int) $pontoId > 0) {
+            $query->where('ve_ponto_id', (int) $pontoId);
         }
 
         $acertos = $query->limit(200)->get();
