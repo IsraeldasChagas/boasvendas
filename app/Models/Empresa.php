@@ -150,6 +150,7 @@ class Empresa extends Model
             'categorias' => 'Categorias',
             'adicionais' => 'Adicionais',
             'clientes' => 'Clientes',
+            'loja_online' => 'Loja online (vitrine)',
             'fidelidade_programa' => 'Fidelidade: Programa',
             'fidelidade_cartoes' => 'Fidelidade: Cartões',
             'entregas' => 'Entregas',

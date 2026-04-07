@@ -35,13 +35,18 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label" for="slug">Slug da loja (URL pública)</label>
-                            <input type="text" class="form-control form-control-sm @error('slug') is-invalid @enderror" id="slug" name="slug" value="{{ old('slug', $empresa->slug) }}" maxlength="64" placeholder="ex.: minha-loja" autocomplete="off">
-                            @error('slug')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            <p class="small text-muted mb-0 mt-1">Apenas letras minúsculas, números e hífens. Deixe em branco se ainda não for usar a loja online.</p>
-                            @if ($empresa->slug)
-                                <p class="small mb-0 mt-2">
-                                    <a href="{{ route('publico.loja', $empresa->slug) }}" target="_blank" rel="noopener">Abrir loja pública <i class="bi bi-box-arrow-up-right"></i></a>
-                                </p>
+                            @if ($empresa->temTelaMenu('loja_online'))
+                                <input type="text" class="form-control form-control-sm @error('slug') is-invalid @enderror" id="slug" name="slug" value="{{ old('slug', $empresa->slug) }}" maxlength="64" placeholder="ex.: minha-loja" autocomplete="off">
+                                @error('slug')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <p class="small text-muted mb-0 mt-1">Apenas letras minúsculas, números e hífens.</p>
+                                @if ($empresa->slug)
+                                    <p class="small mb-0 mt-2">
+                                        <a href="{{ route('publico.loja', $empresa->slug) }}" target="_blank" rel="noopener">Abrir loja pública <i class="bi bi-box-arrow-up-right"></i></a>
+                                    </p>
+                                @endif
+                            @else
+                                <input type="text" class="form-control form-control-sm" id="slug" value="{{ $empresa->slug }}" disabled>
+                                <p class="small text-muted mb-0 mt-1">A loja online (vitrine) não está liberada para sua empresa. Peça ao master para liberar.</p>
                             @endif
                         </div>
                         <div class="col-md-6">
@@ -59,7 +64,10 @@
 
                 <div class="vf-card p-4 mb-3">
                     <h2 class="h6 fw-bold mb-3">PIX na loja online</h2>
-                    <p class="small text-muted mb-3">Para a opção <strong>PIX</strong> aparecer no checkout, preencha a <strong>chave PIX</strong> (abaixo) e/ou o <strong>Pix copia e cola</strong> (QR Code), e/ou um texto de instruções.</p>
+                    @if (! $empresa->temTelaMenu('loja_online'))
+                        <p class="small text-muted mb-0">A loja online (vitrine) não está liberada para sua empresa.</p>
+                    @else
+                        <p class="small text-muted mb-3">Para a opção <strong>PIX</strong> aparecer no checkout, preencha a <strong>chave PIX</strong> (abaixo) e/ou o <strong>Pix copia e cola</strong> (QR Code), e/ou um texto de instruções.</p>
                     <div class="mb-3">
                         <label class="form-label" for="loja_pix_instrucoes">Texto para o cliente <span class="text-muted fw-normal">(opcional)</span></label>
                         <textarea class="form-control form-control-sm @error('loja_pix_instrucoes') is-invalid @enderror" name="loja_pix_instrucoes" id="loja_pix_instrucoes" rows="4" maxlength="4000" placeholder="Ex.: Nome na chave, telefone para envio do comprovante…">{{ old('loja_pix_instrucoes', $empresa->loja_pix_instrucoes) }}</textarea>
@@ -94,6 +102,7 @@
                         @error('loja_pix_copia_cola')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         <p class="small text-muted mb-0 mt-1">Sem esse código não há QR automático; ainda pode usar só o texto acima.</p>
                     </div>
+                    @endif
                 </div>
             </div>
 

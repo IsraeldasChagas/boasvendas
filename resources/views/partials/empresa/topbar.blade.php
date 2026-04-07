@@ -19,9 +19,20 @@
     </div>
     <div class="d-flex align-items-center gap-2 flex-shrink-0">
         <span class="vf-badge bg-success-subtle text-success d-none d-md-inline">Loja aberta</span>
-        <a href="{{ route('publico.loja', ['slug' => 'demo']) }}" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener">
-            <i class="bi bi-box-arrow-up-right me-1"></i>Ver vitrine
-        </a>
+        @php
+            $empresa = Auth::user()?->empresa;
+            $slugLoja = $empresa?->slug;
+            $temLoja = $empresa?->temTelaMenu('loja_online') ?? true;
+        @endphp
+        @if ($temLoja && $slugLoja)
+            <a href="{{ route('publico.loja', ['slug' => $slugLoja]) }}" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener">
+                <i class="bi bi-box-arrow-up-right me-1"></i>Ver vitrine
+            </a>
+        @else
+            <button type="button" class="btn btn-sm btn-outline-secondary" disabled title="{{ $temLoja ? 'Defina o slug em Configurações para habilitar a vitrine.' : 'Loja online não liberada para esta empresa.' }}">
+                <i class="bi bi-box-arrow-up-right me-1"></i>Ver vitrine
+            </button>
+        @endif
         <form action="{{ route('logout') }}" method="post" class="d-inline">
             @csrf
             <button type="submit" class="btn btn-sm btn-primary">Sair</button>
