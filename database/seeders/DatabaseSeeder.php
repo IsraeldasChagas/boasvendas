@@ -33,9 +33,9 @@ class DatabaseSeeder extends Seeder
         $this->call(VendaExternaDemoSeeder::class);
 
         User::query()->firstOrCreate(
-            ['email' => 'admin@vendaffacil.com.br'],
+            ['email' => 'master@vendaffacil.com.br'],
             [
-                'name' => 'Admin Master',
+                'name' => 'Master',
                 'password' => Hash::make('password'),
             ]
         );

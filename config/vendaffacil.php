@@ -6,7 +6,7 @@
 */
 $adminRaw = env('VENDAFFACIL_ADMIN_EMAILS', env('BOASVENDAS_ADMIN_EMAILS'));
 if ($adminRaw === null || trim((string) $adminRaw) === '') {
-    $adminRaw = 'admin@vendaffacil.com.br';
+    $adminRaw = 'master@vendaffacil.com.br';
 }
 
 return [
