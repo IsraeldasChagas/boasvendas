@@ -51,7 +51,7 @@
                                 @if ($pr->categoria)
                                     <div class="small text-muted">{{ $pr->categoria->nome }}</div>
                                 @endif
-                                @if ($pr->permite_adicionais && ($pr->adicionais_loja_count ?? 0) > 0)
+                                @if (($pr->permite_adicionais && ($pr->adicionais_acrescimo_count ?? 0) > 0) || (($pr->ingredientes_count ?? 0) > 0))
                                     <div class="small mt-1"><span class="vf-badge bg-info-subtle text-info">Personalizável</span></div>
                                 @endif
                                 <div class="text-success fw-bold mt-1">R$ {{ number_format((float) $pr->preco, 2, ',', '.') }}</div>

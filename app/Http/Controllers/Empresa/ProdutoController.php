@@ -7,10 +7,12 @@ use App\Models\Adicional;
 use App\Models\Categoria;
 use App\Models\Empresa;
 use App\Models\Produto;
+use App\Models\ProdutoIngrediente;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -89,6 +91,9 @@ class ProdutoController extends Controller
         }
 
         $data = $this->validated($request, $empresa);
+        $nom = $this->listaIngredientesDoRequest($request);
+        $this->validarLimiteRetirarIngredientes($request, $nom);
+        $data['max_ingredientes_retirar'] = count($nom) > 0 ? (int) $request->input('max_ingredientes_retirar') : null;
         $data['empresa_id'] = $empresa->id;
         $data['sku'] = $this->gerarCodigoInternoUnico($empresa);
 
@@ -97,6 +102,7 @@ class ProdutoController extends Controller
         }
 
         $produto = Produto::query()->create($data);
+        $this->syncIngredientesDoProduto($produto, $nom);
         $this->syncAdicionaisDoProduto($produto, $empresa, $request);
 
         return redirect()
@@ -130,7 +136,7 @@ class ProdutoController extends Controller
             ->orderBy('nome')
             ->get();
 
-        $produto->load('adicionais');
+        $produto->load(['adicionais', 'ingredientes']);
 
         return view('empresa.produtos.edit', compact('empresa', 'produto', 'categorias', 'adicionais'));
     }
@@ -143,6 +149,9 @@ class ProdutoController extends Controller
         }
 
         $data = $this->validated($request, $empresa, $produto);
+        $nom = $this->listaIngredientesDoRequest($request);
+        $this->validarLimiteRetirarIngredientes($request, $nom);
+        $data['max_ingredientes_retirar'] = count($nom) > 0 ? (int) $request->input('max_ingredientes_retirar') : null;
 
         if ($request->hasFile('foto')) {
             $this->removerFotoDoDisco($produto);
@@ -150,6 +159,7 @@ class ProdutoController extends Controller
         }
 
         $produto->update($data);
+        $this->syncIngredientesDoProduto($produto, $nom);
         $this->syncAdicionaisDoProduto($produto, $empresa, $request);
 
         return redirect()
@@ -196,15 +206,65 @@ class ProdutoController extends Controller
                 'integer',
                 Rule::exists('adicionais', 'id')->where(fn ($q) => $q->where('empresa_id', $empresa->id)->where('ativo', true)),
             ],
+            'ingredientes_texto' => ['nullable', 'string', 'max:5000'],
         ]);
 
         $data['visivel_loja'] = $request->boolean('visivel_loja');
         $data['ativo'] = $request->boolean('ativo');
         $data['permite_adicionais'] = $request->boolean('permite_adicionais');
 
-        unset($data['foto']);
+        unset($data['foto'], $data['ingredientes_texto']);
 
         return $data;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function listaIngredientesDoRequest(Request $request): array
+    {
+        $texto = (string) $request->input('ingredientes_texto', '');
+
+        return collect(preg_split('/\r\n|\r|\n/', $texto))
+            ->map(function (string $linha) {
+                $t = trim(strip_tags($linha));
+
+                return $t !== '' ? Str::limit($t, 120, '') : '';
+            })
+            ->filter(fn (string $n) => $n !== '')
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @param  list<string>  $ingredientes
+     */
+    private function validarLimiteRetirarIngredientes(Request $request, array $ingredientes): void
+    {
+        if ($ingredientes === []) {
+            return;
+        }
+
+        Validator::make($request->all(), [
+            'max_ingredientes_retirar' => ['required', 'integer', 'min:0', 'max:'.count($ingredientes)],
+        ], [
+            'max_ingredientes_retirar.required' => 'Informe quantos ingredientes o cliente pode pedir para retirar (0 = nenhum).',
+        ])->validate();
+    }
+
+    /**
+     * @param  list<string>  $nomes
+     */
+    private function syncIngredientesDoProduto(Produto $produto, array $nomes): void
+    {
+        $produto->ingredientes()->delete();
+        foreach ($nomes as $i => $nome) {
+            ProdutoIngrediente::query()->create([
+                'produto_id' => $produto->id,
+                'nome' => $nome,
+                'ordem' => $i,
+            ]);
+        }
     }
 
     private function syncAdicionaisDoProduto(Produto $produto, Empresa $empresa, Request $request): void
@@ -225,6 +285,7 @@ class ProdutoController extends Controller
         $valid = Adicional::query()
             ->where('empresa_id', $empresa->id)
             ->where('ativo', true)
+            ->where('tipo', Adicional::TIPO_ACRESCENTAR)
             ->whereIn('id', $ids)
             ->pluck('id')
             ->all();

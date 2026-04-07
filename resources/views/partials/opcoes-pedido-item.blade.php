@@ -5,7 +5,7 @@
     <ul class="list-unstyled small text-muted mb-0 mt-1 ps-2 border-start">
         @foreach ($lista as $op)
             <li>
-                @if (($op['tipo'] ?? '') === \App\Models\Adicional::TIPO_RETIRAR)
+                @if (($op['tipo'] ?? '') === \App\Models\Adicional::TIPO_RETIRAR || ($op['tipo'] ?? '') === 'retirar_ingrediente')
                     <i class="bi bi-dash-circle me-1"></i>Sem {{ $op['nome'] ?? '' }}
                 @else
                     <i class="bi bi-plus-circle me-1"></i>{{ $op['nome'] ?? '' }}

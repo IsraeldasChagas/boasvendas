@@ -57,27 +57,35 @@
                             @error('descricao')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-12">
+                            <label class="form-label" for="ingredientes_texto">Ingredientes do prato <span class="text-muted fw-normal">(opcional)</span></label>
+                            <textarea class="form-control @error('ingredientes_texto') is-invalid @enderror" id="ingredientes_texto" name="ingredientes_texto" rows="4" placeholder="Um por linha, ex.:&#10;Pão&#10;Hambúrguer&#10;Queijo">{{ old('ingredientes_texto') }}</textarea>
+                            @error('ingredientes_texto')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <div class="form-text">Na loja o cliente poderá pedir para retirar até o número máximo indicado abaixo (não pode ser maior que a quantidade de linhas).</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="max_ingredientes_retirar">Máx. ingredientes para retirar</label>
+                            <input type="number" class="form-control @error('max_ingredientes_retirar') is-invalid @enderror" id="max_ingredientes_retirar" name="max_ingredientes_retirar" value="{{ old('max_ingredientes_retirar') }}" min="0" placeholder="Ex.: 2">
+                            @error('max_ingredientes_retirar')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <div class="form-text">Obrigatório se houver ingredientes (use 0 se não quiser permitir retirada).</div>
+                        </div>
+                        <div class="col-12">
                             <div class="form-check mb-2">
                                 <input class="form-check-input" type="checkbox" name="permite_adicionais" id="permite_adicionais" value="1" {{ old('permite_adicionais') ? 'checked' : '' }}>
-                                <label class="form-check-label" for="permite_adicionais">Permitir adicionais / retirar ingredientes na loja</label>
+                                <label class="form-check-label" for="permite_adicionais">Permitir acréscimos pagos na loja</label>
                             </div>
-                            <p class="small text-muted mb-2">Marque quais opções deste cardápio entram neste produto (cadastre em <a href="{{ route('empresa.adicionais.index') }}">Adicionais</a>).</p>
+                            <p class="small text-muted mb-2">Marque as opções de <strong>cobrança</strong> deste cardápio (cadastre em <a href="{{ route('empresa.adicionais.index') }}">Adicionais</a>). Ingredientes para retirar são os listados acima.</p>
                             <div class="border rounded p-3 bg-light mb-2" style="max-height: 12rem; overflow-y: auto;">
-                                @forelse ($adicionais as $ad)
+                                @forelse ($adicionais->where('tipo', \App\Models\Adicional::TIPO_ACRESCENTAR) as $ad)
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" name="adicional_ids[]" id="ad_{{ $ad->id }}" value="{{ $ad->id }}"
                                             @checked(in_array($ad->id, array_map('intval', (array) old('adicional_ids', [])), true))>
                                         <label class="form-check-label" for="ad_{{ $ad->id }}">
                                             {{ $ad->nome }}
-                                            @if ($ad->tipo === \App\Models\Adicional::TIPO_RETIRAR)
-                                                <span class="text-muted small">(retirar)</span>
-                                            @else
-                                                <span class="text-muted small">(+ R$ {{ number_format((float) $ad->preco, 2, ',', '.') }})</span>
-                                            @endif
+                                            <span class="text-muted small">(+ R$ {{ number_format((float) $ad->preco, 2, ',', '.') }})</span>
                                         </label>
                                     </div>
                                 @empty
-                                    <span class="small text-muted">Nenhum adicional cadastrado.</span>
+                                    <span class="small text-muted">Nenhum adicional de acréscimo cadastrado.</span>
                                 @endforelse
                             </div>
                             @error('adicional_ids')<div class="text-danger small">{{ $message }}</div>@enderror

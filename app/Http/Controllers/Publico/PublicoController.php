@@ -39,7 +39,7 @@ class PublicoController extends Controller
     }
 
     /**
-     * @return list<array{produto_id: int, quantidade: int, adicional_ids: list<int>}>
+     * @return list<array{produto_id: int, quantidade: int, adicional_ids: list<int>, retirar_ingrediente_ids: list<int>, observacao: string}>
      */
     private function getCarrinhoLines(string $slug): array
     {
@@ -58,6 +58,8 @@ class PublicoController extends Controller
                     'produto_id' => (int) $line['produto_id'],
                     'quantidade' => max(0, (int) ($line['quantidade'] ?? 0)),
                     'adicional_ids' => $this->normalizarIdsAdicionais($line['adicional_ids'] ?? []),
+                    'retirar_ingrediente_ids' => $this->normalizarIdsAdicionais($line['retirar_ingrediente_ids'] ?? []),
+                    'observacao' => $this->normalizarObservacao($line['observacao'] ?? null),
                 ];
             }
 
@@ -77,6 +79,8 @@ class PublicoController extends Controller
                 'produto_id' => (int) $pid,
                 'quantidade' => $q,
                 'adicional_ids' => [],
+                'retirar_ingrediente_ids' => [],
+                'observacao' => '',
             ];
         }
 
@@ -102,11 +106,29 @@ class PublicoController extends Controller
     }
 
     /**
-     * @param  list<int>  $adicionalIdsOrdenados
+     * @param  list<int>  $adicionalIdsAcrescentarOrdenados
+     * @param  list<int>  $retirarIngredienteIdsOrdenados
      */
-    private function fingerprintLinha(int $produtoId, array $adicionalIdsOrdenados): string
+    private function fingerprintLinha(int $produtoId, array $adicionalIdsAcrescentarOrdenados, array $retirarIngredienteIdsOrdenados, string $observacaoNormalizada): string
     {
-        return $produtoId.'|'.implode(',', $adicionalIdsOrdenados);
+        return $produtoId.'|a:'.implode(',', $adicionalIdsAcrescentarOrdenados).'|r:'.implode(',', $retirarIngredienteIdsOrdenados).'|'.sha1($observacaoNormalizada);
+    }
+
+    private function normalizarObservacao(?string $text): string
+    {
+        if ($text === null || $text === '') {
+            return '';
+        }
+
+        $t = trim(strip_tags($text));
+        if (function_exists('mb_strlen') && mb_strlen($t) > 500) {
+            return mb_substr($t, 0, 500);
+        }
+        if (strlen($t) > 500) {
+            return substr($t, 0, 500);
+        }
+
+        return $t;
     }
 
     private function setCarrinhoLines(string $slug, array $lines): void
@@ -122,7 +144,8 @@ class PublicoController extends Controller
      *   adicional_ids: list<int>,
      *   opcoes: list<array{id:int,nome:string,tipo:string,preco:float}>,
      *   preco_unitario: float,
-     *   subtotal: float
+     *   subtotal: float,
+     *   observacao: string
      * }>
      */
     private function linhasCarrinho(Empresa $empresa, string $slug): array
@@ -140,7 +163,10 @@ class PublicoController extends Controller
             ->whereIn('id', $pids)
             ->where('ativo', true)
             ->where('visivel_loja', true)
-            ->with(['adicionais' => fn ($q) => $q->where('adicionais.ativo', true)])
+            ->with([
+                'adicionais' => fn ($q) => $q->where('adicionais.ativo', true),
+                'ingredientes' => fn ($q) => $q->orderBy('ordem')->orderBy('nome'),
+            ])
             ->get()
             ->keyBy('id');
 
@@ -152,6 +178,7 @@ class PublicoController extends Controller
             $pid = (int) $line['produto_id'];
             $qty = max(0, (int) $line['quantidade']);
             $idsReq = $this->normalizarIdsAdicionais($line['adicional_ids'] ?? []);
+            $retReq = $this->normalizarIdsAdicionais($line['retirar_ingrediente_ids'] ?? []);
             if ($qty < 1) {
                 continue;
             }
@@ -161,28 +188,50 @@ class PublicoController extends Controller
                 continue;
             }
 
-            $idsPermitidos = $p->permite_adicionais
-                ? $p->adicionais->pluck('id')->map(fn ($id) => (int) $id)->all()
+            $idsPermAcre = $p->permite_adicionais
+                ? $p->adicionais->where('tipo', Adicional::TIPO_ACRESCENTAR)->pluck('id')->map(fn ($id) => (int) $id)->all()
                 : [];
 
-            $idsOk = array_values(array_filter($idsReq, fn ($id) => in_array($id, $idsPermitidos, true)));
+            $idsOkAcre = array_values(array_intersect($idsPermAcre, $idsReq));
+
+            $idsPermIng = $p->ingredientes->pluck('id')->map(fn ($id) => (int) $id)->all();
+            $retOk = array_values(array_intersect($retReq, $idsPermIng));
+            sort($retOk);
+            $maxR = (int) ($p->max_ingredientes_retirar ?? 0);
+            if ($p->ingredientes->isEmpty() || $maxR === 0) {
+                $retOk = [];
+            } elseif (count($retOk) > $maxR) {
+                $retOk = array_slice($retOk, 0, $maxR);
+            }
+
+            $obsLinha = $this->normalizarObservacao($line['observacao'] ?? null);
 
             $opcoes = [];
             $extraUnit = 0.0;
-            foreach ($idsOk as $aid) {
+            foreach ($idsOkAcre as $aid) {
                 $ad = $p->adicionais->firstWhere('id', $aid);
-                if (! $ad) {
+                if (! $ad || $ad->tipo !== Adicional::TIPO_ACRESCENTAR) {
                     continue;
                 }
                 $precoAd = (float) $ad->preco;
-                if ($ad->tipo === Adicional::TIPO_ACRESCENTAR) {
-                    $extraUnit += $precoAd;
-                }
+                $extraUnit += $precoAd;
                 $opcoes[] = [
                     'id' => (int) $ad->id,
                     'nome' => $ad->nome,
                     'tipo' => $ad->tipo,
                     'preco' => round($precoAd, 2),
+                ];
+            }
+            foreach ($retOk as $iid) {
+                $ing = $p->ingredientes->firstWhere('id', $iid);
+                if (! $ing) {
+                    continue;
+                }
+                $opcoes[] = [
+                    'id' => (int) $ing->id,
+                    'nome' => $ing->nome,
+                    'tipo' => 'retirar_ingrediente',
+                    'preco' => 0.0,
                 ];
             }
 
@@ -193,17 +242,20 @@ class PublicoController extends Controller
             $novasLinhasSessao[] = [
                 'produto_id' => $pid,
                 'quantidade' => $qty,
-                'adicional_ids' => $idsOk,
+                'adicional_ids' => $idsOkAcre,
+                'retirar_ingrediente_ids' => $retOk,
+                'observacao' => $obsLinha,
             ];
 
             $linhas[] = [
                 'line_index' => $idx,
                 'produto' => $p,
                 'quantidade' => $qty,
-                'adicional_ids' => $idsOk,
+                'adicional_ids' => $idsOkAcre,
                 'opcoes' => $opcoes,
                 'preco_unitario' => $precoUnit,
                 'subtotal' => $subtotal,
+                'observacao' => $obsLinha,
             ];
             $idx++;
         }
@@ -246,9 +298,12 @@ class PublicoController extends Controller
             ->where('ativo', true)
             ->where('visivel_loja', true)
             ->with('categoria')
-            ->withCount(['adicionais as adicionais_loja_count' => function ($q) {
-                $q->where('adicionais.ativo', true);
-            }]);
+            ->withCount([
+                'adicionais as adicionais_acrescimo_count' => function ($q) {
+                    $q->where('adicionais.ativo', true)->where('adicionais.tipo', Adicional::TIPO_ACRESCENTAR);
+                },
+            ])
+            ->withCount('ingredientes');
 
         if ($request->filled('categoria_id')) {
             $query->where('categoria_id', $request->integer('categoria_id'));
@@ -283,6 +338,7 @@ class PublicoController extends Controller
                 'adicionais' => fn ($q) => $q->where('adicionais.ativo', true)
                     ->orderBy('adicionais.ordem')
                     ->orderBy('adicionais.nome'),
+                'ingredientes' => fn ($q) => $q->orderBy('ordem')->orderBy('nome'),
             ])
             ->first();
 
@@ -306,16 +362,23 @@ class PublicoController extends Controller
             'quantidade' => ['nullable', 'integer', 'min:1', 'max:99'],
             'adicional_ids' => ['nullable', 'array'],
             'adicional_ids.*' => ['integer'],
+            'retirar_ingrediente_ids' => ['nullable', 'array'],
+            'retirar_ingrediente_ids.*' => ['integer'],
+            'observacao' => ['nullable', 'string', 'max:500'],
         ]);
 
         $qty = $data['quantidade'] ?? 1;
+        $obsNorm = $this->normalizarObservacao($data['observacao'] ?? null);
 
         $p = Produto::query()
             ->where('empresa_id', $empresa->id)
             ->where('id', $data['produto_id'])
             ->where('ativo', true)
             ->where('visivel_loja', true)
-            ->with(['adicionais' => fn ($q) => $q->where('adicionais.ativo', true)])
+            ->with([
+                'adicionais' => fn ($q) => $q->where('adicionais.ativo', true),
+                'ingredientes' => fn ($q) => $q->orderBy('ordem')->orderBy('nome'),
+            ])
             ->first();
 
         if (! $p) {
@@ -324,14 +387,32 @@ class PublicoController extends Controller
 
         $idsReq = $this->normalizarIdsAdicionais($data['adicional_ids'] ?? []);
         if (! $p->permite_adicionais && $idsReq !== []) {
-            return back()->with('warning', 'Este produto não permite personalização.');
+            return back()->with('warning', 'Este produto não permite acréscimos opcionais.');
         }
 
-        $idsPermitidos = $p->adicionais->pluck('id')->map(fn ($id) => (int) $id)->all();
-        $idsOk = $this->normalizarIdsAdicionais(array_values(array_intersect($idsPermitidos, $idsReq)));
+        $idsPermAcre = $p->permite_adicionais
+            ? $p->adicionais->where('tipo', Adicional::TIPO_ACRESCENTAR)->pluck('id')->map(fn ($id) => (int) $id)->all()
+            : [];
 
-        if (count($idsOk) !== count($idsReq)) {
+        $idsOkAcre = $this->normalizarIdsAdicionais(array_values(array_intersect($idsPermAcre, $idsReq)));
+
+        if (count($idsOkAcre) !== count($idsReq)) {
             return back()->with('warning', 'Uma das opções escolhidas não é válida para este produto.');
+        }
+
+        $retReq = $this->normalizarIdsAdicionais($data['retirar_ingrediente_ids'] ?? []);
+        $idsPermIng = $p->ingredientes->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $retOk = $this->normalizarIdsAdicionais(array_values(array_intersect($idsPermIng, $retReq)));
+
+        if (count($retOk) !== count($retReq)) {
+            return back()->with('warning', 'Uma das opções de retirada não é válida para este produto.');
+        }
+
+        $maxR = (int) ($p->max_ingredientes_retirar ?? 0);
+        if ($p->ingredientes->isEmpty() || $maxR === 0) {
+            $retOk = [];
+        } elseif (count($retOk) > $maxR) {
+            return back()->with('warning', 'Você pode pedir para retirar no máximo '.$maxR.' ingrediente(s) deste item.');
         }
 
         if ($p->estoque !== null && $p->estoque < $qty) {
@@ -339,12 +420,15 @@ class PublicoController extends Controller
         }
 
         $lines = $this->getCarrinhoLines($slug);
-        $fp = $this->fingerprintLinha((int) $p->id, $idsOk);
+        $fp = $this->fingerprintLinha((int) $p->id, $idsOkAcre, $retOk, $obsNorm);
         $found = false;
         foreach ($lines as $i => $line) {
+            $lineObs = $this->normalizarObservacao($line['observacao'] ?? null);
             $lineFp = $this->fingerprintLinha(
                 (int) $line['produto_id'],
-                $this->normalizarIdsAdicionais($line['adicional_ids'] ?? [])
+                $this->normalizarIdsAdicionais($line['adicional_ids'] ?? []),
+                $this->normalizarIdsAdicionais($line['retirar_ingrediente_ids'] ?? []),
+                $lineObs
             );
             if ($lineFp === $fp) {
                 $lines[$i]['quantidade'] = (int) $lines[$i]['quantidade'] + $qty;
@@ -357,7 +441,9 @@ class PublicoController extends Controller
             $lines[] = [
                 'produto_id' => (int) $p->id,
                 'quantidade' => $qty,
-                'adicional_ids' => $idsOk,
+                'adicional_ids' => $idsOkAcre,
+                'retirar_ingrediente_ids' => $retOk,
+                'observacao' => $obsNorm,
             ];
         }
 
@@ -498,6 +584,14 @@ class PublicoController extends Controller
 
             foreach ($linhas as $l) {
                 $p = $l['produto'];
+                $opLinha = [];
+                if ($l['opcoes'] !== []) {
+                    $opLinha['adicionais'] = $l['opcoes'];
+                }
+                if (($l['observacao'] ?? '') !== '') {
+                    $opLinha['observacao'] = $l['observacao'];
+                }
+
                 PedidoItem::query()->create([
                     'pedido_id' => $pedido->id,
                     'produto_id' => $p->id,
@@ -505,7 +599,7 @@ class PublicoController extends Controller
                     'preco_unitario' => $l['preco_unitario'],
                     'quantidade' => $l['quantidade'],
                     'subtotal' => $l['subtotal'],
-                    'opcoes_linha' => $l['opcoes'] === [] ? null : ['adicionais' => $l['opcoes']],
+                    'opcoes_linha' => $opLinha === [] ? null : $opLinha,
                 ]);
 
                 if ($p->estoque !== null) {

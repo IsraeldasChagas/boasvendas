@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Produto extends Model
 {
@@ -22,6 +23,7 @@ class Produto extends Model
         'visivel_loja',
         'ativo',
         'permite_adicionais',
+        'max_ingredientes_retirar',
     ];
 
     protected function casts(): array
@@ -48,6 +50,11 @@ class Produto extends Model
     public function adicionais(): BelongsToMany
     {
         return $this->belongsToMany(Adicional::class, 'adicional_produto')->withTimestamps();
+    }
+
+    public function ingredientes(): HasMany
+    {
+        return $this->hasMany(ProdutoIngrediente::class, 'produto_id')->orderBy('ordem')->orderBy('nome');
     }
 
     /**

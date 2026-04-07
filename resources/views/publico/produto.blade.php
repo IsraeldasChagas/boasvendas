@@ -29,7 +29,11 @@
                 <h1 class="h3 fw-bold mt-2">{{ $produto->nome }}</h1>
                 <p class="text-muted" style="white-space: pre-wrap;">{{ $produto->descricao !== null && $produto->descricao !== '' ? $produto->descricao : 'Sem descrição cadastrada.' }}</p>
                 @php
-                    $temAcrescimo = $produto->permite_adicionais && $produto->adicionais->where('tipo', \App\Models\Adicional::TIPO_ACRESCENTAR)->isNotEmpty();
+                    $acres = $produto->adicionais->where('tipo', \App\Models\Adicional::TIPO_ACRESCENTAR);
+                    $temAcrescimo = $produto->permite_adicionais && $acres->isNotEmpty();
+                    $maxRet = (int) ($produto->max_ingredientes_retirar ?? 0);
+                    $temRetirarIng = $produto->ingredientes->isNotEmpty() && $maxRet > 0;
+                    $temPersonalizar = ($produto->permite_adicionais && $acres->isNotEmpty()) || $temRetirarIng;
                 @endphp
                 <p class="h4 text-success mb-1">R$ {{ number_format((float) $produto->preco, 2, ',', '.') }}</p>
                 @if ($temAcrescimo)
@@ -50,11 +54,10 @@
                         @csrf
                         <input type="hidden" name="produto_id" value="{{ $produto->id }}">
 
-                        @if ($produto->permite_adicionais && $produto->adicionais->isNotEmpty())
+                        @if ($temPersonalizar)
                             <div class="vf-card p-3 mb-3">
                                 <h2 class="h6 fw-bold mb-2">Personalizar</h2>
-                                @php $acres = $produto->adicionais->where('tipo', \App\Models\Adicional::TIPO_ACRESCENTAR); @endphp
-                                @if ($acres->isNotEmpty())
+                                @if ($produto->permite_adicionais && $acres->isNotEmpty())
                                     <p class="small text-muted mb-2">Acrescentar</p>
                                     @foreach ($acres as $ad)
                                         <div class="form-check">
@@ -68,18 +71,22 @@
                                         </div>
                                     @endforeach
                                 @endif
-                                @php $rets = $produto->adicionais->where('tipo', \App\Models\Adicional::TIPO_RETIRAR); @endphp
-                                @if ($rets->isNotEmpty())
-                                    <p class="small text-muted mb-2 mt-3">Retirar ingrediente</p>
-                                    @foreach ($rets as $ad)
+                                @if ($temRetirarIng)
+                                    <p class="small text-muted mb-2 mt-3">Retirar ingrediente <span class="text-muted">(até {{ $maxRet }})</span></p>
+                                    @foreach ($produto->ingredientes as $ing)
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="adicional_ids[]" id="adicional_{{ $ad->id }}" value="{{ $ad->id }}">
-                                            <label class="form-check-label" for="adicional_{{ $ad->id }}">Sem {{ $ad->nome }}</label>
+                                            <input class="form-check-input vf-retirar-ing" type="checkbox" name="retirar_ingrediente_ids[]" id="ing_{{ $ing->id }}" value="{{ $ing->id }}" data-max="{{ $maxRet }}">
+                                            <label class="form-check-label" for="ing_{{ $ing->id }}">Sem {{ $ing->nome }}</label>
                                         </div>
                                     @endforeach
                                 @endif
                             </div>
                         @endif
+
+                        <div class="mb-3">
+                            <label class="form-label small text-muted mb-1" for="obs_prod">Observações <span class="text-muted">(opcional)</span></label>
+                            <textarea class="form-control" id="obs_prod" name="observacao" rows="2" maxlength="500" placeholder="Ex.: ponto da carne, detalhes da entrega…">{{ old('observacao') }}</textarea>
+                        </div>
 
                         <div class="d-flex flex-wrap gap-2 align-items-end">
                             <div>
@@ -95,4 +102,24 @@
             </div>
         </div>
     </div>
+    @if ($temRetirarIng ?? false)
+        @push('scripts')
+            <script>
+                (function () {
+                    const form = document.querySelector('form[action*="carrinho.adicionar"]');
+                    if (!form) return;
+                    const max = parseInt(form.querySelector('.vf-retirar-ing')?.dataset.max || '0', 10);
+                    if (!max) return;
+                    form.addEventListener('change', function (e) {
+                        if (!e.target.classList.contains('vf-retirar-ing')) return;
+                        const checked = form.querySelectorAll('.vf-retirar-ing:checked');
+                        if (checked.length > max) {
+                            e.target.checked = false;
+                            alert('Você pode escolher no máximo ' + max + ' ingrediente(s) para retirar.');
+                        }
+                    });
+                })();
+            </script>
+        @endpush
+    @endif
 @endsection
