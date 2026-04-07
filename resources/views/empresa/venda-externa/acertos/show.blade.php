@@ -52,6 +52,14 @@
                     </dd>
                     <dt class="col-sm-4">Repasse unitário</dt>
                     <dd class="col-sm-8">{{ $acerto->valor_repasse_unitario !== null ? 'R$ '.number_format((float) $acerto->valor_repasse_unitario, 2, ',', '.') : '—' }}</dd>
+                    <dt class="col-sm-4">Quantidade vendida</dt>
+                    <dd class="col-sm-8">
+                        @if ($acerto->quantidade !== null)
+                            {{ rtrim(rtrim(number_format((float) $acerto->quantidade, 3, ',', '.'), '0'), ',') }}
+                        @else
+                            —
+                        @endif
+                    </dd>
                     <dt class="col-sm-4">Repasse total</dt>
                     <dd class="col-sm-8">{{ $acerto->valor_repasse !== null ? 'R$ '.number_format((float) $acerto->valor_repasse, 2, ',', '.') : '—' }}</dd>
                 </dl>

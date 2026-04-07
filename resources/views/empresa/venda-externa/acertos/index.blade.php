@@ -54,6 +54,7 @@
                         <th>Parceiro</th>
                         <th>Remessa</th>
                         <th class="text-end">Repasse unit.</th>
+                        <th class="text-end">Qtd.</th>
                         <th class="text-end">Repasse total</th>
                         <th>Status</th>
                         <th class="text-end">Ações</th>
@@ -83,6 +84,13 @@
                                 @endif
                             </td>
                             <td class="text-end small">
+                                @if ($a->quantidade !== null)
+                                    {{ rtrim(rtrim(number_format((float) $a->quantidade, 3, ',', '.'), '0'), ',') }}
+                                @else
+                                    —
+                                @endif
+                            </td>
+                            <td class="text-end small">
                                 @if ($a->valor_repasse !== null)
                                     R$ {{ number_format((float) $a->valor_repasse, 2, ',', '.') }}
                                 @else
@@ -97,7 +105,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-5">
+                            <td colspan="8" class="text-center text-muted py-5">
                                 Nenhum acerto.
                                 <a href="{{ route('empresa.venda-externa.acertos.create') }}">Registrar</a>
                             </td>

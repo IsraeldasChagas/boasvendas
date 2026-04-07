@@ -20,6 +20,7 @@ class VeAcerto extends Model
         'data_acerto',
         'valor_vendas',
         'valor_repasse_unitario',
+        'quantidade',
         'valor_repasse',
         'status',
         'observacoes',
@@ -31,6 +32,7 @@ class VeAcerto extends Model
             'data_acerto' => 'date',
             'valor_vendas' => 'decimal:2',
             'valor_repasse_unitario' => 'decimal:2',
+            'quantidade' => 'decimal:3',
             'valor_repasse' => 'decimal:2',
         ];
     }

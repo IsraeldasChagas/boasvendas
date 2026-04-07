@@ -515,21 +515,7 @@ class VendaExternaController extends Controller
 
         $data = $this->validatedAcerto($request, $empresa->id);
         $data['empresa_id'] = $empresa->id;
-
-        if (
-            Schema::hasColumn('ve_acertos', 'valor_repasse_unitario')
-            && empty($data['valor_repasse_unitario'])
-            && ! empty($data['ve_remessa_id'])
-        ) {
-            $precoProduto = VeRemessa::query()
-                ->where('empresa_id', $empresa->id)
-                ->whereKey($data['ve_remessa_id'])
-                ->with('produto')
-                ->first()?->produto?->preco;
-            if ($precoProduto !== null) {
-                $data['valor_repasse_unitario'] = $precoProduto;
-            }
-        }
+        $data = $this->aplicarDefaultsAcerto($data, $empresa->id);
 
         VeAcerto::query()->create($data);
 
@@ -578,21 +564,7 @@ class VendaExternaController extends Controller
         $this->mergeAcertoRemessaVazio($request);
 
         $data = $this->validatedAcerto($request, $empresa->id);
-
-        if (
-            Schema::hasColumn('ve_acertos', 'valor_repasse_unitario')
-            && empty($data['valor_repasse_unitario'])
-            && ! empty($data['ve_remessa_id'])
-        ) {
-            $precoProduto = VeRemessa::query()
-                ->where('empresa_id', $empresa->id)
-                ->whereKey($data['ve_remessa_id'])
-                ->with('produto')
-                ->first()?->produto?->preco;
-            if ($precoProduto !== null) {
-                $data['valor_repasse_unitario'] = $precoProduto;
-            }
-        }
+        $data = $this->aplicarDefaultsAcerto($data, $empresa->id);
 
         $veAcerto->update($data);
 
@@ -632,6 +604,7 @@ class VendaExternaController extends Controller
                 Rule::requiredIf(fn () => $request->input('status') === VeAcerto::STATUS_CONCLUIDO),
             ],
             'valor_repasse_unitario' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
+            'quantidade' => ['nullable', 'numeric', 'min:0.001', 'max:99999999.999'],
             'valor_repasse' => ['nullable', 'numeric', 'min:0', 'max:99999999.99'],
             'status' => ['required', Rule::in([VeAcerto::STATUS_ABERTO, VeAcerto::STATUS_CONCLUIDO])],
             'observacoes' => ['nullable', 'string', 'max:5000'],
@@ -640,9 +613,41 @@ class VendaExternaController extends Controller
         if (! Schema::hasColumn('ve_acertos', 'valor_repasse_unitario')) {
             unset($rules['valor_repasse_unitario']);
         }
+        if (! Schema::hasColumn('ve_acertos', 'quantidade')) {
+            unset($rules['quantidade']);
+        }
 
         $data = $request->validate($rules);
         $data['valor_vendas'] = null;
+
+        return $data;
+    }
+
+    private function aplicarDefaultsAcerto(array $data, int $empresaId): array
+    {
+        if (
+            Schema::hasColumn('ve_acertos', 'valor_repasse_unitario')
+            && empty($data['valor_repasse_unitario'])
+            && ! empty($data['ve_remessa_id'])
+        ) {
+            $precoProduto = VeRemessa::query()
+                ->where('empresa_id', $empresaId)
+                ->whereKey($data['ve_remessa_id'])
+                ->with('produto')
+                ->first()?->produto?->preco;
+            if ($precoProduto !== null) {
+                $data['valor_repasse_unitario'] = (float) $precoProduto;
+            }
+        }
+
+        if (
+            Schema::hasColumn('ve_acertos', 'valor_repasse_unitario')
+            && Schema::hasColumn('ve_acertos', 'quantidade')
+            && ! empty($data['valor_repasse_unitario'])
+            && ! empty($data['quantidade'])
+        ) {
+            $data['valor_repasse'] = round(((float) $data['valor_repasse_unitario']) * ((float) $data['quantidade']), 2);
+        }
 
         return $data;
     }

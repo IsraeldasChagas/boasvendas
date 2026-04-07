@@ -69,10 +69,17 @@
                     <div class="form-text">Valor acertado com o parceiro por unidade (pode coincidir com o preço do produto ou não).</div>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label" for="valor_repasse">Repasse total (R$)</label>
-                    <input type="number" step="0.01" min="0" class="form-control @error('valor_repasse') is-invalid @enderror" id="valor_repasse" name="valor_repasse" value="{{ old('valor_repasse', $acerto->valor_repasse) }}">
-                    @error('valor_repasse')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    <label class="form-label" for="quantidade">Quantidade vendida</label>
+                    <input type="number" step="0.001" min="0" class="form-control @error('quantidade') is-invalid @enderror" id="quantidade" name="quantidade" value="{{ old('quantidade', $acerto->quantidade) }}">
+                    @error('quantidade')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    <div class="form-text">Quantidade que o parceiro vendeu (é isso que calcula o repasse total).</div>
                 </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="valor_repasse">Repasse total (R$)</label>
+                <input type="number" step="0.01" min="0" class="form-control @error('valor_repasse') is-invalid @enderror" id="valor_repasse" name="valor_repasse" value="{{ old('valor_repasse', $acerto->valor_repasse) }}" readonly>
+                @error('valor_repasse')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                <div class="form-text">Calculado automaticamente: repasse unitário × quantidade.</div>
             </div>
             <div class="mb-4">
                 <label class="form-label" for="observacoes">Observações</label>
@@ -132,8 +139,26 @@
                 }
             }
 
+            function calcTotal() {
+                const inputRepasseUnit = document.getElementById('valor_repasse_unitario');
+                const inputQtd = document.getElementById('quantidade');
+                const inputTotal = document.getElementById('valor_repasse');
+                if (!inputRepasseUnit || !inputQtd || !inputTotal) return;
+                const u = parseFloat((inputRepasseUnit.value || '').replace(',', '.'));
+                const q = parseFloat((inputQtd.value || '').replace(',', '.'));
+                if (Number.isNaN(u) || Number.isNaN(q)) {
+                    inputTotal.value = '';
+                    return;
+                }
+                inputTotal.value = (u * q).toFixed(2);
+            }
+
             sel?.addEventListener('change', sync);
+            sel?.addEventListener('change', calcTotal);
+            document.getElementById('valor_repasse_unitario')?.addEventListener('input', calcTotal);
+            document.getElementById('quantidade')?.addEventListener('input', calcTotal);
             sync();
+            calcTotal();
         })();
     </script>
 @endpush
