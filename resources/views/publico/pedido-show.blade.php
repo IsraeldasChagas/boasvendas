@@ -95,7 +95,7 @@
                 <p class="small text-muted mb-1">{{ $pedido->cliente_email }}</p>
             @endif
             <p class="small mb-0">{{ $pedido->endereco }}@if ($pedido->complemento), {{ $pedido->complemento }}@endif</p>
-            <p class="small mt-2 mb-0"><span class="text-muted">Pagamento:</span> {{ $pedido->rotuloFormaPagamento() }}</p>
+            <p class="small mt-2 mb-0"><span class="text-muted">Pagamento:</span> {{ $pedido->descricaoPagamentoExibicao() }}</p>
             @if ($pedido->observacoes)
                 <p class="small mt-2 mb-0"><span class="text-muted">Obs.:</span> {{ $pedido->observacoes }}</p>
             @endif

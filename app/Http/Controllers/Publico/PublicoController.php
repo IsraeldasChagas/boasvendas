@@ -542,15 +542,37 @@ class PublicoController extends Controller
                 ->with('warning', 'Seu carrinho está vazio.');
         }
 
+        $subtotalVal = $this->subtotalCarrinho($linhas);
+        $taxaVal = $this->taxaEntregaValor($empresa);
+        $totalPedido = round($subtotalVal + $taxaVal, 2);
+
+        $formasCheckout = array_keys(collect(Pedido::formasPagamentoRotulos())->except([Pedido::PAGAMENTO_CARTAO])->all());
+
         $data = $request->validate([
             'cliente_nome' => ['required', 'string', 'max:120'],
             'cliente_telefone' => ['required', 'string', 'max:32'],
             'cliente_email' => ['nullable', 'email', 'max:255'],
             'endereco' => ['required', 'string', 'max:255'],
             'complemento' => ['nullable', 'string', 'max:120'],
-            'forma_pagamento' => ['required', 'string', Rule::in(array_keys(Pedido::formasPagamentoRotulos()))],
+            'forma_pagamento' => ['required', 'string', Rule::in($formasCheckout)],
+            'pagamento_troco_para' => ['nullable', 'numeric', 'min:0'],
             'observacoes' => ['nullable', 'string', 'max:1000'],
         ]);
+
+        $trocoPara = $data['pagamento_troco_para'] ?? null;
+        if ($data['forma_pagamento'] === Pedido::PAGAMENTO_DINHEIRO && $trocoPara !== null && $trocoPara !== '') {
+            $v = (float) $trocoPara;
+            if ($v > 0 && $v < $totalPedido) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['pagamento_troco_para' => 'Informe um valor igual ou maior que o total (R$ '.number_format($totalPedido, 2, ',', '.').') para calcular o troco, ou deixe em branco se for pagamento em valor exato.']);
+            }
+        }
+
+        $pagamentoTrocoPara = null;
+        if ($data['forma_pagamento'] === Pedido::PAGAMENTO_DINHEIRO && $trocoPara !== null && $trocoPara !== '') {
+            $pagamentoTrocoPara = round((float) $trocoPara, 2);
+        }
 
         foreach ($linhas as $l) {
             $p = $l['produto'];
@@ -560,11 +582,11 @@ class PublicoController extends Controller
             }
         }
 
-        $subtotal = $this->subtotalCarrinho($linhas);
-        $taxa = $this->taxaEntregaValor($empresa);
-        $total = round($subtotal + $taxa, 2);
+        $subtotal = $subtotalVal;
+        $taxa = $taxaVal;
+        $total = $totalPedido;
 
-        $pedido = DB::transaction(function () use ($empresa, $linhas, $data, $subtotal, $taxa, $total) {
+        $pedido = DB::transaction(function () use ($empresa, $linhas, $data, $subtotal, $taxa, $total, $pagamentoTrocoPara) {
             $pedido = Pedido::query()->create([
                 'empresa_id' => $empresa->id,
                 'codigo_publico' => $this->gerarCodigoPublico(),
@@ -575,6 +597,7 @@ class PublicoController extends Controller
                 'endereco' => $data['endereco'],
                 'complemento' => $data['complemento'] ?: null,
                 'forma_pagamento' => $data['forma_pagamento'],
+                'pagamento_troco_para' => $pagamentoTrocoPara,
                 'observacoes' => $data['observacoes'] ?: null,
                 'status' => Pedido::STATUS_RECEBIDO,
                 'subtotal' => $subtotal,

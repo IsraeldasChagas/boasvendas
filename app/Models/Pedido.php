@@ -26,7 +26,14 @@ class Pedido extends Model
 
     public const PAGAMENTO_PIX = 'pix';
 
+    /** @deprecated Pedidos antigos; exibir como cartão genérico */
     public const PAGAMENTO_CARTAO = 'cartao';
+
+    public const PAGAMENTO_CARTAO_CREDITO_MAQUININHA = 'cartao_credito';
+
+    public const PAGAMENTO_CARTAO_DEBITO_MAQUININHA = 'cartao_debito';
+
+    public const PAGAMENTO_DINHEIRO = 'dinheiro';
 
     public const PAGAMENTO_ENTREGA = 'entrega';
 
@@ -40,6 +47,7 @@ class Pedido extends Model
         'endereco',
         'complemento',
         'forma_pagamento',
+        'pagamento_troco_para',
         'observacoes',
         'status',
         'subtotal',
@@ -53,6 +61,7 @@ class Pedido extends Model
             'subtotal' => 'decimal:2',
             'taxa_entrega' => 'decimal:2',
             'total' => 'decimal:2',
+            'pagamento_troco_para' => 'decimal:2',
         ];
     }
 
@@ -100,13 +109,37 @@ class Pedido extends Model
     {
         return [
             self::PAGAMENTO_PIX => 'PIX',
+            self::PAGAMENTO_CARTAO_CREDITO_MAQUININHA => 'Cartão de crédito (na maquininha)',
+            self::PAGAMENTO_CARTAO_DEBITO_MAQUININHA => 'Cartão de débito (na maquininha)',
+            self::PAGAMENTO_DINHEIRO => 'Dinheiro',
+            self::PAGAMENTO_ENTREGA => 'Na entrega (combinar)',
             self::PAGAMENTO_CARTAO => 'Cartão',
-            self::PAGAMENTO_ENTREGA => 'Na entrega',
         ];
     }
 
     public function rotuloFormaPagamento(): string
     {
         return self::formasPagamentoRotulos()[$this->forma_pagamento] ?? $this->forma_pagamento;
+    }
+
+    /** Texto para exibição ao cliente e na empresa (forma + troco em dinheiro). */
+    public function descricaoPagamentoExibicao(): string
+    {
+        $rotulo = $this->rotuloFormaPagamento();
+
+        if ($this->forma_pagamento !== self::PAGAMENTO_DINHEIRO) {
+            return $rotulo;
+        }
+
+        $pagaCom = $this->pagamento_troco_para;
+        if ($pagaCom === null) {
+            return $rotulo.' — valor exato ou troco não informado';
+        }
+
+        $paga = (float) $pagaCom;
+        $total = (float) $this->total;
+        $troco = round(max(0, $paga - $total), 2);
+
+        return $rotulo.' — paga com R$ '.number_format($paga, 2, ',', '.').' (troco R$ '.number_format($troco, 2, ',', '.').')';
     }
 }

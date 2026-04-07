@@ -41,15 +41,28 @@
                     </div>
                     <div class="vf-card p-3 mb-3">
                         <h2 class="h6 fw-bold mb-3">Pagamento</h2>
-                        <div class="d-flex flex-wrap gap-2">
-                            @foreach (\App\Models\Pedido::formasPagamentoRotulos() as $val => $rotulo)
+                        @php
+                            $formasCheckout = collect(\App\Models\Pedido::formasPagamentoRotulos())->except([\App\Models\Pedido::PAGAMENTO_CARTAO]);
+                        @endphp
+                        <div class="d-flex flex-column gap-2">
+                            @foreach ($formasCheckout as $val => $rotulo)
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="forma_pagamento" id="pay-{{ $val }}" value="{{ $val }}" @checked(old('forma_pagamento', \App\Models\Pedido::PAGAMENTO_PIX) === $val)>
+                                    <input class="form-check-input vf-pay-opt" type="radio" name="forma_pagamento" id="pay-{{ $val }}" value="{{ $val }}" data-pay="{{ $val }}" @checked(old('forma_pagamento', \App\Models\Pedido::PAGAMENTO_PIX) === $val)>
                                     <label class="form-check-label" for="pay-{{ $val }}">{{ $rotulo }}</label>
                                 </div>
                             @endforeach
                         </div>
                         @error('forma_pagamento')<div class="text-danger small mt-2">{{ $message }}</div>@enderror
+
+                        <div id="vf-pay-dinheiro-extra" class="mt-3 p-3 rounded border bg-light {{ old('forma_pagamento', \App\Models\Pedido::PAGAMENTO_PIX) === \App\Models\Pedido::PAGAMENTO_DINHEIRO ? '' : 'd-none' }}">
+                            <label class="form-label small mb-1" for="pagamento_troco_para">Vai pagar com quanto em dinheiro? <span class="text-muted">(opcional)</span></label>
+                            <div class="input-group input-group-sm" style="max-width: 14rem;">
+                                <span class="input-group-text">R$</span>
+                                <input type="number" class="form-control @error('pagamento_troco_para') is-invalid @enderror" name="pagamento_troco_para" id="pagamento_troco_para" value="{{ old('pagamento_troco_para') }}" min="0" step="0.01" placeholder="Ex.: 100,00">
+                            </div>
+                            @error('pagamento_troco_para')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            <p class="small text-muted mb-0 mt-2">Informe o valor da cédula ou do montante (deve ser ≥ total R$ {{ number_format($total, 2, ',', '.') }}) para o entregador levar o troco. Deixe em branco se for pagar o valor exato.</p>
+                        </div>
                     </div>
                     <div class="vf-card p-3">
                         <h2 class="h6 fw-bold mb-2">Observações</h2>
@@ -80,4 +93,19 @@
             </div>
         </form>
     </div>
+    @push('scripts')
+        <script>
+            (function () {
+                var din = '{{ \App\Models\Pedido::PAGAMENTO_DINHEIRO }}';
+                var box = document.getElementById('vf-pay-dinheiro-extra');
+                if (!box) return;
+                document.querySelectorAll('.vf-pay-opt').forEach(function (r) {
+                    r.addEventListener('change', function () {
+                        if (this.value === din) box.classList.remove('d-none');
+                        else box.classList.add('d-none');
+                    });
+                });
+            })();
+        </script>
+    @endpush
 @endsection
