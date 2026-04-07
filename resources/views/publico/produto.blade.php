@@ -57,6 +57,9 @@
                         @if ($temPersonalizar)
                             <div class="vf-card p-3 mb-3">
                                 <h2 class="h6 fw-bold mb-2">Personalizar</h2>
+                                @if ($temRetirarIng)
+                                    <p class="small text-muted mb-3 border-start border-3 border-secondary-subtle ps-2">Retirar ingredientes é opcional e <strong>não reduz</strong> o valor do produto.</p>
+                                @endif
                                 @if ($produto->permite_adicionais && $acres->isNotEmpty())
                                     <p class="small text-muted mb-2">Acrescentar</p>
                                     @foreach ($acres as $ad)
