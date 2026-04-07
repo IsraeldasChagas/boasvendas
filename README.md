@@ -39,6 +39,14 @@ Layouts: `resources/views/layouts/{site,auth,publico,empresa,admin}.blade.php`.
 
 Assets: `public/assets/css/vendaffacil.css`, `public/assets/js/vendaffacil.js`, `public/assets/img/`.
 
+## Multi-empresa (isolamento)
+
+- Cada **empresa** tem `id`, `slug` (URL pública `/loja/{slug}`), `status` (`ativa`, `trial`, `suspensa`, etc.).
+- Dados operacionais (produtos, pedidos, clientes, caixa, financeiro, venda externa, fidelidade, chamados) usam **`empresa_id`**; o painel `/empresa` filtra sempre pela empresa do utilizador autenticado.
+- **Route model binding** em `AppServiceProvider` resolve `{produto}`, `{pedido}`, `{cliente}`, etc. só dentro da empresa do utilizador (evita aceder a IDs de outra empresa).
+- Middleware **`empresa.painel`**: em todas as rotas `/empresa/*`, exige utilizador com empresa válida; **empresa suspensa** não acede ao painel; **master** (`VENDAFFACIL_ADMIN_EMAILS`) sem `empresa_id` é redirecionado para `/admin` (não mistura painéis).
+- **Master** (`/admin`) vê e gere todas as empresas; **site** e **loja pública** são globais por `slug`.
+
 ## PWA (base)
 
 - Manifest: `public/pwa/manifest.json`

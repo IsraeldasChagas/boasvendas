@@ -8,17 +8,17 @@ use App\Http\Controllers\Admin\PlanoController as AdminPlanoController;
 use App\Http\Controllers\Admin\SuporteController as AdminSuporteController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Empresa\CaixaController;
-use App\Http\Controllers\Empresa\ChamadoController as EmpresaChamadoController;
 use App\Http\Controllers\Empresa\CategoriaController;
+use App\Http\Controllers\Empresa\ChamadoController as EmpresaChamadoController;
 use App\Http\Controllers\Empresa\ClienteController;
 use App\Http\Controllers\Empresa\ConfiguracaoController;
 use App\Http\Controllers\Empresa\DashboardController as EmpresaDashboardController;
 use App\Http\Controllers\Empresa\EntregaController;
+use App\Http\Controllers\Empresa\FidelidadeController;
 use App\Http\Controllers\Empresa\FinanceiroController;
 use App\Http\Controllers\Empresa\PedidoController;
 use App\Http\Controllers\Empresa\ProdutoController;
 use App\Http\Controllers\Empresa\RelatorioController;
-use App\Http\Controllers\Empresa\FidelidadeController;
 use App\Http\Controllers\Empresa\UsuarioController;
 use App\Http\Controllers\Empresa\VendaExternaController;
 use App\Http\Controllers\Publico\FidelidadePublicController;
@@ -76,7 +76,7 @@ Route::get('/carrinho', [PublicoController::class, 'legadoCarrinho'])->name('pub
 Route::get('/checkout', [PublicoController::class, 'legadoCheckout'])->name('publico.checkout.legado');
 Route::get('/acompanhar-pedido', [PublicoController::class, 'legadoAcompanhar'])->name('publico.acompanhar-pedido.legado');
 
-Route::middleware('auth')->prefix('empresa')->name('empresa.')->group(function () {
+Route::middleware(['auth', 'empresa.painel'])->prefix('empresa')->name('empresa.')->group(function () {
     Route::get('/dashboard', [EmpresaDashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/suporte/chamados', [EmpresaChamadoController::class, 'index'])->name('chamados.index');
