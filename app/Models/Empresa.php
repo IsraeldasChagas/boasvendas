@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Support\GeradorQrCodePix;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -123,6 +124,11 @@ class Empresa extends Model
     public function slugs(): HasMany
     {
         return $this->hasMany(EmpresaSlug::class, 'empresa_id');
+    }
+
+    public function modulos(): BelongsToMany
+    {
+        return $this->belongsToMany(Modulo::class, 'empresa_modulo')->withTimestamps();
     }
 
     public static function statusRotulos(): array

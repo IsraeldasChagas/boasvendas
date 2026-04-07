@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Modulo extends Model
 {
@@ -20,6 +21,11 @@ class Modulo extends Model
         return [
             'ordem' => 'integer',
         ];
+    }
+
+    public function empresas(): BelongsToMany
+    {
+        return $this->belongsToMany(Empresa::class, 'empresa_modulo')->withTimestamps();
     }
 
     public static function situacoes(): array

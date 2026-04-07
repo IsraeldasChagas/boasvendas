@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Empresa;
+use App\Models\Modulo;
 use App\Models\Plano;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -42,16 +43,18 @@ class EmpresaController extends Controller
     public function create(): View
     {
         $planos = Plano::query()->orderBy('ordem')->orderBy('nome')->get();
+        $modulos = Modulo::query()->orderBy('ordem')->orderBy('nome')->get();
 
-        return view('admin.empresas.create', compact('planos'));
+        return view('admin.empresas.create', compact('planos', 'modulos'));
     }
 
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validated($request);
         $admin = $this->validatedAdminUser($request);
+        $moduloIds = $this->validatedModulos($request);
 
-        DB::transaction(function () use ($data, $admin) {
+        DB::transaction(function () use ($data, $admin, $moduloIds) {
             $data['slug'] = $this->gerarSlugUnico((string) ($data['nome'] ?? 'loja'));
             $empresa = Empresa::query()->create($data);
 
@@ -62,6 +65,9 @@ class EmpresaController extends Controller
                 'empresa_id' => $empresa->id,
                 'role' => 'gestor',
             ]);
+
+            $empresa->modulos()->sync($moduloIds);
+            $empresa->update(['modulos_resumo' => $this->resumoModulos($moduloIds)]);
         });
 
         return redirect()
@@ -79,13 +85,22 @@ class EmpresaController extends Controller
     public function edit(Empresa $empresa): View
     {
         $planos = Plano::query()->orderBy('ordem')->orderBy('nome')->get();
+        $modulos = Modulo::query()->orderBy('ordem')->orderBy('nome')->get();
+        $empresa->load('modulos');
 
-        return view('admin.empresas.edit', compact('empresa', 'planos'));
+        return view('admin.empresas.edit', compact('empresa', 'planos', 'modulos'));
     }
 
     public function update(Request $request, Empresa $empresa): RedirectResponse
     {
-        $empresa->update($this->validated($request));
+        $data = $this->validated($request);
+        $moduloIds = $this->validatedModulos($request);
+
+        DB::transaction(function () use ($empresa, $data, $moduloIds) {
+            $empresa->update($data);
+            $empresa->modulos()->sync($moduloIds);
+            $empresa->update(['modulos_resumo' => $this->resumoModulos($moduloIds)]);
+        });
 
         return redirect()
             ->route('admin.empresas.show', $empresa)
@@ -112,9 +127,50 @@ class EmpresaController extends Controller
             'cnpj' => ['nullable', 'string', 'max:32'],
             'plano_id' => ['nullable', 'integer', 'exists:planos,id'],
             'status' => ['required', 'string', Rule::in(array_keys(Empresa::statusRotulos()))],
-            'modulos_resumo' => ['nullable', 'string', 'max:255'],
+            'modulo_ids' => ['nullable', 'array'],
+            'modulo_ids.*' => ['integer', 'exists:modulos,id'],
             'cliente_desde' => ['nullable', 'date'],
         ]);
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function validatedModulos(Request $request): array
+    {
+        $ids = $request->input('modulo_ids', []);
+        if (! is_array($ids)) {
+            return [];
+        }
+
+        return collect($ids)
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @param  list<int>  $moduloIds
+     */
+    private function resumoModulos(array $moduloIds): ?string
+    {
+        if ($moduloIds === []) {
+            return null;
+        }
+
+        $nomes = Modulo::query()
+            ->whereIn('id', $moduloIds)
+            ->orderBy('ordem')
+            ->orderBy('nome')
+            ->pluck('nome')
+            ->filter()
+            ->all();
+
+        $txt = implode(' + ', $nomes);
+
+        return $txt !== '' ? $txt : null;
     }
 
     private function gerarSlugUnico(string $nome): string

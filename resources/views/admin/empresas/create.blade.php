@@ -45,10 +45,25 @@
                 </select>
                 @error('status')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
-            <div class="mb-3">
-                <label class="form-label" for="modulos_resumo">Módulos (resumo)</label>
-                <input type="text" class="form-control @error('modulos_resumo') is-invalid @enderror" id="modulos_resumo" name="modulos_resumo" value="{{ old('modulos_resumo') }}" placeholder="Ex.: VE + Delivery">
-                @error('modulos_resumo')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            <div class="mb-4">
+                <label class="form-label">Módulos liberados para a empresa</label>
+                <div class="border rounded p-3 bg-light" style="max-height: 14rem; overflow-y: auto;">
+                    @forelse ($modulos as $m)
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="modulo_ids[]" id="mod-{{ $m->id }}" value="{{ $m->id }}"
+                                @checked(in_array((int) $m->id, array_map('intval', (array) old('modulo_ids', [])), true))>
+                            <label class="form-check-label" for="mod-{{ $m->id }}">
+                                {{ $m->nome }}
+                                <span class="text-muted small">({{ \App\Models\Modulo::situacoes()[$m->situacao] ?? $m->situacao }})</span>
+                            </label>
+                        </div>
+                    @empty
+                        <div class="small text-muted">Nenhum módulo cadastrado. Cadastre em <a href="{{ route('admin.modulos.index') }}">Módulos</a>.</div>
+                    @endforelse
+                </div>
+                @error('modulo_ids')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                @error('modulo_ids.*')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                <div class="form-text">Isso substitui o “resumo” manual e será usado para liberar acesso (próximo passo).</div>
             </div>
             <div class="mb-4">
                 <label class="form-label" for="cliente_desde">Cliente desde</label>
