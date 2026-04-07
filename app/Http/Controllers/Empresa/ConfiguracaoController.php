@@ -59,8 +59,14 @@ class ConfiguracaoController extends Controller
             'loja_pix_copia_cola' => ['nullable', 'string', 'max:8192'],
         ]);
 
+        // Evita quebrar a vitrine ao salvar sem slug: se a empresa já tem slug,
+        // não permitimos que ele vire null por acidente ao editar outras infos.
+        if (! isset($data['slug']) || $data['slug'] === null || $data['slug'] === '') {
+            unset($data['slug']);
+        }
+
         $slugAnterior = (string) ($empresa->slug ?? '');
-        $slugNovo = (string) ($data['slug'] ?? '');
+        $slugNovo = (string) ($data['slug'] ?? $empresa->slug ?? '');
         $mudouSlug = $slugAnterior !== '' && $slugNovo !== '' && $slugAnterior !== $slugNovo;
         if ($mudouSlug) {
             EmpresaSlug::query()->firstOrCreate([
