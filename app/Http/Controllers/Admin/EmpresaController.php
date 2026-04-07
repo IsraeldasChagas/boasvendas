@@ -100,6 +100,20 @@ class EmpresaController extends Controller
             unset($data['menu_acessos']);
         }
         $empresa->update($data);
+
+        // Se liberou "Loja online (vitrine)" e a empresa ainda não tem slug, gera um automaticamente
+        // para evitar 404 e para o botão "Ver vitrine" funcionar.
+        if (
+            Schema::hasColumn('empresas', 'slug')
+            && ($empresa->slug === null || trim((string) $empresa->slug) === '')
+            && Schema::hasColumn('empresas', 'menu_acessos')
+        ) {
+            $menu = $empresa->telasMenuEmpresaLiberadas();
+            if (in_array('loja_online', $menu, true)) {
+                $empresa->update(['slug' => $this->gerarSlugUnico((string) $empresa->nome)]);
+            }
+        }
+
         if (Schema::hasColumn('empresas', 'menu_acessos')) {
             $empresa->update(['modulos_resumo' => $this->resumoTelasMenu($empresa->menu_acessos)]);
         }
