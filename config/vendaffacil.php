@@ -1,5 +1,14 @@
 <?php
 
+/*
+| E-mails master: se VENDAFFACIL_ADMIN_EMAILS existir no .env mas estiver vazio,
+| env() devolve '' e o default do segundo parâmetro NÃO é aplicado — por isso tratamos aqui.
+*/
+$adminRaw = env('VENDAFFACIL_ADMIN_EMAILS', env('BOASVENDAS_ADMIN_EMAILS'));
+if ($adminRaw === null || trim((string) $adminRaw) === '') {
+    $adminRaw = 'admin@vendaffacil.com.br';
+}
+
 return [
 
     /*
@@ -11,12 +20,12 @@ return [
 
     /*
     | E-mails (separados por vírgula) que acessam o painel master /admin.
-    | Ex.: VENDAFFACIL_ADMIN_EMAILS=admin@exemplo.com,outro@exemplo.com
+    | Em produção defina VENDAFFACIL_ADMIN_EMAILS com o(s) e-mail(s) real(is).
     */
 
     'admin_emails' => array_values(array_filter(array_map(
         'trim',
-        explode(',', (string) env('VENDAFFACIL_ADMIN_EMAILS', env('BOASVENDAS_ADMIN_EMAILS', '')))
+        explode(',', (string) $adminRaw)
     ))),
 
     /*
