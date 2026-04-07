@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\Storage;
 
 class Produto extends Model
 {
@@ -18,6 +19,7 @@ class Produto extends Model
         'preco',
         'estoque',
         'descricao',
+        'foto',
         'visivel_loja',
         'ativo',
         'permite_adicionais',
@@ -47,5 +49,14 @@ class Produto extends Model
     public function adicionais(): BelongsToMany
     {
         return $this->belongsToMany(Adicional::class, 'adicional_produto')->withTimestamps();
+    }
+
+    public function urlFoto(): ?string
+    {
+        if ($this->foto === null || $this->foto === '') {
+            return null;
+        }
+
+        return Storage::disk('public')->url($this->foto);
     }
 }

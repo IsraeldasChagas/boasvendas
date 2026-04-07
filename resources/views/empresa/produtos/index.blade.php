@@ -54,10 +54,17 @@
     <div class="vf-card p-0 overflow-hidden">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0 vf-table">
-                <thead><tr><th>Cód. interno</th><th>Nome</th><th>Categoria</th><th>Preço</th><th>Estoque</th><th>Status</th><th class="text-end">Ações</th></tr></thead>
+                <thead><tr><th style="width:3.5rem;"></th><th>Cód. interno</th><th>Nome</th><th>Categoria</th><th>Preço</th><th>Estoque</th><th>Status</th><th class="text-end">Ações</th></tr></thead>
                 <tbody>
                     @forelse ($produtos as $pr)
                         <tr>
+                            <td class="p-1">
+                                @if ($pr->foto)
+                                    <img src="{{ $pr->urlFoto() }}" alt="" width="40" height="40" class="rounded border object-fit-cover" style="width:40px;height:40px;">
+                                @else
+                                    <span class="d-inline-flex align-items-center justify-content-center rounded border bg-light text-muted" style="width:40px;height:40px;"><i class="bi bi-image small"></i></span>
+                                @endif
+                            </td>
                             <td class="small text-muted">{{ $pr->sku }}</td>
                             <td class="fw-medium">{{ $pr->nome }}</td>
                             <td>{{ $pr->categoria?->nome ?? '—' }}</td>
@@ -75,7 +82,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-5">
+                            <td colspan="8" class="text-center text-muted py-5">
                                 Nenhum produto cadastrado.
                                 <a href="{{ route('empresa.produtos.create') }}">Criar primeiro</a>
                             </td>

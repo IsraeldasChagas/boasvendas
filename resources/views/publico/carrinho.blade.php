@@ -31,8 +31,15 @@
                                         @php $p = $l['produto']; @endphp
                                         <tr>
                                             <td class="fw-medium">
-                                                <a href="{{ route('publico.produto', ['slug' => $slug, 'produto_id' => $p->id]) }}" class="text-decoration-none text-dark">{{ $p->nome }}</a>
-                                                @include('partials.opcoes-pedido-item', ['opcoesLinha' => $l['opcoes'] === [] ? null : ['adicionais' => $l['opcoes']]])
+                                                <div class="d-flex align-items-start gap-2">
+                                                    @if ($p->foto)
+                                                        <img src="{{ $p->urlFoto() }}" alt="" width="48" height="48" class="rounded border flex-shrink-0 object-fit-cover" style="width:48px;height:48px;">
+                                                    @endif
+                                                    <div>
+                                                        <a href="{{ route('publico.produto', ['slug' => $slug, 'produto_id' => $p->id]) }}" class="text-decoration-none text-dark">{{ $p->nome }}</a>
+                                                        @include('partials.opcoes-pedido-item', ['opcoesLinha' => $l['opcoes'] === [] ? null : ['adicionais' => $l['opcoes']]])
+                                                    </div>
+                                                </div>
                                             </td>
                                             <td class="text-center">
                                                 <input type="number" class="form-control form-control-sm text-center" name="quantidade[{{ $l['line_index'] }}]" value="{{ $l['quantidade'] }}" min="0" max="99">

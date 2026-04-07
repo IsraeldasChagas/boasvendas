@@ -15,8 +15,14 @@
         </nav>
         <div class="row g-4">
             <div class="col-md-6">
-                <div class="vf-card ratio ratio-1x1 bg-light d-flex align-items-center justify-content-center">
-                    <i class="bi bi-cup-hot display-3 text-primary opacity-25"></i>
+                <div class="vf-card ratio ratio-1x1 bg-light overflow-hidden">
+                    @if ($produto->foto)
+                        <img src="{{ $produto->urlFoto() }}" alt="{{ $produto->nome }}" class="w-100 h-100 object-fit-cover">
+                    @else
+                        <div class="d-flex align-items-center justify-content-center w-100 h-100">
+                            <i class="bi bi-cup-hot display-3 text-primary opacity-25"></i>
+                        </div>
+                    @endif
                 </div>
             </div>
             <div class="col-md-6">

@@ -37,8 +37,14 @@
                 <div class="col-6 col-md-4 col-lg-3">
                     <a href="{{ route('publico.produto', ['slug' => $slug, 'produto_id' => $pr->id]) }}" class="text-decoration-none text-dark">
                         <div class="vf-card vf-product-card h-100 overflow-hidden">
-                            <div class="ratio ratio-4x3 bg-primary-subtle d-flex align-items-center justify-content-center">
-                                <i class="bi bi-image text-primary opacity-50 fs-1"></i>
+                            <div class="ratio ratio-4x3 bg-primary-subtle overflow-hidden">
+                                @if ($pr->foto)
+                                    <img src="{{ $pr->urlFoto() }}" alt="" class="w-100 h-100 object-fit-cover">
+                                @else
+                                    <div class="d-flex align-items-center justify-content-center w-100 h-100">
+                                        <i class="bi bi-image text-primary opacity-50 fs-1"></i>
+                                    </div>
+                                @endif
                             </div>
                             <div class="p-3">
                                 <div class="fw-semibold">{{ $pr->nome }}</div>

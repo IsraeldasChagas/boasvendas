@@ -15,10 +15,21 @@
             </div>
             <span class="vf-badge {{ $produto->ativo ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }}">{{ $produto->ativo ? 'Ativo' : 'Inativo' }}</span>
         </div>
-        <form action="{{ route('empresa.produtos.update', $produto) }}" method="post">
+        <form action="{{ route('empresa.produtos.update', $produto) }}" method="post" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label" for="foto">Foto do produto</label>
+                    @if ($produto->foto)
+                        <div class="mb-2">
+                            <img src="{{ $produto->urlFoto() }}" alt="" class="rounded border" style="max-height: 140px; width: auto;">
+                        </div>
+                    @endif
+                    <input type="file" class="form-control @error('foto') is-invalid @enderror" id="foto" name="foto" accept="image/jpeg,image/png,image/webp,image/gif">
+                    @error('foto')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    <div class="form-text">Opcional. Envie uma nova imagem para trocar. JPG, PNG, WebP ou GIF, até 3&nbsp;MB.</div>
+                </div>
                 <div class="col-12">
                     <label class="form-label" for="nome">Nome</label>
                     <input type="text" class="form-control @error('nome') is-invalid @enderror" id="nome" name="nome" value="{{ old('nome', $produto->nome) }}" required>

@@ -11,9 +11,15 @@
         <div class="col-lg-8">
             <div class="vf-card p-4">
                 <h2 class="h5 fw-bold mb-4">Dados do produto</h2>
-                <form action="{{ route('empresa.produtos.store') }}" method="post">
+                <form action="{{ route('empresa.produtos.store') }}" method="post" enctype="multipart/form-data">
                     @csrf
                     <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label" for="foto">Foto do produto</label>
+                            <input type="file" class="form-control @error('foto') is-invalid @enderror" id="foto" name="foto" accept="image/jpeg,image/png,image/webp,image/gif">
+                            @error('foto')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <div class="form-text">Opcional. JPG, PNG, WebP ou GIF, até 3&nbsp;MB. Aparece no cardápio online.</div>
+                        </div>
                         <div class="col-12">
                             <label class="form-label" for="nome">Nome</label>
                             <input type="text" class="form-control @error('nome') is-invalid @enderror" id="nome" name="nome" value="{{ old('nome') }}" placeholder="Ex.: X-Burger" required>

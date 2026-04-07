@@ -9,6 +9,8 @@ use App\Models\Empresa;
 use App\Models\Produto;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -90,6 +92,10 @@ class ProdutoController extends Controller
         $data['empresa_id'] = $empresa->id;
         $data['sku'] = $this->gerarCodigoInternoUnico($empresa);
 
+        if ($request->hasFile('foto')) {
+            $data['foto'] = $this->armazenarFoto($request->file('foto'), $empresa);
+        }
+
         $produto = Produto::query()->create($data);
         $this->syncAdicionaisDoProduto($produto, $empresa, $request);
 
@@ -136,7 +142,14 @@ class ProdutoController extends Controller
             abort(403);
         }
 
-        $produto->update($this->validated($request, $empresa, $produto));
+        $data = $this->validated($request, $empresa, $produto);
+
+        if ($request->hasFile('foto')) {
+            $this->removerFotoDoDisco($produto);
+            $data['foto'] = $this->armazenarFoto($request->file('foto'), $empresa);
+        }
+
+        $produto->update($data);
         $this->syncAdicionaisDoProduto($produto, $empresa, $request);
 
         return redirect()
@@ -151,6 +164,7 @@ class ProdutoController extends Controller
             abort(403);
         }
 
+        $this->removerFotoDoDisco($produto);
         $produto->delete();
 
         return redirect()
@@ -173,6 +187,7 @@ class ProdutoController extends Controller
             'preco' => ['required', 'numeric', 'min:0'],
             'estoque' => ['required', 'integer', 'min:0'],
             'descricao' => ['nullable', 'string', 'max:10000'],
+            'foto' => ['nullable', 'image', 'max:3072'],
             'visivel_loja' => ['sometimes', 'boolean'],
             'ativo' => ['sometimes', 'boolean'],
             'permite_adicionais' => ['sometimes', 'boolean'],
@@ -186,6 +201,8 @@ class ProdutoController extends Controller
         $data['visivel_loja'] = $request->boolean('visivel_loja');
         $data['ativo'] = $request->boolean('ativo');
         $data['permite_adicionais'] = $request->boolean('permite_adicionais');
+
+        unset($data['foto']);
 
         return $data;
     }
@@ -228,5 +245,24 @@ class ProdutoController extends Controller
         );
 
         return $sku;
+    }
+
+    private function armazenarFoto(UploadedFile $file, Empresa $empresa): string
+    {
+        $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+        $ext = preg_match('/^[a-z0-9]{2,4}$/', $ext) ? $ext : 'jpg';
+        $nome = Str::uuid()->toString().'.'.$ext;
+        $dir = 'produtos/'.$empresa->id;
+
+        return $file->storeAs($dir, $nome, 'public');
+    }
+
+    private function removerFotoDoDisco(Produto $produto): void
+    {
+        if (! $produto->foto) {
+            return;
+        }
+
+        Storage::disk('public')->delete($produto->foto);
     }
 }
