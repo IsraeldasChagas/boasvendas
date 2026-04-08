@@ -7,7 +7,12 @@
     <div class="container py-2">
         <div class="d-flex align-items-center justify-content-between gap-3">
             <a href="{{ route('publico.loja', ['slug' => $slugNav]) }}" class="text-decoration-none text-dark fw-bold text-truncate me-2">
-                <i class="bi bi-shop text-primary me-1"></i><span class="d-none d-sm-inline">{{ $nomeLoja }}</span><span class="d-sm-none">Loja</span>
+                @if ($empresa && $empresa->urlLogo())
+                    <img src="{{ $empresa->urlLogo() }}" alt="" width="22" height="22" class="me-2 rounded bg-white border" style="object-fit: contain;">
+                @else
+                    <i class="bi bi-shop text-primary me-1"></i>
+                @endif
+                <span class="d-none d-sm-inline">{{ $nomeLoja }}</span><span class="d-sm-none">Loja</span>
             </a>
             <div class="d-flex align-items-center gap-2 flex-shrink-0">
                 @if ($empresa && $empresa->fidelidadePrograma && $empresa->fidelidadePrograma->ativo)
