@@ -39,12 +39,16 @@
                         <div class="vf-card vf-product-card h-100 overflow-hidden">
                             <div class="ratio ratio-4x3 bg-primary-subtle overflow-hidden">
                                 @if ($pr->urlFoto())
-                                    <img src="{{ $pr->urlFoto() }}" alt="" class="w-100 h-100 object-fit-cover">
+                                    <img src="{{ $pr->urlFoto() }}" alt="" class="w-100 h-100 object-fit-cover"
+                                         onerror="this.style.display='none'; this.parentElement.querySelector('[data-fallback]').classList.remove('d-none');">
                                 @else
                                     <div class="d-flex align-items-center justify-content-center w-100 h-100">
                                         <i class="bi bi-image text-primary opacity-50 fs-1"></i>
                                     </div>
                                 @endif
+                                <div class="d-none d-flex align-items-center justify-content-center w-100 h-100" data-fallback>
+                                    <i class="bi bi-image text-primary opacity-50 fs-1"></i>
+                                </div>
                             </div>
                             <div class="p-3">
                                 <div class="fw-semibold">{{ $pr->nome }}</div>

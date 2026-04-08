@@ -17,12 +17,16 @@
             <div class="col-md-6">
                 <div class="vf-card ratio ratio-1x1 bg-light overflow-hidden">
                     @if ($produto->urlFoto())
-                        <img src="{{ $produto->urlFoto() }}" alt="{{ $produto->nome }}" class="w-100 h-100 object-fit-cover">
+                        <img src="{{ $produto->urlFoto() }}" alt="{{ $produto->nome }}" class="w-100 h-100 object-fit-cover"
+                             onerror="this.style.display='none'; this.parentElement.querySelector('[data-fallback]').classList.remove('d-none');">
                     @else
                         <div class="d-flex align-items-center justify-content-center w-100 h-100">
                             <i class="bi bi-cup-hot display-3 text-primary opacity-25"></i>
                         </div>
                     @endif
+                    <div class="d-none d-flex align-items-center justify-content-center w-100 h-100" data-fallback>
+                        <i class="bi bi-cup-hot display-3 text-primary opacity-25"></i>
+                    </div>
                 </div>
             </div>
             <div class="col-md-6">

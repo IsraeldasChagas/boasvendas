@@ -726,32 +726,40 @@ class PublicoController extends Controller
         }
 
         $ext = strtolower(pathinfo($full, PATHINFO_EXTENSION));
-        if ($ext === 'webp') {
+        if (in_array($ext, ['webp', 'avif'], true)) {
             try {
-                $raw = @file_get_contents($full);
-                if (is_string($raw) && $raw !== '') {
-                    $img = @imagecreatefromstring($raw);
-                    if ($img !== false) {
-                        $w = imagesx($img);
-                        $h = imagesy($img);
-                        $dst = imagecreatetruecolor($w, $h);
-                        $white = imagecolorallocate($dst, 255, 255, 255);
-                        imagefilledrectangle($dst, 0, 0, $w, $h, $white);
-                        imagecopy($dst, $img, 0, 0, 0, 0, $w, $h);
+                $img = null;
+                if ($ext === 'webp' && function_exists('imagecreatefromwebp')) {
+                    $img = @imagecreatefromwebp($full);
+                } elseif ($ext === 'avif' && function_exists('imagecreatefromavif')) {
+                    $img = @imagecreatefromavif($full);
+                } else {
+                    $raw = @file_get_contents($full);
+                    if (is_string($raw) && $raw !== '') {
+                        $img = @imagecreatefromstring($raw);
+                    }
+                }
 
-                        ob_start();
-                        imagejpeg($dst, null, 85);
-                        $jpeg = ob_get_clean();
+                if ($img !== null && $img !== false) {
+                    $w = imagesx($img);
+                    $h = imagesy($img);
+                    $dst = imagecreatetruecolor($w, $h);
+                    $white = imagecolorallocate($dst, 255, 255, 255);
+                    imagefilledrectangle($dst, 0, 0, $w, $h, $white);
+                    imagecopy($dst, $img, 0, 0, 0, 0, $w, $h);
 
-                        imagedestroy($dst);
-                        imagedestroy($img);
+                    ob_start();
+                    imagejpeg($dst, null, 85);
+                    $jpeg = ob_get_clean();
 
-                        if (is_string($jpeg) && $jpeg !== '') {
-                            return response($jpeg, 200, [
-                                'Content-Type' => 'image/jpeg',
-                                'Cache-Control' => 'public, max-age=604800',
-                            ]);
-                        }
+                    imagedestroy($dst);
+                    imagedestroy($img);
+
+                    if (is_string($jpeg) && $jpeg !== '') {
+                        return response($jpeg, 200, [
+                            'Content-Type' => 'image/jpeg',
+                            'Cache-Control' => 'public, max-age=604800',
+                        ]);
                     }
                 }
             } catch (\Throwable $e) {
