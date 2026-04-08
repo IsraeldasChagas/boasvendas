@@ -56,6 +56,8 @@ class ConfiguracaoController extends Controller
             'logo' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'email_contato' => ['nullable', 'email', 'max:255'],
             'cnpj' => ['nullable', 'string', 'max:32'],
+            'endereco' => ['nullable', 'string', 'max:255'],
+            'whatsapp' => ['nullable', 'string', 'max:32'],
             'loja_pix_instrucoes' => ['nullable', 'string', 'max:4000'],
             'loja_pix_chave_tipo' => ['nullable', 'string', Rule::in(array_keys(Empresa::pixChaveTiposRotulos()))],
             'loja_pix_chave_valor' => ['nullable', 'string', 'max:255'],

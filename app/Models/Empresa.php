@@ -18,6 +18,8 @@ class Empresa extends Model
         'nome',
         'slug',
         'logo',
+        'endereco',
+        'whatsapp',
         'loja_pix_instrucoes',
         'loja_pix_chave_tipo',
         'loja_pix_chave_valor',

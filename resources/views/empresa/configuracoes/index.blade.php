@@ -76,6 +76,17 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="col-12">
+                            <label class="form-label" for="endereco">Endereço</label>
+                            <input type="text" class="form-control form-control-sm @error('endereco') is-invalid @enderror" id="endereco" name="endereco" value="{{ old('endereco', $empresa->endereco) }}" maxlength="255" placeholder="Ex.: Av. Principal, 123 - Bairro - Cidade/UF">
+                            @error('endereco')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="whatsapp">WhatsApp</label>
+                            <input type="text" class="form-control form-control-sm @error('whatsapp') is-invalid @enderror" id="whatsapp" name="whatsapp" value="{{ old('whatsapp', $empresa->whatsapp) }}" maxlength="32" placeholder="Ex.: (91) 99999-9999">
+                            @error('whatsapp')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <p class="small text-muted mb-0 mt-1">Esse número aparece na vitrine com link direto pro WhatsApp.</p>
+                        </div>
                     </div>
                 </div>
 
