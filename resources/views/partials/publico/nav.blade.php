@@ -13,13 +13,13 @@
 <header class="vf-publico-header sticky-top shadow-sm">
     <div class="container py-2">
         <div class="d-flex align-items-center justify-content-between gap-3">
-            <a href="{{ route('publico.loja', ['slug' => $slugNav]) }}" class="text-decoration-none text-dark fw-bold text-truncate me-2 d-flex align-items-center gap-1" style="min-width: 0;">
+            <a href="{{ route('publico.loja', ['slug' => $slugNav]) }}" class="text-decoration-none text-dark fw-bold me-2 d-flex align-items-center gap-1" style="min-width: 0;">
                 @if ($empresa && $empresa->urlLogo())
                     <img src="{{ $empresa->urlLogo() }}" alt="" width="66" height="66" class="me-2 rounded bg-white border" style="object-fit: contain;">
                 @else
                     <i class="bi bi-shop text-primary me-1"></i>
                 @endif
-                <span class="text-truncate">{{ $nomeLoja }}</span>
+                <span class="vf-store-name">{{ $nomeLoja }}</span>
             </a>
             <div class="d-flex align-items-center gap-2 flex-shrink-0">
                 @if ($temContatoTopo)

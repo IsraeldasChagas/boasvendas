@@ -300,6 +300,23 @@ body.vf-body {
   border-bottom: 1px solid var(--vf-border);
 }
 
+.vf-store-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.05;
+}
+
+@media (max-width: 575.98px) {
+  .vf-store-name {
+    font-size: clamp(0.78rem, 3.6vw, 0.95rem);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
 .vf-product-card {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
