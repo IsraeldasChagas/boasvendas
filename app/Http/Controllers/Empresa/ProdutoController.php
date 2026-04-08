@@ -332,9 +332,11 @@ class ProdutoController extends Controller
                 imagedestroy($img);
 
                 if (is_string($jpeg) && $jpeg !== '') {
-                    Storage::disk('uploads')->put($path, $jpeg);
-
-                    return $path;
+                    $disk = Storage::disk('uploads');
+                    $disk->makeDirectory($dir);
+                    if ($disk->put($path, $jpeg)) {
+                        return $path;
+                    }
                 }
             }
         } catch (\Throwable $e) {
