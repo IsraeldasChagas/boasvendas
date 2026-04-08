@@ -8,7 +8,7 @@
         <div class="d-flex align-items-center justify-content-between gap-3">
             <a href="{{ route('publico.loja', ['slug' => $slugNav]) }}" class="text-decoration-none text-dark fw-bold text-truncate me-2">
                 @if ($empresa && $empresa->urlLogo())
-                    <img src="{{ $empresa->urlLogo() }}" alt="" width="22" height="22" class="me-2 rounded bg-white border" style="object-fit: contain;">
+                    <img src="{{ $empresa->urlLogo() }}" alt="" width="66" height="66" class="me-2 rounded bg-white border" style="object-fit: contain;">
                 @else
                     <i class="bi bi-shop text-primary me-1"></i>
                 @endif
