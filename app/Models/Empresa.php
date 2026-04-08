@@ -322,6 +322,8 @@ class Empresa extends Model
             return null;
         }
 
-        return route('publico.empresa_logo', ['empresa' => $this->getKey()], absolute: false);
+        $v = $this->updated_at?->getTimestamp() ?? time();
+
+        return route('publico.empresa_logo', ['empresa' => $this->getKey()], absolute: false).'?v='.$v;
     }
 }

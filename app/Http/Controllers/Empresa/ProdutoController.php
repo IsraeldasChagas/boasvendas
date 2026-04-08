@@ -161,6 +161,8 @@ class ProdutoController extends Controller
         $produto->update($data);
         $this->syncIngredientesDoProduto($produto, $nom);
         $this->syncAdicionaisDoProduto($produto, $empresa, $request);
+        // Garante que o "Editar" reflita atualização mesmo quando só muda relacionamentos.
+        $produto->touch();
 
         return redirect()
             ->route('empresa.produtos.index')
