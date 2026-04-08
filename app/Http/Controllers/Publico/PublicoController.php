@@ -725,6 +725,40 @@ class PublicoController extends Controller
             abort(404);
         }
 
+        $ext = strtolower(pathinfo($full, PATHINFO_EXTENSION));
+        if ($ext === 'webp') {
+            try {
+                $raw = @file_get_contents($full);
+                if (is_string($raw) && $raw !== '') {
+                    $img = @imagecreatefromstring($raw);
+                    if ($img !== false) {
+                        $w = imagesx($img);
+                        $h = imagesy($img);
+                        $dst = imagecreatetruecolor($w, $h);
+                        $white = imagecolorallocate($dst, 255, 255, 255);
+                        imagefilledrectangle($dst, 0, 0, $w, $h, $white);
+                        imagecopy($dst, $img, 0, 0, 0, 0, $w, $h);
+
+                        ob_start();
+                        imagejpeg($dst, null, 85);
+                        $jpeg = ob_get_clean();
+
+                        imagedestroy($dst);
+                        imagedestroy($img);
+
+                        if (is_string($jpeg) && $jpeg !== '') {
+                            return response($jpeg, 200, [
+                                'Content-Type' => 'image/jpeg',
+                                'Cache-Control' => 'public, max-age=604800',
+                            ]);
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                // fallback abaixo
+            }
+        }
+
         return response()->file($full, [
             'Cache-Control' => 'public, max-age=604800',
         ]);
