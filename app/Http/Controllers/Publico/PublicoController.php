@@ -730,6 +730,21 @@ class PublicoController extends Controller
         ]);
     }
 
+    /**
+     * Serve logo da empresa (public/uploads ou storage/app/public legado).
+     */
+    public function empresaLogo(Empresa $empresa): BinaryFileResponse
+    {
+        $full = $empresa->resolveLogoAbsolutePath();
+        if ($full === null || ! is_file($full)) {
+            abort(404);
+        }
+
+        return response()->file($full, [
+            'Cache-Control' => 'public, max-age=604800',
+        ]);
+    }
+
     public function legadoCarrinho(): RedirectResponse
     {
         return redirect()

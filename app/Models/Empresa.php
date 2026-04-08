@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Str;
 
 class Empresa extends Model
 {
@@ -16,6 +17,7 @@ class Empresa extends Model
     protected $fillable = [
         'nome',
         'slug',
+        'logo',
         'loja_pix_instrucoes',
         'loja_pix_chave_tipo',
         'loja_pix_chave_valor',
@@ -271,5 +273,55 @@ class Empresa extends Model
         $p = trim((string) $this->loja_pix_copia_cola);
 
         return $p !== '' ? GeradorQrCodePix::dataUriSvg($p) : null;
+    }
+
+    /**
+     * Caminho absoluto no disco do arquivo de logo (public/uploads ou storage/app/public legado).
+     */
+    public function resolveLogoAbsolutePath(): ?string
+    {
+        if ($this->logo === null || $this->logo === '') {
+            return null;
+        }
+
+        $rel = ltrim(str_replace('\\', '/', (string) $this->logo), '/');
+        if ($rel === '' || Str::contains($rel, '..')) {
+            return null;
+        }
+
+        $candidates = [
+            public_path('uploads/'.$rel),
+            public_path($rel),
+        ];
+
+        if (Str::startsWith($rel, 'uploads/')) {
+            $candidates[] = public_path($rel);
+            $candidates[] = public_path('uploads/'.ltrim(Str::after($rel, 'uploads/'), '/'));
+        }
+
+        foreach (array_unique(array_filter($candidates)) as $full) {
+            if (@is_file($full)) {
+                return $full;
+            }
+        }
+
+        $storage = storage_path('app/public/'.$rel);
+        if (@is_file($storage)) {
+            return $storage;
+        }
+
+        return null;
+    }
+
+    /**
+     * URL da logo: sempre pela rota que lê o arquivo no disco.
+     */
+    public function urlLogo(): ?string
+    {
+        if ($this->resolveLogoAbsolutePath() === null) {
+            return null;
+        }
+
+        return route('publico.empresa_logo', ['empresa' => $this->getKey()], absolute: false);
     }
 }

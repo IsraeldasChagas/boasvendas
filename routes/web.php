@@ -51,6 +51,10 @@ Route::get('/media/produto/{produto}', [PublicoController::class, 'produtoFoto']
     ->whereNumber('produto')
     ->name('publico.produto_foto');
 
+Route::get('/media/empresa/{empresa}', [PublicoController::class, 'empresaLogo'])
+    ->whereNumber('empresa')
+    ->name('publico.empresa_logo');
+
 Route::get('/loja/{slug}/fidelidade', [FidelidadePublicController::class, 'show'])->name('publico.fidelidade');
 Route::post('/loja/{slug}/fidelidade', [FidelidadePublicController::class, 'consultar'])
     ->middleware('throttle:30,1')

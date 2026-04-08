@@ -19,7 +19,7 @@
         <h1 class="h5 fw-bold mb-0">Configurações</h1>
     </div>
 
-    <form action="{{ route('empresa.configuracoes.update') }}" method="post">
+    <form action="{{ route('empresa.configuracoes.update') }}" method="post" enctype="multipart/form-data">
         @csrf
         @method('PUT')
 
@@ -58,6 +58,23 @@
                             <label class="form-label" for="cnpj">CNPJ</label>
                             <input type="text" class="form-control form-control-sm @error('cnpj') is-invalid @enderror" id="cnpj" name="cnpj" value="{{ old('cnpj', $empresa->cnpj) }}" maxlength="32">
                             @error('cnpj')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="logo">Logo da empresa</label>
+                            <div class="d-flex flex-wrap align-items-center gap-3">
+                                <div class="border rounded bg-white d-flex align-items-center justify-content-center" style="width: 84px; height: 84px; overflow: hidden;">
+                                    @if ($empresa->urlLogo())
+                                        <img src="{{ $empresa->urlLogo() }}" alt="Logo da empresa" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                                    @else
+                                        <span class="text-muted small">Sem logo</span>
+                                    @endif
+                                </div>
+                                <div class="flex-grow-1">
+                                    <input type="file" class="form-control form-control-sm @error('logo') is-invalid @enderror" id="logo" name="logo" accept="image/png,image/jpeg,image/webp">
+                                    @error('logo')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    <p class="small text-muted mb-0 mt-1">Formatos: JPG, PNG ou WebP. Máx: 2MB.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

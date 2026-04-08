@@ -7,6 +7,9 @@ use App\Models\Empresa;
 use App\Models\EmpresaSlug;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -50,6 +53,7 @@ class ConfiguracaoController extends Controller
                 Rule::unique('empresas', 'slug')->ignore($empresa->id),
                 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
             ],
+            'logo' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'email_contato' => ['nullable', 'email', 'max:255'],
             'cnpj' => ['nullable', 'string', 'max:32'],
             'loja_pix_instrucoes' => ['nullable', 'string', 'max:4000'],
@@ -76,10 +80,43 @@ class ConfiguracaoController extends Controller
             ]);
         }
 
+        $logo = $request->file('logo');
+        if ($logo instanceof UploadedFile) {
+            $data['logo'] = $this->armazenarLogo($logo, $empresa);
+            $this->removerLogoAnteriorDoDisco($empresa);
+        }
+
         $empresa->update($data);
 
         return redirect()
             ->route('empresa.configuracoes.index')
             ->with('status', 'Configurações salvas.');
+    }
+
+    private function armazenarLogo(UploadedFile $file, Empresa $empresa): string
+    {
+        $ext = strtolower($file->getClientOriginalExtension() ?: 'png');
+        $ext = preg_match('/^[a-z0-9]{2,4}$/', $ext) ? $ext : 'png';
+        $nome = Str::uuid()->toString().'.'.$ext;
+        $dir = 'empresas/'.$empresa->id;
+
+        return $file->storeAs($dir, $nome, 'uploads');
+    }
+
+    private function removerLogoAnteriorDoDisco(Empresa $empresa): void
+    {
+        if (! $empresa->logo) {
+            return;
+        }
+
+        $path = ltrim(str_replace('\\', '/', $empresa->logo), '/');
+
+        if (Storage::disk('uploads')->exists($path)) {
+            Storage::disk('uploads')->delete($path);
+
+            return;
+        }
+
+        Storage::disk('public')->delete($empresa->logo);
     }
 }
