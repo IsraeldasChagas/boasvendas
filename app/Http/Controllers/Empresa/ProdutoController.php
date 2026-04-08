@@ -309,12 +309,46 @@ class ProdutoController extends Controller
 
     private function armazenarFoto(UploadedFile $file, Empresa $empresa): string
     {
+        $nome = Str::uuid()->toString().'.jpg';
+        $dir = 'produtos/'.$empresa->id;
+        $path = $dir.'/'.$nome;
+
+        // Compatibilidade mobile: reencoda como JPEG (evita WebP não suportado em alguns aparelhos).
+        try {
+            $img = @imagecreatefromstring($file->get());
+            if ($img !== false) {
+                $w = imagesx($img);
+                $h = imagesy($img);
+                $dst = imagecreatetruecolor($w, $h);
+                $white = imagecolorallocate($dst, 255, 255, 255);
+                imagefilledrectangle($dst, 0, 0, $w, $h, $white);
+                imagecopy($dst, $img, 0, 0, 0, 0, $w, $h);
+
+                ob_start();
+                imagejpeg($dst, null, 85);
+                $jpeg = ob_get_clean();
+
+                imagedestroy($dst);
+                imagedestroy($img);
+
+                if (is_string($jpeg) && $jpeg !== '') {
+                    Storage::disk('uploads')->put($path, $jpeg);
+
+                    return $path;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Fallback abaixo
+        }
+
+        // Fallback: salva original.
         $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
         $ext = preg_match('/^[a-z0-9]{2,4}$/', $ext) ? $ext : 'jpg';
-        $nome = Str::uuid()->toString().'.'.$ext;
-        $dir = 'produtos/'.$empresa->id;
+        $fallbackNome = Str::uuid()->toString().'.'.$ext;
+        $fallbackPath = $dir.'/'.$fallbackNome;
+        $file->storeAs($dir, $fallbackNome, 'uploads');
 
-        return $file->storeAs($dir, $nome, 'uploads');
+        return $fallbackPath;
     }
 
     private function removerFotoDoDisco(Produto $produto): void
