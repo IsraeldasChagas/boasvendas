@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -96,3 +98,91 @@ Artisan::command('vendaffacil:copiar-fotos-storage-para-uploads', function (): i
 
     return 0;
 })->purpose('Copia fotos de produto de storage/app/public para public/uploads (imagens passam a abrir sem storage:link)');
+
+Artisan::command('vendaffacil:converter-fotos-produto-para-jpg {--dry-run : Não grava no disco nem altera no banco}', function (): int {
+    $dry = (bool) $this->option('dry-run');
+    $total = 0;
+    $convertidos = 0;
+    $pulados = 0;
+    $falhas = 0;
+
+    Produto::query()
+        ->whereNotNull('foto')
+        ->where('foto', '!=', '')
+        ->orderBy('id')
+        ->chunkById(200, function ($rows) use ($dry, &$total, &$convertidos, &$pulados, &$falhas) {
+            foreach ($rows as $p) {
+                $total++;
+                $full = $p->resolveFotoAbsolutePath();
+                if ($full === null || ! is_file($full)) {
+                    $pulados++;
+                    continue;
+                }
+
+                $ext = strtolower(pathinfo($full, PATHINFO_EXTENSION));
+                if (! in_array($ext, ['webp', 'avif'], true)) {
+                    $pulados++;
+                    continue;
+                }
+
+                $img = null;
+                try {
+                    if ($ext === 'webp' && function_exists('imagecreatefromwebp')) {
+                        $img = @imagecreatefromwebp($full);
+                    } elseif ($ext === 'avif' && function_exists('imagecreatefromavif')) {
+                        $img = @imagecreatefromavif($full);
+                    } else {
+                        $raw = @file_get_contents($full);
+                        if (is_string($raw) && $raw !== '') {
+                            $img = @imagecreatefromstring($raw);
+                        }
+                    }
+
+                    if ($img === null || $img === false) {
+                        $falhas++;
+                        $this->warn("Falhou ao decodificar: produto {$p->id} ({$p->foto})");
+                        continue;
+                    }
+
+                    $w = imagesx($img);
+                    $h = imagesy($img);
+                    $dst = imagecreatetruecolor($w, $h);
+                    $white = imagecolorallocate($dst, 255, 255, 255);
+                    imagefilledrectangle($dst, 0, 0, $w, $h, $white);
+                    imagecopy($dst, $img, 0, 0, 0, 0, $w, $h);
+
+                    ob_start();
+                    imagejpeg($dst, null, 85);
+                    $jpeg = ob_get_clean();
+
+                    imagedestroy($dst);
+                    imagedestroy($img);
+
+                    if (! is_string($jpeg) || $jpeg === '') {
+                        $falhas++;
+                        $this->warn("Falhou ao gerar JPEG: produto {$p->id} ({$p->foto})");
+                        continue;
+                    }
+
+                    $dir = 'produtos/'.$p->empresa_id;
+                    $nome = Str::uuid()->toString().'.jpg';
+                    $path = $dir.'/'.$nome;
+
+                    if (! $dry) {
+                        Storage::disk('uploads')->put($path, $jpeg);
+                        $p->update(['foto' => $path]);
+                    }
+
+                    $convertidos++;
+                    $this->line("OK: produto {$p->id} -> {$path}".($dry ? ' (dry-run)' : ''));
+                } catch (\Throwable $e) {
+                    $falhas++;
+                    $this->warn("Erro: produto {$p->id} ({$p->foto})");
+                }
+            }
+        });
+
+    $this->info("Total: {$total} | Convertidos: {$convertidos} | Pulados: {$pulados} | Falhas: {$falhas}".($dry ? ' (dry-run)' : ''));
+
+    return $falhas > 0 ? 1 : 0;
+})->purpose('Converte fotos antigas (WebP/AVIF) para JPG em public/uploads e atualiza a coluna foto');
