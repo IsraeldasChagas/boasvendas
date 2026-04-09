@@ -97,6 +97,11 @@ body.vf-body {
     display: none !important;
   }
 
+  .vf-app-wrapper.vf-sidebar-collapsed .vf-sidebar .vf-sidebar-brand img {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
   .vf-app-wrapper.vf-sidebar-collapsed .vf-sidebar .vf-submenu-content {
     display: none !important;
   }
