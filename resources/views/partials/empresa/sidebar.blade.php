@@ -6,7 +6,7 @@
     <div class="vf-sidebar-brand text-white">
         <div class="d-flex align-items-center gap-2">
             @if ($empresa && $empresa->urlLogo())
-                <img src="{{ $empresa->urlLogo() }}" alt="" width="34" height="34" class="rounded bg-white border" style="object-fit: contain;">
+                <img src="{{ $empresa->urlLogo() }}" alt="" width="102" height="102" class="rounded bg-white border" style="object-fit: contain;">
             @else
                 <i class="bi bi-shop-window"></i>
             @endif
