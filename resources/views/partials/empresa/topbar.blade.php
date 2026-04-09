@@ -24,6 +24,9 @@
             $slugLoja = $empresa?->slug;
             $temLoja = $empresa?->temTelaMenu('loja_online') ?? true;
         @endphp
+        @if ($empresa && $empresa->urlLogo())
+            <img src="{{ $empresa->urlLogo() }}" alt="" width="28" height="28" class="rounded bg-white border d-none d-md-inline" style="object-fit: contain;">
+        @endif
         @if ($temLoja && $slugLoja)
             <a href="{{ route('publico.loja', ['slug' => $slugLoja]) }}" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener">
                 <i class="bi bi-box-arrow-up-right me-1"></i>Ver vitrine

@@ -4,8 +4,17 @@
 @endphp
 <aside class="vf-sidebar" data-vf-sidebar>
     <div class="vf-sidebar-brand text-white">
-        <i class="bi bi-shop-window me-1"></i>Boa<span class="text-info">Vendas</span>
-        <div class="small text-white-50 fw-normal mt-1">Painel da empresa</div>
+        <div class="d-flex align-items-center gap-2">
+            @if ($empresa && $empresa->urlLogo())
+                <img src="{{ $empresa->urlLogo() }}" alt="" width="34" height="34" class="rounded bg-white border" style="object-fit: contain;">
+            @else
+                <i class="bi bi-shop-window"></i>
+            @endif
+            <div class="min-w-0">
+                <div class="fw-bold text-truncate">{{ $empresa?->nome ?? 'BoaVendas' }}</div>
+                <div class="small text-white-50 fw-normal text-truncate">Painel da empresa</div>
+            </div>
+        </div>
     </div>
     <nav class="nav flex-column px-2 py-3">
         <a class="nav-link {{ request()->routeIs('empresa.dashboard') ? 'active' : '' }}" href="{{ route('empresa.dashboard') }}">
