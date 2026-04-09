@@ -743,10 +743,16 @@ class PublicoController extends Controller
                 if ($img !== null && $img !== false) {
                     $w = imagesx($img);
                     $h = imagesy($img);
-                    $dst = imagecreatetruecolor($w, $h);
+
+                    $max = 1400;
+                    $scale = ($w > 0 && $h > 0) ? min(1, $max / max($w, $h)) : 1;
+                    $nw = max(1, (int) round($w * $scale));
+                    $nh = max(1, (int) round($h * $scale));
+
+                    $dst = imagecreatetruecolor($nw, $nh);
                     $white = imagecolorallocate($dst, 255, 255, 255);
-                    imagefilledrectangle($dst, 0, 0, $w, $h, $white);
-                    imagecopy($dst, $img, 0, 0, 0, 0, $w, $h);
+                    imagefilledrectangle($dst, 0, 0, $nw, $nh, $white);
+                    imagecopyresampled($dst, $img, 0, 0, 0, 0, $nw, $nh, $w, $h);
 
                     ob_start();
                     imagejpeg($dst, null, 85);
