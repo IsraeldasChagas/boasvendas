@@ -401,6 +401,10 @@ class VendaExternaController extends Controller
             $rules['produto_id'] = ['required', 'integer', Rule::exists('produtos', 'id')->where('empresa_id', $empresaId)];
         }
 
+        if (Schema::hasColumn('ve_remessas', 'quantidade')) {
+            $rules['quantidade'] = ['required', 'integer', 'min:1', 'max:999999'];
+        }
+
         $validated = $request->validate($rules);
 
         $entregaAcerto = $validated['entrega_acerto'];
@@ -709,13 +713,22 @@ class VendaExternaController extends Controller
             && empty($data['valor_repasse_unitario'])
             && ! empty($data['ve_remessa_id'])
         ) {
-            $precoProduto = VeRemessa::query()
+            $rem = VeRemessa::query()
                 ->where('empresa_id', $empresaId)
                 ->whereKey($data['ve_remessa_id'])
                 ->with('produto')
-                ->first()?->produto?->preco;
+                ->first();
+            $precoProduto = $rem?->produto?->preco;
             if ($precoProduto !== null) {
                 $data['valor_repasse_unitario'] = (float) $precoProduto;
+            }
+            if (
+                Schema::hasColumn('ve_acertos', 'quantidade')
+                && Schema::hasColumn('ve_remessas', 'quantidade')
+                && (empty($data['quantidade']) || (float) $data['quantidade'] <= 0)
+                && $rem
+            ) {
+                $data['quantidade'] = max(1, (int) ($rem->quantidade ?? 1));
             }
         }
 
@@ -1198,7 +1211,7 @@ class VendaExternaController extends Controller
                 return;
             }
             fprintf($out, "\xEF\xBB\xBF");
-            fputcsv($out, [
+            $headers = [
                 'id',
                 'titulo',
                 'status',
@@ -1206,13 +1219,17 @@ class VendaExternaController extends Controller
                 'criada_em',
                 'atualizada_em',
                 'dias_criacao_ate_atualizacao',
-            ], ';');
+            ];
+            if (Schema::hasColumn('ve_remessas', 'quantidade')) {
+                array_splice($headers, 3, 0, ['quantidade']);
+            }
+            fputcsv($out, $headers, ';');
 
             foreach ($remessas as $r) {
                 $dias = $r->created_at && $r->updated_at
                     ? $r->created_at->diffInDays($r->updated_at)
                     : '';
-                fputcsv($out, [
+                $row = [
                     $r->id,
                     $r->tituloExibicao(),
                     $r->status,
@@ -1220,7 +1237,11 @@ class VendaExternaController extends Controller
                     $r->created_at?->format('Y-m-d H:i:s') ?? '',
                     $r->updated_at?->format('Y-m-d H:i:s') ?? '',
                     $dias,
-                ], ';');
+                ];
+                if (Schema::hasColumn('ve_remessas', 'quantidade')) {
+                    array_splice($row, 3, 0, [(int) ($r->quantidade ?? 1)]);
+                }
+                fputcsv($out, $row, ';');
             }
 
             fclose($out);

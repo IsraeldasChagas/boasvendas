@@ -32,6 +32,14 @@
                 @error('produto_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 <div class="form-text">Bem simples: selecione o produto que você está entregando para o parceiro revender.</div>
             </div>
+            @if (\Illuminate\Support\Facades\Schema::hasColumn('ve_remessas', 'quantidade'))
+                <div class="mb-3">
+                    <label class="form-label" for="quantidade">Quantidade</label>
+                    <input type="number" class="form-control @error('quantidade') is-invalid @enderror" id="quantidade" name="quantidade" value="{{ old('quantidade', $remessa->quantidade ?? 1) }}" min="1" max="999999" step="1" required>
+                    @error('quantidade')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    <div class="form-text">Quantas unidades deste produto estão sendo entregues ao parceiro.</div>
+                </div>
+            @endif
             <div class="mb-3">
                 <label class="form-label" for="ve_ponto_id">Parceiro (opcional)</label>
                 <select class="form-select @error('ve_ponto_id') is-invalid @enderror" id="ve_ponto_id" name="ve_ponto_id">

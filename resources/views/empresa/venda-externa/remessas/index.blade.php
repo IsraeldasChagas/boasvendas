@@ -62,6 +62,9 @@
                     <tr>
                         <th>ID</th>
                         <th>Produto</th>
+                        @if (\Illuminate\Support\Facades\Schema::hasColumn('ve_remessas', 'quantidade'))
+                            <th class="text-end">Qtd.</th>
+                        @endif
                         <th>Parceiro</th>
                         <th>Criada em</th>
                         <th>Status</th>
@@ -73,6 +76,9 @@
                         <tr>
                             <td class="fw-semibold">#{{ $r->id }}</td>
                             <td class="small">{{ $r->produto?->nome ?? $r->tituloExibicao() }}</td>
+                            @if (\Illuminate\Support\Facades\Schema::hasColumn('ve_remessas', 'quantidade'))
+                                <td class="small text-end fw-semibold">{{ (int) ($r->quantidade ?? 1) }}</td>
+                            @endif
                             <td class="small">{{ $r->ponto?->nome ?? '—' }}</td>
                             <td class="small">{{ $r->created_at->format('d/m/Y H:i') }}</td>
                             @php $acertada = (int) ($r->acertos_concluidos_count ?? 0) > 0; @endphp
@@ -84,7 +90,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-5">
+                            <td colspan="{{ \Illuminate\Support\Facades\Schema::hasColumn('ve_remessas', 'quantidade') ? 7 : 6 }}" class="text-center text-muted py-5">
                                 Nenhuma entrega.
                                 <a href="{{ route('empresa.venda-externa.remessas.create') }}">Cadastrar</a>
                             </td>

@@ -39,7 +39,13 @@
                 </div>
                 <div class="border rounded p-3 bg-light-subtle">
                     <h3 class="h6 fw-bold mb-2">Itens da entrega</h3>
-                    <p class="small text-muted mb-0">Aqui é só a entrega do produto para o parceiro revender. (Produtos/quantidades e acerto serão adicionados numa próxima etapa.) Por enquanto use o título e o status para acompanhar cada entrega.</p>
+                    @if (\Illuminate\Support\Facades\Schema::hasColumn('ve_remessas', 'quantidade'))
+                        <p class="small mb-2">
+                            <strong>Produto:</strong> {{ $remessa->produto?->nome ?? $remessa->tituloExibicao() }}
+                            · <strong>Quantidade:</strong> {{ (int) ($remessa->quantidade ?? 1) }}
+                        </p>
+                    @endif
+                    <p class="small text-muted mb-0">Entrega do produto para o parceiro revender. Use <strong>Editar entrega</strong> para alterar produto ou quantidade.</p>
                 </div>
             </div>
         </div>

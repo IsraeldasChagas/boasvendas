@@ -20,9 +20,17 @@ class VeRemessa extends Model
         'empresa_id',
         've_ponto_id',
         'produto_id',
+        'quantidade',
         'titulo',
         'status',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'quantidade' => 'integer',
+        ];
+    }
 
     public function empresa(): BelongsTo
     {
