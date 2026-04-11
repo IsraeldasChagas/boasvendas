@@ -3,13 +3,18 @@
 namespace App\Http\Controllers\Empresa;
 
 use App\Http\Controllers\Controller;
+use App\Models\CaixaMovimento;
+use App\Models\CaixaTurno;
 use App\Models\Empresa;
 use App\Models\FinanceiroDespesaFixa;
 use App\Models\FinanceiroTitulo;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class FinanceiroController extends Controller
@@ -142,6 +147,85 @@ class FinanceiroController extends Controller
         );
 
         return redirect()->route('empresa.financeiro.despesas-fixas.index')->with('status', 'Despesa fixa cadastrada.');
+    }
+
+    public function despesasFixasPagar(Request $request, FinanceiroDespesaFixa $financeiroDespesaFixa): RedirectResponse
+    {
+        $empresa = $request->user()->empresa;
+        if (! $empresa || (int) $financeiroDespesaFixa->empresa_id !== (int) $empresa->id) {
+            abort(404);
+        }
+
+        $data = $request->validate([
+            'valor' => ['required', 'numeric', 'min:0.01', 'max:99999999.99'],
+            'pago_em' => ['required', 'date'],
+            'repetir_proximo' => ['required', Rule::in(['0', '1', 0, 1])],
+        ]);
+
+        $repetir = in_array($data['repetir_proximo'], [1, '1'], true);
+
+        $pagoEm = Carbon::parse($data['pago_em'])->startOfDay();
+
+        $descricao = 'Despesa fixa: '.$financeiroDespesaFixa->nome;
+        if ($financeiroDespesaFixa->categoria) {
+            $descricao .= ' ('.$financeiroDespesaFixa->categoria.')';
+        }
+
+        $lancouCaixa = false;
+
+        DB::transaction(function () use ($request, $empresa, $financeiroDespesaFixa, $data, $pagoEm, $descricao, $repetir, &$lancouCaixa) {
+            FinanceiroTitulo::query()->create([
+                'empresa_id' => $empresa->id,
+                'tipo' => FinanceiroTitulo::TIPO_PAGAR,
+                'contraparte' => $financeiroDespesaFixa->nome,
+                'descricao' => $descricao,
+                'valor' => $data['valor'],
+                'vencimento' => $pagoEm->toDateString(),
+                'status' => FinanceiroTitulo::STATUS_PAGO,
+                'pago_em' => $pagoEm->toDateString(),
+                'observacoes' => null,
+            ]);
+
+            if (! $repetir) {
+                $financeiroDespesaFixa->update(['ativo' => false]);
+            }
+
+            $turno = CaixaTurno::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('status', CaixaTurno::STATUS_ABERTO)
+                ->first();
+
+            if ($turno) {
+                $descCaixa = 'Despesa fixa paga: '.$financeiroDespesaFixa->nome;
+                if ($financeiroDespesaFixa->categoria) {
+                    $descCaixa .= ' ('.$financeiroDespesaFixa->categoria.')';
+                }
+                if (strlen($descCaixa) > 500) {
+                    $descCaixa = substr($descCaixa, 0, 497).'...';
+                }
+
+                CaixaMovimento::query()->create([
+                    'caixa_turno_id' => $turno->id,
+                    'user_id' => $request->user()->id,
+                    'tipo' => CaixaMovimento::TIPO_SANGRIA,
+                    'descricao' => $descCaixa,
+                    'valor' => $data['valor'],
+                ]);
+                $lancouCaixa = true;
+            }
+        });
+
+        $msg = 'Pagamento registrado em contas a pagar.';
+        if ($lancouCaixa) {
+            $msg .= ' Saída registrada no caixa (sangria no turno aberto).';
+        } else {
+            $msg .= ' Com o caixa fechado não há turno aberto — nada foi lançado no caixa; ao abrir, registre a saída em dinheiro se precisar.';
+        }
+        if (! $repetir) {
+            $msg .= ' Esta despesa fixa foi desativada e não entra mais no total mensal.';
+        }
+
+        return redirect()->route('empresa.financeiro.despesas-fixas.index')->with('status', $msg);
     }
 
     public function despesasFixasEdit(Request $request, FinanceiroDespesaFixa $financeiroDespesaFixa): View|RedirectResponse
@@ -378,7 +462,7 @@ class FinanceiroController extends Controller
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, FinanceiroTitulo>
+     * @return Collection<int, FinanceiroTitulo>
      */
     private function filtrarTitulos(Empresa $empresa, string $tipo, Request $request)
     {

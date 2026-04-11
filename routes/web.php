@@ -144,6 +144,7 @@ Route::middleware(['auth', 'empresa.painel', 'empresa.menu'])->prefix('empresa')
         Route::get('/', [FinanceiroController::class, 'despesasFixasIndex'])->name('index');
         Route::get('/novo', [FinanceiroController::class, 'despesasFixasCreate'])->name('create');
         Route::post('/', [FinanceiroController::class, 'despesasFixasStore'])->name('store');
+        Route::post('/{financeiroDespesaFixa}/pagar', [FinanceiroController::class, 'despesasFixasPagar'])->name('pagar');
         Route::get('/{financeiroDespesaFixa}/editar', [FinanceiroController::class, 'despesasFixasEdit'])->name('edit');
         Route::put('/{financeiroDespesaFixa}', [FinanceiroController::class, 'despesasFixasUpdate'])->name('update');
         Route::delete('/{financeiroDespesaFixa}', [FinanceiroController::class, 'despesasFixasDestroy'])->name('destroy');
