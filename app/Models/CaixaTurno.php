@@ -54,18 +54,14 @@ class CaixaTurno extends Model
     public function totalEntradasMovimentos(): float
     {
         return (float) $this->movimentos()
-            ->whereIn('tipo', [
-                CaixaMovimento::TIPO_SUPRIMENTO,
-                CaixaMovimento::TIPO_VENDA_AVULSA,
-                CaixaMovimento::TIPO_ENTRADA_MANUAL,
-            ])
+            ->whereIn('tipo', [CaixaMovimento::TIPO_SUPRIMENTO, CaixaMovimento::TIPO_VENDA_AVULSA])
             ->sum('valor');
     }
 
     public function totalSaidasMovimentos(): float
     {
         return (float) $this->movimentos()
-            ->whereIn('tipo', [CaixaMovimento::TIPO_SANGRIA, CaixaMovimento::TIPO_SAIDA_MANUAL])
+            ->where('tipo', CaixaMovimento::TIPO_SANGRIA)
             ->sum('valor');
     }
 

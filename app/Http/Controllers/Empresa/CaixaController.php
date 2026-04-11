@@ -212,8 +212,6 @@ class CaixaController extends Controller
                 CaixaMovimento::TIPO_SUPRIMENTO,
                 CaixaMovimento::TIPO_SANGRIA,
                 CaixaMovimento::TIPO_VENDA_AVULSA,
-                CaixaMovimento::TIPO_ENTRADA_MANUAL,
-                CaixaMovimento::TIPO_SAIDA_MANUAL,
             ])],
             'descricao' => ['required', 'string', 'max:500'],
             'valor' => ['required', 'numeric', 'min:0.01', 'max:99999999.99'],

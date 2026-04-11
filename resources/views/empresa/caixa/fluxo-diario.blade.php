@@ -58,21 +58,39 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="vf-card vf-card-stat">
+            <div
+                class="vf-card vf-card-stat vf-card-stat--clickable {{ $turnoAberto ? '' : 'vf-card-stat--disabled' }}"
+                role="button"
+                tabindex="0"
+                data-bs-toggle="modal"
+                data-bs-target="#modalFluxoLancamento"
+                data-lanc-tipo="{{ \App\Models\CaixaMovimento::TIPO_SUPRIMENTO }}"
+                data-lanc-titulo="Registrar entrada"
+            >
                 <div>
-                    <div class="small text-muted">Entradas no dia</div>
+                    <div class="small text-muted">Entradas no dia <span class="text-success fw-semibold">+</span></div>
                     <div class="h5 mb-0 text-success">R$ {{ number_format($totalEntradas, 2, ',', '.') }}</div>
+                    <div class="small text-muted mt-1">{{ $turnoAberto ? 'Clique para lançar entrada' : 'Caixa fechado — abra para lançar' }}</div>
                 </div>
-                <i class="bi bi-plus-circle fs-3 text-success opacity-50"></i>
+                <i class="bi bi-plus-circle fs-3 text-success opacity-50" aria-hidden="true"></i>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="vf-card vf-card-stat">
+            <div
+                class="vf-card vf-card-stat vf-card-stat--clickable {{ $turnoAberto ? '' : 'vf-card-stat--disabled' }}"
+                role="button"
+                tabindex="0"
+                data-bs-toggle="modal"
+                data-bs-target="#modalFluxoLancamento"
+                data-lanc-tipo="{{ \App\Models\CaixaMovimento::TIPO_SANGRIA }}"
+                data-lanc-titulo="Registrar saída"
+            >
                 <div>
-                    <div class="small text-muted">Saídas no dia</div>
+                    <div class="small text-muted">Saídas no dia <span class="text-danger fw-semibold">−</span></div>
                     <div class="h5 mb-0 text-danger">R$ {{ number_format($totalSaidas, 2, ',', '.') }}</div>
+                    <div class="small text-muted mt-1">{{ $turnoAberto ? 'Clique para lançar saída' : 'Caixa fechado — abra para lançar' }}</div>
                 </div>
-                <i class="bi bi-dash-circle fs-3 text-danger opacity-50"></i>
+                <i class="bi bi-dash-circle fs-3 text-danger opacity-50" aria-hidden="true"></i>
             </div>
         </div>
         <div class="col-md-3">
@@ -89,44 +107,6 @@
     <div class="vf-card p-3 mb-3">
         <h3 class="h6 fw-bold mb-2">Resumo do mês ({{ $dataRef->translatedFormat('F/Y') }})</h3>
         <p class="small text-muted mb-0">Entradas R$ {{ number_format($entradasMes, 2, ',', '.') }} · Saídas R$ {{ number_format($saidasMes, 2, ',', '.') }} · Líquido movimentos R$ {{ number_format($entradasMes - $saidasMes, 2, ',', '.') }}</p>
-    </div>
-
-    <div class="vf-card p-3 mb-3">
-        <h3 class="h6 fw-bold mb-2">Entrada e saída manual</h3>
-        @if (! $turnoAberto)
-            <p class="small text-muted mb-0">Abra o caixa na <a href="{{ route('empresa.caixa.index') }}">visão geral do caixa</a> para registrar movimentos.</p>
-        @else
-            @if (! $dataRef->isSameDay(\Carbon\Carbon::today()))
-                <p class="small text-warning mb-2 mb-md-3">Você está vendo outro dia: o lançamento será gravado com a <strong>data e hora atuais</strong> no turno aberto (aparece no fluxo de hoje).</p>
-            @endif
-            <form action="{{ route('empresa.caixa.movimento') }}" method="post" class="row g-3 align-items-end">
-                @csrf
-                <div class="col-md-3">
-                    <label class="form-label" for="fluxo-tipo-mov">Tipo</label>
-                    <select class="form-select @error('tipo') is-invalid @enderror" id="fluxo-tipo-mov" name="tipo" required>
-                        <option value="{{ \App\Models\CaixaMovimento::TIPO_ENTRADA_MANUAL }}" @selected(old('tipo') === \App\Models\CaixaMovimento::TIPO_ENTRADA_MANUAL)>Entrada manual</option>
-                        <option value="{{ \App\Models\CaixaMovimento::TIPO_SAIDA_MANUAL }}" @selected(old('tipo') === \App\Models\CaixaMovimento::TIPO_SAIDA_MANUAL)>Saída manual</option>
-                        <option value="{{ \App\Models\CaixaMovimento::TIPO_VENDA_AVULSA }}" @selected(old('tipo') === \App\Models\CaixaMovimento::TIPO_VENDA_AVULSA)>Venda (dinheiro)</option>
-                        <option value="{{ \App\Models\CaixaMovimento::TIPO_SUPRIMENTO }}" @selected(old('tipo') === \App\Models\CaixaMovimento::TIPO_SUPRIMENTO)>Suprimento</option>
-                        <option value="{{ \App\Models\CaixaMovimento::TIPO_SANGRIA }}" @selected(old('tipo') === \App\Models\CaixaMovimento::TIPO_SANGRIA)>Sangria</option>
-                    </select>
-                    @error('tipo')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label" for="fluxo-desc-mov">Descrição</label>
-                    <input type="text" class="form-control @error('descricao') is-invalid @enderror" id="fluxo-desc-mov" name="descricao" value="{{ old('descricao') }}" placeholder="Ex.: Troco, compra avulsa…" required>
-                    @error('descricao')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label" for="fluxo-valor-mov">Valor (R$)</label>
-                    <input type="number" step="0.01" min="0.01" class="form-control @error('valor') is-invalid @enderror" id="fluxo-valor-mov" name="valor" value="{{ old('valor') }}" required>
-                    @error('valor')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary w-100">Registrar</button>
-                </div>
-            </form>
-        @endif
     </div>
 
     <div class="vf-card p-0 overflow-hidden mb-3">
@@ -199,4 +179,92 @@
             </ul>
         </div>
     @endif
+
+    <div class="modal fade" id="modalFluxoLancamento" tabindex="-1" aria-labelledby="modalFluxoLancamentoTitulo" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalFluxoLancamentoTitulo">Lançamento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    @if ($turnoAberto)
+                        @if (! $dataRef->isSameDay(\Carbon\Carbon::today()))
+                            <p class="small text-warning mb-3">Você está vendo outro dia: o registro usará a <strong>data e hora atuais</strong> (aparece no fluxo de hoje).</p>
+                        @endif
+                        <form action="{{ route('empresa.caixa.movimento') }}" method="post" id="formFluxoLancamento">
+                            @csrf
+                            <input type="hidden" name="lancamento_fluxo" value="1">
+                            <input type="hidden" name="tipo" id="modalFluxoLancamentoTipo" value="{{ old('lancamento_fluxo') ? old('tipo') : '' }}">
+                            <div class="mb-3">
+                                <label class="form-label" for="modalFluxoLancamentoDesc">Descrição</label>
+                                <input type="text" class="form-control @error('descricao') is-invalid @enderror" id="modalFluxoLancamentoDesc" name="descricao" value="{{ old('lancamento_fluxo') ? old('descricao') : '' }}" placeholder="Ex.: Troco, retirada…" required>
+                                @error('descricao')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" for="modalFluxoLancamentoValor">Valor (R$)</label>
+                                <input type="number" step="0.01" min="0.01" class="form-control @error('valor') is-invalid @enderror" id="modalFluxoLancamentoValor" name="valor" value="{{ old('lancamento_fluxo') ? old('valor') : '' }}" required>
+                                @error('valor')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            @error('tipo')
+                                <div class="alert alert-danger small py-2 mb-3">{{ $message }}</div>
+                            @enderror
+                            <div class="d-flex gap-2 justify-content-end">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-primary">Registrar</button>
+                            </div>
+                        </form>
+                    @else
+                        <p class="mb-3">Abra o caixa na <a href="{{ route('empresa.caixa.index') }}">visão geral do caixa</a> para registrar entradas e saídas.</p>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    const modalEl = document.getElementById('modalFluxoLancamento');
+    if (!modalEl) return;
+    const tipoInput = document.getElementById('modalFluxoLancamentoTipo');
+    const tituloEl = document.getElementById('modalFluxoLancamentoTitulo');
+    const suprimento = @json(\App\Models\CaixaMovimento::TIPO_SUPRIMENTO);
+    const sangria = @json(\App\Models\CaixaMovimento::TIPO_SANGRIA);
+
+    function tituloParaTipo(tipo) {
+        if (tipo === suprimento) return 'Registrar entrada';
+        if (tipo === sangria) return 'Registrar saída';
+        return 'Lançamento';
+    }
+
+    modalEl.addEventListener('show.bs.modal', function (e) {
+        const t = e.relatedTarget;
+        if (t && t.dataset && t.dataset.lancTipo && tipoInput && tituloEl) {
+            tipoInput.value = t.dataset.lancTipo;
+            tituloEl.textContent = t.dataset.lancTitulo || tituloParaTipo(t.dataset.lancTipo);
+        }
+    });
+
+    document.querySelectorAll('[data-lanc-tipo]').forEach(function (el) {
+        el.addEventListener('keydown', function (ev) {
+            if (ev.key === 'Enter' || ev.key === ' ') {
+                ev.preventDefault();
+                el.click();
+            }
+        });
+    });
+
+    @if ($errors->any() && old('lancamento_fluxo'))
+    if (typeof bootstrap !== 'undefined' && tipoInput && tituloEl) {
+        const tipo = @json(old('tipo'));
+        tipoInput.value = tipo || suprimento;
+        tituloEl.textContent = tituloParaTipo(tipoInput.value);
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    }
+    @endif
+})();
+</script>
+@endpush

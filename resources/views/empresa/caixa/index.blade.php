@@ -47,9 +47,9 @@
     @else
         @php
             $movs = $turnoAberto->movimentos;
-            $totSup = (float) $movs->whereIn('tipo', [\App\Models\CaixaMovimento::TIPO_SUPRIMENTO, \App\Models\CaixaMovimento::TIPO_ENTRADA_MANUAL])->sum('valor');
+            $totSup = (float) $movs->where('tipo', \App\Models\CaixaMovimento::TIPO_SUPRIMENTO)->sum('valor');
             $totVenda = (float) $movs->where('tipo', \App\Models\CaixaMovimento::TIPO_VENDA_AVULSA)->sum('valor');
-            $totSang = (float) $movs->whereIn('tipo', [\App\Models\CaixaMovimento::TIPO_SANGRIA, \App\Models\CaixaMovimento::TIPO_SAIDA_MANUAL])->sum('valor');
+            $totSang = (float) $movs->where('tipo', \App\Models\CaixaMovimento::TIPO_SANGRIA)->sum('valor');
             $saldo = $turnoAberto->saldoEsperado();
         @endphp
         <div class="alert alert-info small mb-3">
@@ -106,8 +106,6 @@
                         <div class="mb-3">
                             <label class="form-label" for="tipo-mov">Tipo</label>
                             <select class="form-select @error('tipo') is-invalid @enderror" id="tipo-mov" name="tipo" required>
-                                <option value="{{ \App\Models\CaixaMovimento::TIPO_ENTRADA_MANUAL }}" @selected(old('tipo') === \App\Models\CaixaMovimento::TIPO_ENTRADA_MANUAL)>Entrada manual</option>
-                                <option value="{{ \App\Models\CaixaMovimento::TIPO_SAIDA_MANUAL }}" @selected(old('tipo') === \App\Models\CaixaMovimento::TIPO_SAIDA_MANUAL)>Saída manual</option>
                                 <option value="{{ \App\Models\CaixaMovimento::TIPO_VENDA_AVULSA }}" @selected(old('tipo') === \App\Models\CaixaMovimento::TIPO_VENDA_AVULSA)>Venda (dinheiro)</option>
                                 <option value="{{ \App\Models\CaixaMovimento::TIPO_SUPRIMENTO }}" @selected(old('tipo') === \App\Models\CaixaMovimento::TIPO_SUPRIMENTO)>Suprimento</option>
                                 <option value="{{ \App\Models\CaixaMovimento::TIPO_SANGRIA }}" @selected(old('tipo') === \App\Models\CaixaMovimento::TIPO_SANGRIA)>Sangria</option>

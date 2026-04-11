@@ -230,6 +230,31 @@ body.vf-body {
   gap: 0.75rem;
 }
 
+.vf-card-stat.vf-card-stat--clickable {
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.vf-card-stat.vf-card-stat--clickable:hover {
+  box-shadow: 0 0.35rem 1rem rgba(0, 0, 0, 0.08);
+  border-color: var(--vf-border-strong, #c5ccd6);
+}
+
+.vf-card-stat.vf-card-stat--clickable:focus-visible {
+  outline: 2px solid var(--bs-primary, #0d6efd);
+  outline-offset: 2px;
+}
+
+.vf-card-stat.vf-card-stat--clickable.vf-card-stat--disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.vf-card-stat.vf-card-stat--clickable.vf-card-stat--disabled:hover {
+  box-shadow: var(--vf-shadow);
+  border-color: var(--vf-border);
+}
+
 .vf-card-stat .icon-wrap {
   width: 44px;
   height: 44px;
