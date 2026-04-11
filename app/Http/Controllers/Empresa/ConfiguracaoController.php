@@ -60,12 +60,19 @@ class ConfiguracaoController extends Controller
             'cnpj' => ['nullable', 'string', 'max:32'],
             'endereco' => ['nullable', 'string', 'max:255'],
             'whatsapp' => ['nullable', 'string', 'max:32'],
+        ];
+
+        if (Schema::hasColumn('empresas', 'cep')) {
+            $rules['cep'] = ['nullable', 'string', 'max:16'];
+        }
+
+        $rules = array_merge($rules, [
             'loja_pix_instrucoes' => ['nullable', 'string', 'max:4000'],
             'loja_pix_chave_tipo' => ['nullable', 'string', Rule::in(array_keys(Empresa::pixChaveTiposRotulos()))],
             'loja_pix_chave_valor' => ['nullable', 'string', 'max:255'],
             'loja_pix_banco' => ['nullable', 'string', 'max:120'],
             'loja_pix_copia_cola' => ['nullable', 'string', 'max:8192'],
-        ];
+        ]);
 
         if (Schema::hasColumn('empresas', 'loja_taxa_entrega_padrao')) {
             $rules['loja_taxa_entrega_padrao'] = ['nullable', 'numeric', 'min:0', 'max:99999999.99'];
@@ -93,6 +100,21 @@ class ConfiguracaoController extends Controller
 
         $data = $request->validate($rules);
 
+        if (Schema::hasColumn('empresas', 'cep')) {
+            $digits = preg_replace('/\D+/', '', (string) ($data['cep'] ?? ''));
+            if ($digits === '') {
+                $data['cep'] = null;
+            } elseif (strlen($digits) === 8) {
+                $data['cep'] = $digits;
+            } else {
+                throw ValidationException::withMessages([
+                    'cep' => 'Informe o CEP com 8 dígitos ou deixe em branco.',
+                ]);
+            }
+        } else {
+            unset($data['cep']);
+        }
+
         if (($data['loja_frete_modo'] ?? null) === Empresa::LOJA_FRETE_GOOGLE_DISTANCIA
             && Schema::hasColumn('empresas', 'loja_frete_google_rs_por_km')) {
             if (! filled(config('services.google_maps.api_key'))) {
@@ -104,8 +126,9 @@ class ConfiguracaoController extends Controller
             $origemCampo = trim((string) ($data['loja_frete_origem_endereco'] ?? ''));
             $origemEmpresa = trim((string) ($data['endereco'] ?? ''));
             $origemGlobal = trim((string) config('services.google_maps.default_origin_address', ''));
-            if ($origemCampo === '' && $origemEmpresa === '' && $origemGlobal === '') {
-                $msg = 'Informe o endereço de origem do frete, ou preencha o campo Endereço em Dados da empresa, ou defina GOOGLE_MAPS_DEFAULT_ORIGIN_ADDRESS no servidor.';
+            $temCep = Schema::hasColumn('empresas', 'cep') && ($data['cep'] ?? null) !== null;
+            if ($origemCampo === '' && $origemEmpresa === '' && $origemGlobal === '' && ! $temCep) {
+                $msg = 'Informe o CEP da loja, o endereço de origem do frete, o Endereço em Dados da empresa, ou defina GOOGLE_MAPS_DEFAULT_ORIGIN_ADDRESS no servidor.';
                 if (Schema::hasColumn('empresas', 'loja_frete_origem_endereco')) {
                     throw ValidationException::withMessages(['loja_frete_origem_endereco' => $msg]);
                 }

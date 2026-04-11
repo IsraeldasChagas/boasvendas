@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Cep;
 use App\Support\GeradorQrCodePix;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -29,6 +30,7 @@ class Empresa extends Model
         'slug',
         'logo',
         'endereco',
+        'cep',
         'whatsapp',
         'loja_taxa_entrega_padrao',
         'loja_permite_retirada_balcao',
@@ -202,14 +204,38 @@ class Empresa extends Model
             }
         }
 
+        $cepFmt = $this->cepFormatadoParaMaps();
+
         $e = trim((string) ($this->endereco ?? ''));
         if ($e !== '') {
+            if ($cepFmt !== null) {
+                return $e.', '.$cepFmt.', Brasil';
+            }
+
             return $e;
+        }
+
+        if ($cepFmt !== null) {
+            return $cepFmt.', Brasil';
         }
 
         $g = trim((string) config('services.google_maps.default_origin_address', ''));
 
         return $g !== '' ? $g : null;
+    }
+
+    /** CEP da loja como "00000-000" ou null. */
+    public function cepFormatadoParaMaps(): ?string
+    {
+        if (! Schema::hasColumn('empresas', 'cep')) {
+            return null;
+        }
+        $c = Cep::normalizar8($this->cep ?? null);
+        if ($c === null) {
+            return null;
+        }
+
+        return substr($c, 0, 5).'-'.substr($c, 5);
     }
 
     /** Valor em R$ por km rodoviário, ou null se não configurado. */

@@ -76,11 +76,25 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-12">
-                            <label class="form-label" for="endereco">Endereço</label>
-                            <input type="text" class="form-control form-control-sm @error('endereco') is-invalid @enderror" id="endereco" name="endereco" value="{{ old('endereco', $empresa->endereco) }}" maxlength="255" placeholder="Ex.: Av. Principal, 123 - Bairro - Cidade/UF">
-                            @error('endereco')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                        </div>
+                        @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'cep'))
+                            <div class="col-md-4">
+                                <label class="form-label" for="cep">CEP da loja</label>
+                                <input type="text" class="form-control form-control-sm @error('cep') is-invalid @enderror" id="cep" name="cep" value="{{ old('cep', $empresa->cep ? substr($empresa->cep, 0, 5).'-'.substr($empresa->cep, 5) : '') }}" maxlength="9" placeholder="00000-000" inputmode="numeric" autocomplete="postal-code">
+                                @error('cep')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <p class="small text-muted mb-0 mt-1">Usado no frete por Google (origem) junto com o endereço.</p>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label" for="endereco">Endereço</label>
+                                <input type="text" class="form-control form-control-sm @error('endereco') is-invalid @enderror" id="endereco" name="endereco" value="{{ old('endereco', $empresa->endereco) }}" maxlength="255" placeholder="Ex.: Av. Principal, 123 - Bairro - Cidade/UF">
+                                @error('endereco')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                        @else
+                            <div class="col-12">
+                                <label class="form-label" for="endereco">Endereço</label>
+                                <input type="text" class="form-control form-control-sm @error('endereco') is-invalid @enderror" id="endereco" name="endereco" value="{{ old('endereco', $empresa->endereco) }}" maxlength="255" placeholder="Ex.: Av. Principal, 123 - Bairro - Cidade/UF">
+                                @error('endereco')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                        @endif
                         <div class="col-md-6">
                             <label class="form-label" for="whatsapp">WhatsApp</label>
                             <input type="text" class="form-control form-control-sm @error('whatsapp') is-invalid @enderror" id="whatsapp" name="whatsapp" value="{{ old('whatsapp', $empresa->whatsapp) }}" maxlength="32" placeholder="Ex.: (91) 99999-9999">
@@ -175,7 +189,7 @@
                                             <li>Valor em <strong>R$ por km</strong> (maior que zero)</li>
                                         @endif
                                         @if (! $gchk['origem'])
-                                            <li><strong>Endereço de origem</strong> (campo abaixo, ou Endereço da empresa, ou <code>GOOGLE_MAPS_DEFAULT_ORIGIN_ADDRESS</code>)</li>
+                                            <li><strong>Origem da rota</strong>: CEP da loja, endereço de origem do frete, Endereço da empresa ou <code>GOOGLE_MAPS_DEFAULT_ORIGIN_ADDRESS</code></li>
                                         @endif
                                     </ul>
                                 </div>
@@ -184,7 +198,7 @@
                         @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_frete_google_rs_por_km'))
                             <div id="vf-frete-google-campos" class="border rounded p-3 mb-3 bg-body-secondary bg-opacity-25 {{ old('loja_frete_modo', $empresa->loja_frete_modo ?? \App\Models\Empresa::LOJA_FRETE_FAIXAS_CEP) === \App\Models\Empresa::LOJA_FRETE_GOOGLE_DISTANCIA ? '' : 'd-none' }}">
                                 <h3 class="h6 fw-bold mb-2">Modo Google Maps — valores</h3>
-                                <p class="small text-muted mb-3">Com este modo ativo, o sistema <strong>exige</strong> salvar: chave no servidor, <strong>R$ por km</strong> &gt; 0 e pelo menos uma <strong>origem</strong> (campo abaixo, “Endereço” da empresa ou <code>GOOGLE_MAPS_DEFAULT_ORIGIN_ADDRESS</code>). Se a API falhar no checkout, ainda entra a taxa padrão da loja.</p>
+                                <p class="small text-muted mb-3">Com este modo ativo, o sistema <strong>exige</strong> salvar: chave no servidor, <strong>R$ por km</strong> &gt; 0 e pelo menos uma <strong>origem</strong> (<strong>CEP</strong> da loja em Dados da empresa, campo abaixo, “Endereço” ou <code>GOOGLE_MAPS_DEFAULT_ORIGIN_ADDRESS</code>). Se a API falhar no checkout, ainda entra a taxa padrão da loja.</p>
                                 <div class="row g-3">
                                     <div class="col-md-4">
                                         <label class="form-label" for="loja_frete_google_rs_por_km">R$ por km rodoviário <span class="text-danger">*</span></label>
