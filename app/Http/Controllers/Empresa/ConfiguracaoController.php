@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class ConfiguracaoController extends Controller
@@ -76,7 +77,9 @@ class ConfiguracaoController extends Controller
             $rules['loja_frete_modo'] = ['required', 'string', Rule::in(array_keys(Empresa::lojaFreteModosRotulos()))];
         }
         if (Schema::hasColumn('empresas', 'loja_frete_google_rs_por_km')) {
-            $rules['loja_frete_google_rs_por_km'] = ['nullable', 'numeric', 'min:0', 'max:99999999.99'];
+            $rules['loja_frete_google_rs_por_km'] = $request->input('loja_frete_modo') === Empresa::LOJA_FRETE_GOOGLE_DISTANCIA
+                ? ['required', 'numeric', 'min:0.01', 'max:99999999.99']
+                : ['nullable', 'numeric', 'min:0', 'max:99999999.99'];
         }
         if (Schema::hasColumn('empresas', 'loja_frete_google_taxa_minima')) {
             $rules['loja_frete_google_taxa_minima'] = ['nullable', 'numeric', 'min:0', 'max:99999999.99'];
@@ -89,6 +92,26 @@ class ConfiguracaoController extends Controller
         }
 
         $data = $request->validate($rules);
+
+        if (($data['loja_frete_modo'] ?? null) === Empresa::LOJA_FRETE_GOOGLE_DISTANCIA
+            && Schema::hasColumn('empresas', 'loja_frete_google_rs_por_km')) {
+            if (! filled(config('services.google_maps.api_key'))) {
+                throw ValidationException::withMessages([
+                    'loja_frete_modo' => 'O servidor ainda não tem GOOGLE_MAPS_API_KEY no .env. Configure a chave e a Distance Matrix API no Google Cloud antes de usar este modo.',
+                ]);
+            }
+
+            $origemCampo = trim((string) ($data['loja_frete_origem_endereco'] ?? ''));
+            $origemEmpresa = trim((string) ($data['endereco'] ?? ''));
+            $origemGlobal = trim((string) config('services.google_maps.default_origin_address', ''));
+            if ($origemCampo === '' && $origemEmpresa === '' && $origemGlobal === '') {
+                $msg = 'Informe o endereço de origem do frete, ou preencha o campo Endereço em Dados da empresa, ou defina GOOGLE_MAPS_DEFAULT_ORIGIN_ADDRESS no servidor.';
+                if (Schema::hasColumn('empresas', 'loja_frete_origem_endereco')) {
+                    throw ValidationException::withMessages(['loja_frete_origem_endereco' => $msg]);
+                }
+                throw ValidationException::withMessages(['endereco' => $msg]);
+            }
+        }
 
         // Evita quebrar a vitrine ao salvar sem slug: se a empresa já tem slug,
         // não permitimos que ele vire null por acidente ao editar outras infos.

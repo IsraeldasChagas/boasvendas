@@ -253,6 +253,25 @@ class Empresa extends Model
         return round((float) $v, 2);
     }
 
+    /**
+     * Requisitos do frete por Google Maps após salvar (chave no servidor + loja).
+     *
+     * @return array{api_configurada: bool, rs_por_km: bool, origem: bool, pronto: bool}
+     */
+    public function lojaFreteGoogleChecklistPronto(): array
+    {
+        $api = filled(config('services.google_maps.api_key'));
+        $rs = $this->lojaFreteGoogleRsPorKm() !== null;
+        $origem = $this->lojaFreteOrigemEnderecoEfetiva() !== null;
+
+        return [
+            'api_configurada' => $api,
+            'rs_por_km' => $rs,
+            'origem' => $origem,
+            'pronto' => $api && $rs && $origem,
+        ];
+    }
+
     /** Taxa padrão da loja ou valor global do sistema. */
     public function lojaTaxaEntregaPadraoEfetiva(): float
     {

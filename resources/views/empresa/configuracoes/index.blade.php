@@ -151,22 +151,44 @@
                         <div class="alert alert-light border small mb-3 mb-md-3 py-2 px-3">
                             <strong class="d-block mb-1">Google Maps (API no servidor)</strong>
                             <p class="mb-2">A chave fica no <code>.env</code> do servidor: <code>GOOGLE_MAPS_API_KEY</code>. No <a href="https://console.cloud.google.com/apis/library" rel="noopener noreferrer" target="_blank">Google Cloud Console</a> habilite a <strong>Distance Matrix API</strong> (obrigatória para o cálculo). <strong>Maps JavaScript API</strong> só se for exibir mapa no site.</p>
-                            <p class="mb-0">
+                            <p class="mb-2">
                                 @if (filled(config('services.google_maps.api_key')))
                                     <span class="text-success">Status neste servidor: chave configurada.</span>
                                 @else
                                     <span class="text-muted">Status neste servidor: chave ainda não configurada (<code>GOOGLE_MAPS_API_KEY</code> vazio).</span>
                                 @endif
                             </p>
+                            <p class="mb-0 small">Teste no terminal (no projeto): <code class="user-select-all">php artisan vendaffacil:google-maps-test</code></p>
                         </div>
+                        @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_frete_google_rs_por_km') && \Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_frete_modo') && $empresa->lojaFreteModoEfetivo() === \App\Models\Empresa::LOJA_FRETE_GOOGLE_DISTANCIA)
+                            @php $gchk = $empresa->lojaFreteGoogleChecklistPronto(); @endphp
+                            @if ($gchk['pronto'])
+                                <div class="alert alert-success small py-2 mb-3"><strong>Frete Google:</strong> pronto para uso (chave no servidor, R$/km e endereço de origem).</div>
+                            @else
+                                <div class="alert alert-warning small py-2 mb-3">
+                                    <strong class="d-block mb-1">Frete Google — falta algo:</strong>
+                                    <ul class="small mb-0 ps-3">
+                                        @if (! $gchk['api_configurada'])
+                                            <li>Chave <code>GOOGLE_MAPS_API_KEY</code> no <code>.env</code> do servidor</li>
+                                        @endif
+                                        @if (! $gchk['rs_por_km'])
+                                            <li>Valor em <strong>R$ por km</strong> (maior que zero)</li>
+                                        @endif
+                                        @if (! $gchk['origem'])
+                                            <li><strong>Endereço de origem</strong> (campo abaixo, ou Endereço da empresa, ou <code>GOOGLE_MAPS_DEFAULT_ORIGIN_ADDRESS</code>)</li>
+                                        @endif
+                                    </ul>
+                                </div>
+                            @endif
+                        @endif
                         @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_frete_google_rs_por_km'))
                             <div id="vf-frete-google-campos" class="border rounded p-3 mb-3 bg-body-secondary bg-opacity-25 {{ old('loja_frete_modo', $empresa->loja_frete_modo ?? \App\Models\Empresa::LOJA_FRETE_FAIXAS_CEP) === \App\Models\Empresa::LOJA_FRETE_GOOGLE_DISTANCIA ? '' : 'd-none' }}">
                                 <h3 class="h6 fw-bold mb-2">Modo Google Maps — valores</h3>
-                                <p class="small text-muted mb-3">Obrigatório para esse modo: <strong>R$ por km</strong> e um <strong>endereço de origem</strong> (abaixo ou o campo “Endereço” da empresa, ou <code>GOOGLE_MAPS_DEFAULT_ORIGIN_ADDRESS</code> no servidor). A taxa padrão da loja é usada se faltar chave, origem ou km, ou se a API falhar.</p>
+                                <p class="small text-muted mb-3">Com este modo ativo, o sistema <strong>exige</strong> salvar: chave no servidor, <strong>R$ por km</strong> &gt; 0 e pelo menos uma <strong>origem</strong> (campo abaixo, “Endereço” da empresa ou <code>GOOGLE_MAPS_DEFAULT_ORIGIN_ADDRESS</code>). Se a API falhar no checkout, ainda entra a taxa padrão da loja.</p>
                                 <div class="row g-3">
                                     <div class="col-md-4">
-                                        <label class="form-label" for="loja_frete_google_rs_por_km">R$ por km rodoviário</label>
-                                        <input type="number" step="0.01" min="0" class="form-control form-control-sm @error('loja_frete_google_rs_por_km') is-invalid @enderror" id="loja_frete_google_rs_por_km" name="loja_frete_google_rs_por_km" value="{{ old('loja_frete_google_rs_por_km', $empresa->loja_frete_google_rs_por_km) }}" placeholder="Ex.: 2,50">
+                                        <label class="form-label" for="loja_frete_google_rs_por_km">R$ por km rodoviário <span class="text-danger">*</span></label>
+                                        <input type="number" step="0.01" min="0.01" class="form-control form-control-sm @error('loja_frete_google_rs_por_km') is-invalid @enderror" id="loja_frete_google_rs_por_km" name="loja_frete_google_rs_por_km" value="{{ old('loja_frete_google_rs_por_km', $empresa->loja_frete_google_rs_por_km) }}" placeholder="Ex.: 2,50" data-vf-google-rs>
                                         @error('loja_frete_google_rs_por_km')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                     </div>
                                     <div class="col-md-4">
@@ -181,7 +203,7 @@
                                         <p class="small text-muted mb-0 mt-1">Acima disso o cliente não consegue finalizar entrega.</p>
                                     </div>
                                     <div class="col-12">
-                                        <label class="form-label" for="loja_frete_origem_endereco">Endereço de origem das entregas <span class="text-muted fw-normal">(opcional)</span></label>
+                                        <label class="form-label" for="loja_frete_origem_endereco">Endereço de origem das entregas <span class="text-muted fw-normal">(se vazio, usa “Endereço” da empresa ou o .env)</span></label>
                                         <input type="text" class="form-control form-control-sm @error('loja_frete_origem_endereco') is-invalid @enderror" id="loja_frete_origem_endereco" name="loja_frete_origem_endereco" value="{{ old('loja_frete_origem_endereco', $empresa->loja_frete_origem_endereco) }}" maxlength="500" placeholder="Ex.: Rua X, 100 — Bairro, Cidade - UF">
                                         @error('loja_frete_origem_endereco')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                         <p class="small text-muted mb-0 mt-1">Se vazio, usa o endereço cadastrado acima em “Dados da empresa” ou o padrão global do servidor.</p>
@@ -248,9 +270,12 @@
             (function () {
                 var sel = document.getElementById('loja_frete_modo');
                 var box = document.getElementById('vf-frete-google-campos');
+                var rs = document.querySelector('[data-vf-google-rs]');
                 if (!sel || !box) return;
                 function sync() {
-                    box.classList.toggle('d-none', sel.value !== 'google_distancia');
+                    var google = sel.value === 'google_distancia';
+                    box.classList.toggle('d-none', !google);
+                    if (rs) rs.required = google;
                 }
                 sel.addEventListener('change', sync);
                 sync();

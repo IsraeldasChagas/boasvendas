@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Produto;
+use App\Support\GoogleMapsDistanceMatrix;
 use Database\Seeders\RestaurarEmpresaDemoSeeder;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -13,6 +14,33 @@ use Illuminate\Support\Str;
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+Artisan::command('vendaffacil:google-maps-test', function (): int {
+    $key = config('services.google_maps.api_key');
+    if (! filled($key)) {
+        $this->error('Defina GOOGLE_MAPS_API_KEY no .env e rode: php artisan config:clear');
+
+        return 1;
+    }
+
+    $this->info('Consultando Distance Matrix (São Paulo → São Paulo, rota de carro)…');
+
+    $km = GoogleMapsDistanceMatrix::distanciaKmRodoviaria(
+        'Praça da Sé, São Paulo - SP, Brasil',
+        'Av. Paulista, 1578 - São Paulo - SP, Brasil',
+        is_string($key) ? $key : null
+    );
+
+    if ($km === null) {
+        $this->error('A API não devolveu distância. Verifique se a Distance Matrix API está ativa e se a chave tem permissão.');
+
+        return 1;
+    }
+
+    $this->info('OK: distância retornada ≈ '.number_format($km, 2, ',', '.').' km. Frete Google pode calcular no site.');
+
+    return 0;
+})->purpose('Testa GOOGLE_MAPS_API_KEY e a Distance Matrix API (diagnóstico rápido)');
 
 Artisan::command('vendaffacil:restaurar-empresa-demo', function (): int {
     $this->info('A restaurar empresa demo (Lanchonete Demo / slug demo)…');
@@ -116,12 +144,14 @@ Artisan::command('vendaffacil:converter-fotos-produto-para-jpg {--dry-run : Não
                 $full = $p->resolveFotoAbsolutePath();
                 if ($full === null || ! is_file($full)) {
                     $pulados++;
+
                     continue;
                 }
 
                 $ext = strtolower(pathinfo($full, PATHINFO_EXTENSION));
                 if (! in_array($ext, ['webp', 'avif'], true)) {
                     $pulados++;
+
                     continue;
                 }
 
@@ -141,6 +171,7 @@ Artisan::command('vendaffacil:converter-fotos-produto-para-jpg {--dry-run : Não
                     if ($img === null || $img === false) {
                         $falhas++;
                         $this->warn("Falhou ao decodificar: produto {$p->id} ({$p->foto})");
+
                         continue;
                     }
 
@@ -161,6 +192,7 @@ Artisan::command('vendaffacil:converter-fotos-produto-para-jpg {--dry-run : Não
                     if (! is_string($jpeg) || $jpeg === '') {
                         $falhas++;
                         $this->warn("Falhou ao gerar JPEG: produto {$p->id} ({$p->foto})");
+
                         continue;
                     }
 
@@ -175,7 +207,7 @@ Artisan::command('vendaffacil:converter-fotos-produto-para-jpg {--dry-run : Não
 
                     $convertidos++;
                     $this->line("OK: produto {$p->id} -> {$path}".($dry ? ' (dry-run)' : ''));
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     $falhas++;
                     $this->warn("Erro: produto {$p->id} ({$p->foto})");
                 }
