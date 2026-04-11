@@ -79,7 +79,11 @@
                         @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'cep'))
                             <div class="col-md-4">
                                 <label class="form-label" for="cep">CEP da loja</label>
-                                <input type="text" class="form-control form-control-sm @error('cep') is-invalid @enderror" id="cep" name="cep" value="{{ old('cep', $empresa->cep ? substr($empresa->cep, 0, 5).'-'.substr($empresa->cep, 5) : '') }}" maxlength="9" placeholder="00000-000" inputmode="numeric" autocomplete="postal-code">
+                                @php
+                                    $cepDb = $empresa->cep !== null && $empresa->cep !== '' ? preg_replace('/\D+/', '', (string) $empresa->cep) : '';
+                                    $cepMostrar = strlen($cepDb) === 8 ? substr($cepDb, 0, 5).'-'.substr($cepDb, 5) : '';
+                                @endphp
+                                <input type="text" class="form-control form-control-sm @error('cep') is-invalid @enderror" id="cep" name="cep" value="{{ old('cep', $cepMostrar) }}" maxlength="9" placeholder="00000-000" inputmode="numeric" autocomplete="postal-code">
                                 @error('cep')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 <p class="small text-muted mb-0 mt-1">Usado no frete por Google (origem) junto com o endereço.</p>
                             </div>

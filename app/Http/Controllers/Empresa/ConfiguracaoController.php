@@ -101,15 +101,21 @@ class ConfiguracaoController extends Controller
         $data = $request->validate($rules);
 
         if (Schema::hasColumn('empresas', 'cep')) {
-            $digits = preg_replace('/\D+/', '', (string) ($data['cep'] ?? ''));
-            if ($digits === '') {
-                $data['cep'] = null;
-            } elseif (strlen($digits) === 8) {
-                $data['cep'] = $digits;
+            // Só altera o CEP no banco se o campo veio no POST (evita apagar ao salvar
+            // sem o input no HTML, aba antiga em cache, etc.). String vazia = limpar CEP.
+            if (array_key_exists('cep', $request->all())) {
+                $digits = preg_replace('/\D+/', '', (string) $request->input('cep', ''));
+                if ($digits === '') {
+                    $data['cep'] = null;
+                } elseif (strlen($digits) === 8) {
+                    $data['cep'] = $digits;
+                } else {
+                    throw ValidationException::withMessages([
+                        'cep' => 'Informe o CEP com 8 dígitos ou deixe em branco.',
+                    ]);
+                }
             } else {
-                throw ValidationException::withMessages([
-                    'cep' => 'Informe o CEP com 8 dígitos ou deixe em branco.',
-                ]);
+                unset($data['cep']);
             }
         } else {
             unset($data['cep']);
@@ -126,7 +132,14 @@ class ConfiguracaoController extends Controller
             $origemCampo = trim((string) ($data['loja_frete_origem_endereco'] ?? ''));
             $origemEmpresa = trim((string) ($data['endereco'] ?? ''));
             $origemGlobal = trim((string) config('services.google_maps.default_origin_address', ''));
-            $temCep = Schema::hasColumn('empresas', 'cep') && ($data['cep'] ?? null) !== null;
+            $cepPersistidoOuNovo = Schema::hasColumn('empresas', 'cep')
+                ? (array_key_exists('cep', $request->all())
+                    ? ($data['cep'] ?? null)
+                    : $empresa->cep)
+                : null;
+            $temCep = Schema::hasColumn('empresas', 'cep')
+                && $cepPersistidoOuNovo !== null
+                && trim((string) $cepPersistidoOuNovo) !== '';
             if ($origemCampo === '' && $origemEmpresa === '' && $origemGlobal === '' && ! $temCep) {
                 $msg = 'Informe o CEP da loja, o endereço de origem do frete, o Endereço em Dados da empresa, ou defina GOOGLE_MAPS_DEFAULT_ORIGIN_ADDRESS no servidor.';
                 if (Schema::hasColumn('empresas', 'loja_frete_origem_endereco')) {
