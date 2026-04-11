@@ -136,6 +136,7 @@
         }
         $caixaItens = [
             'caixa_visao' => ['active' => request()->routeIs('empresa.caixa.index'), 'url' => route('empresa.caixa.index'), 'icon' => 'bi-cash-stack', 'label' => 'Visão geral'],
+            'caixa_fluxo_diario' => ['active' => request()->routeIs('empresa.caixa.fluxo-diario'), 'url' => route('empresa.caixa.fluxo-diario'), 'icon' => 'bi-graph-up-arrow', 'label' => 'Fluxo do dia'],
             'caixa_operacoes' => ['active' => request()->routeIs('empresa.caixa.abrir', 'empresa.caixa.movimento', 'empresa.caixa.fechar'), 'url' => route('empresa.caixa.index'), 'icon' => 'bi-lightning-charge', 'label' => 'Operações'],
             'caixa_conferencia' => ['active' => request()->routeIs('empresa.caixa.conferencia'), 'url' => route('empresa.caixa.conferencia'), 'icon' => 'bi-clipboard-check', 'label' => 'Conferência'],
         ];

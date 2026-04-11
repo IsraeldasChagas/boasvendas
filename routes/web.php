@@ -166,6 +166,7 @@ Route::middleware(['auth', 'empresa.painel', 'empresa.menu'])->prefix('empresa')
     Route::post('/contas-pagar/{financeiroTitulo}/baixar', [FinanceiroController::class, 'pagarBaixar'])->name('financeiro.contas-pagar.baixar');
 
     Route::get('/caixa', [CaixaController::class, 'index'])->name('caixa.index');
+    Route::get('/caixa/fluxo-diario', [CaixaController::class, 'fluxoDiario'])->name('caixa.fluxo-diario');
     Route::post('/caixa/abrir', [CaixaController::class, 'abrir'])->name('caixa.abrir');
     Route::post('/caixa/movimento', [CaixaController::class, 'movimento'])->name('caixa.movimento');
     Route::post('/caixa/fechar', [CaixaController::class, 'fechar'])->name('caixa.fechar');

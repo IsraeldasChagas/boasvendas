@@ -21,6 +21,10 @@
         </div>
     @endif
 
+    <div class="mb-3">
+        <a href="{{ route('empresa.caixa.fluxo-diario') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-graph-up-arrow me-1"></i>Fluxo do dia (entradas/saídas)</a>
+    </div>
+
     @if (! $turnoAberto)
         <div class="vf-card p-4 mb-4" style="max-width: 28rem;">
             <h2 class="h5 fw-bold mb-3">Caixa fechado</h2>

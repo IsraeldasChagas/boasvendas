@@ -169,6 +169,7 @@ class Empresa extends Model
             'financeiro_pagar' => 'Financeiro: Contas a pagar',
             'financeiro_despesas_fixas' => 'Financeiro: Despesas fixas',
             'caixa_visao' => 'Caixa: Visão geral',
+            'caixa_fluxo_diario' => 'Caixa: Fluxo do dia',
             'caixa_operacoes' => 'Caixa: Abrir/Movimentos/Fechar',
             'caixa_conferencia' => 'Caixa: Conferência',
             'relatorios' => 'Relatórios',
@@ -224,6 +225,10 @@ class Empresa extends Model
             return true;
         }
         if (str_starts_with($key, 'caixa_') && in_array('caixa', $libs, true)) {
+            return true;
+        }
+
+        if ($key === 'caixa_fluxo_diario' && in_array('caixa_visao', $libs, true)) {
             return true;
         }
         if (str_starts_with($key, 'fidelidade_') && in_array('fidelidade', $libs, true)) {

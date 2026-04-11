@@ -104,6 +104,9 @@ class EnsureEmpresaMenuAccess
             if (str_starts_with($routeName, 'empresa.caixa.conferencia')) {
                 return 'caixa_conferencia';
             }
+            if (str_starts_with($routeName, 'empresa.caixa.fluxo-diario')) {
+                return 'caixa_fluxo_diario';
+            }
             if (str_starts_with($routeName, 'empresa.caixa.movimento')
                 || str_starts_with($routeName, 'empresa.caixa.abrir')
                 || str_starts_with($routeName, 'empresa.caixa.fechar')) {
