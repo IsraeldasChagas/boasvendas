@@ -6,13 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Models\Adicional;
 use App\Models\Categoria;
 use App\Models\Empresa;
+use App\Models\EmpresaEntregaFaixaCep;
 use App\Models\EmpresaSlug;
 use App\Models\Pedido;
 use App\Models\PedidoItem;
 use App\Models\Produto;
+use App\Support\Cep;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -287,9 +290,70 @@ class PublicoController extends Controller
         return round($t, 2);
     }
 
-    private function taxaEntregaValor(Empresa $empresa): float
+    private function entregaPrefsKey(string $slug): string
     {
-        return (float) config('vendaffacil.taxa_entrega_padrao', 5.99);
+        return 'loja_entrega_prefs.'.$slug;
+    }
+
+    private function lojaPermiteRetiradaBalcao(Empresa $empresa): bool
+    {
+        if (! Schema::hasColumn('empresas', 'loja_permite_retirada_balcao')) {
+            return true;
+        }
+
+        return (bool) $empresa->loja_permite_retirada_balcao;
+    }
+
+    /**
+     * @return array{modo: string, cep: string}
+     */
+    private function getEntregaPrefs(string $slug, Empresa $empresa): array
+    {
+        $default = [
+            'modo' => Pedido::TIPO_ENTREGA_ENTREGA,
+            'cep' => '',
+        ];
+        $raw = session($this->entregaPrefsKey($slug), []);
+        if (! is_array($raw)) {
+            return $default;
+        }
+        $modoRaw = $raw['modo'] ?? Pedido::TIPO_ENTREGA_ENTREGA;
+        $modo = $modoRaw === Pedido::TIPO_ENTREGA_BALCAO && $this->lojaPermiteRetiradaBalcao($empresa)
+            ? Pedido::TIPO_ENTREGA_BALCAO
+            : Pedido::TIPO_ENTREGA_ENTREGA;
+        $cep = isset($raw['cep']) && is_string($raw['cep']) ? preg_replace('/\D+/', '', $raw['cep']) : '';
+
+        return ['modo' => $modo, 'cep' => $cep];
+    }
+
+    /**
+     * @return array{taxa: float, rotulo: string}
+     */
+    private function calcularTaxaResumo(Empresa $empresa, string $modo, ?string $cepSoDigitos): array
+    {
+        if ($modo === Pedido::TIPO_ENTREGA_BALCAO && $this->lojaPermiteRetiradaBalcao($empresa)) {
+            return ['taxa' => 0.0, 'rotulo' => 'Retirada no balcão'];
+        }
+
+        $cep8 = Cep::normalizar8($cepSoDigitos);
+        if ($cep8 === null || $cepSoDigitos === null || $cepSoDigitos === '') {
+            return [
+                'taxa' => round($empresa->lojaTaxaEntregaPadraoEfetiva(), 2),
+                'rotulo' => 'Taxa padrão (informe o CEP para usar faixa)',
+            ];
+        }
+
+        if (Schema::hasTable('empresa_entrega_faixas_cep')) {
+            $porFaixa = EmpresaEntregaFaixaCep::taxaParaCep((int) $empresa->id, $cep8);
+            if ($porFaixa !== null) {
+                return ['taxa' => round($porFaixa, 2), 'rotulo' => 'Faixa de CEP'];
+            }
+        }
+
+        return [
+            'taxa' => round($empresa->lojaTaxaEntregaPadraoEfetiva(), 2),
+            'rotulo' => 'Taxa padrão da loja',
+        ];
     }
 
     private function gerarCodigoPublico(): string
@@ -476,10 +540,51 @@ class PublicoController extends Controller
         $empresa = $this->empresaLojaAtiva($slug);
         $linhas = $this->linhasCarrinho($empresa, $slug);
         $subtotal = $this->subtotalCarrinho($linhas);
-        $taxa = $this->taxaEntregaValor($empresa);
+        $prefs = $this->getEntregaPrefs($slug, $empresa);
+        $resumo = $this->calcularTaxaResumo(
+            $empresa,
+            $prefs['modo'],
+            $prefs['cep'] !== '' ? $prefs['cep'] : null
+        );
+        $taxa = $resumo['taxa'];
+        $taxaRotulo = $resumo['rotulo'];
         $total = round($subtotal + $taxa, 2);
+        $permiteBalcao = $this->lojaPermiteRetiradaBalcao($empresa);
 
-        return view('publico.carrinho', compact('slug', 'empresa', 'linhas', 'subtotal', 'taxa', 'total'));
+        return view('publico.carrinho', compact(
+            'slug',
+            'empresa',
+            'linhas',
+            'subtotal',
+            'taxa',
+            'taxaRotulo',
+            'total',
+            'prefs',
+            'permiteBalcao'
+        ));
+    }
+
+    public function carrinhoEntregaPrefs(Request $request, string $slug): RedirectResponse
+    {
+        $empresa = $this->empresaLojaAtiva($slug);
+
+        $data = $request->validate([
+            'modo' => ['required', Rule::in([Pedido::TIPO_ENTREGA_ENTREGA, Pedido::TIPO_ENTREGA_BALCAO])],
+            'cep' => ['nullable', 'string', 'max:16'],
+        ]);
+
+        if ($data['modo'] === Pedido::TIPO_ENTREGA_BALCAO && ! $this->lojaPermiteRetiradaBalcao($empresa)) {
+            return back()->with('warning', 'Retirada no balcão não está disponível nesta loja.');
+        }
+
+        session([$this->entregaPrefsKey($slug) => [
+            'modo' => $data['modo'],
+            'cep' => preg_replace('/\D+/', '', (string) ($data['cep'] ?? '')),
+        ]]);
+
+        return redirect()
+            ->route('publico.carrinho', ['slug' => $slug])
+            ->with('status', 'Frete atualizado.');
     }
 
     public function carrinhoAtualizar(Request $request, string $slug): RedirectResponse
@@ -538,10 +643,49 @@ class PublicoController extends Controller
         }
 
         $subtotal = $this->subtotalCarrinho($linhas);
-        $taxa = $this->taxaEntregaValor($empresa);
+        $prefs = $this->getEntregaPrefs($slug, $empresa);
+        $tipoCheckout = old('tipo_entrega', $prefs['modo']);
+        if (! in_array($tipoCheckout, [Pedido::TIPO_ENTREGA_ENTREGA, Pedido::TIPO_ENTREGA_BALCAO], true)) {
+            $tipoCheckout = Pedido::TIPO_ENTREGA_ENTREGA;
+        }
+        if ($tipoCheckout === Pedido::TIPO_ENTREGA_BALCAO && ! $this->lojaPermiteRetiradaBalcao($empresa)) {
+            $tipoCheckout = Pedido::TIPO_ENTREGA_ENTREGA;
+        }
+        $cepDigits = old('cep_entrega') !== null
+            ? preg_replace('/\D+/', '', (string) old('cep_entrega'))
+            : $prefs['cep'];
+        $resumo = $this->calcularTaxaResumo(
+            $empresa,
+            $tipoCheckout,
+            $tipoCheckout === Pedido::TIPO_ENTREGA_ENTREGA && $cepDigits !== '' ? $cepDigits : null
+        );
+        $taxa = $resumo['taxa'];
+        $taxaRotulo = $resumo['rotulo'];
         $total = round($subtotal + $taxa, 2);
+        $permiteBalcao = $this->lojaPermiteRetiradaBalcao($empresa);
 
-        return view('publico.checkout', compact('slug', 'empresa', 'linhas', 'subtotal', 'taxa', 'total'));
+        $resumoEntregaCep = $this->calcularTaxaResumo(
+            $empresa,
+            Pedido::TIPO_ENTREGA_ENTREGA,
+            $cepDigits !== '' ? $cepDigits : null
+        );
+        $taxaSeEntrega = $resumoEntregaCep['taxa'];
+        $rotuloSeEntrega = $resumoEntregaCep['rotulo'];
+
+        return view('publico.checkout', compact(
+            'slug',
+            'empresa',
+            'linhas',
+            'subtotal',
+            'taxa',
+            'taxaRotulo',
+            'total',
+            'tipoCheckout',
+            'cepDigits',
+            'permiteBalcao',
+            'taxaSeEntrega',
+            'rotuloSeEntrega'
+        ));
     }
 
     public function checkoutFinalizar(Request $request, string $slug): RedirectResponse
@@ -555,21 +699,59 @@ class PublicoController extends Controller
         }
 
         $subtotalVal = $this->subtotalCarrinho($linhas);
-        $taxaVal = $this->taxaEntregaValor($empresa);
-        $totalPedido = round($subtotalVal + $taxaVal, 2);
 
         $formasCheckout = array_keys($empresa->formasPagamentoLojaPublica());
 
+        $tiposEntrega = [Pedido::TIPO_ENTREGA_ENTREGA, Pedido::TIPO_ENTREGA_BALCAO];
+        if (! $this->lojaPermiteRetiradaBalcao($empresa)) {
+            $tiposEntrega = [Pedido::TIPO_ENTREGA_ENTREGA];
+        }
+
         $data = $request->validate([
+            'tipo_entrega' => ['required', Rule::in($tiposEntrega)],
+            'cep_entrega' => ['nullable', 'string', 'max:16'],
             'cliente_nome' => ['required', 'string', 'max:120'],
             'cliente_telefone' => ['required', 'string', 'max:32'],
             'cliente_email' => ['nullable', 'email', 'max:255'],
-            'endereco' => ['required', 'string', 'max:255'],
+            'endereco' => ['nullable', 'string', 'max:255'],
             'complemento' => ['nullable', 'string', 'max:120'],
             'forma_pagamento' => ['required', 'string', Rule::in($formasCheckout)],
             'pagamento_troco_para' => ['nullable', 'numeric', 'min:0'],
             'observacoes' => ['nullable', 'string', 'max:1000'],
         ]);
+
+        $tipoEntrega = $data['tipo_entrega'];
+        $cepNorm = null;
+        $enderecoPedido = '';
+        $complementoPedido = $data['complemento'] ?: null;
+
+        if ($tipoEntrega === Pedido::TIPO_ENTREGA_BALCAO) {
+            $taxaVal = 0.0;
+            $enderecoPedido = 'Retirada no balcão';
+        } else {
+            $cepNorm = Cep::normalizar8($data['cep_entrega'] ?? '');
+            if ($cepNorm === null) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['cep_entrega' => 'Informe um CEP válido (8 dígitos).']);
+            }
+            if (Schema::hasTable('empresa_entrega_faixas_cep')) {
+                $porFaixa = EmpresaEntregaFaixaCep::taxaParaCep((int) $empresa->id, $cepNorm);
+                $taxaVal = $porFaixa !== null ? (float) $porFaixa : $empresa->lojaTaxaEntregaPadraoEfetiva();
+            } else {
+                $taxaVal = $empresa->lojaTaxaEntregaPadraoEfetiva();
+            }
+            $enderecoTrim = trim((string) ($data['endereco'] ?? ''));
+            if ($enderecoTrim === '') {
+                return back()
+                    ->withInput()
+                    ->withErrors(['endereco' => 'Informe o endereço de entrega.']);
+            }
+            $enderecoPedido = $enderecoTrim;
+        }
+
+        $taxaVal = round((float) $taxaVal, 2);
+        $totalPedido = round($subtotalVal + $taxaVal, 2);
 
         $trocoPara = $data['pagamento_troco_para'] ?? null;
         if ($data['forma_pagamento'] === Pedido::PAGAMENTO_DINHEIRO && $trocoPara !== null && $trocoPara !== '') {
@@ -604,16 +786,18 @@ class PublicoController extends Controller
         $taxa = $taxaVal;
         $total = $totalPedido;
 
-        $pedido = DB::transaction(function () use ($empresa, $linhas, $data, $subtotal, $taxa, $total, $pagamentoTrocoPara) {
+        $pedido = DB::transaction(function () use ($empresa, $linhas, $data, $subtotal, $taxa, $total, $pagamentoTrocoPara, $tipoEntrega, $cepNorm, $enderecoPedido, $complementoPedido) {
             $pedido = Pedido::query()->create([
                 'empresa_id' => $empresa->id,
                 'codigo_publico' => $this->gerarCodigoPublico(),
                 'canal' => Pedido::CANAL_LOJA,
+                'tipo_entrega' => $tipoEntrega,
                 'cliente_nome' => $data['cliente_nome'],
                 'cliente_telefone' => $data['cliente_telefone'],
                 'cliente_email' => $data['cliente_email'] ?: null,
-                'endereco' => $data['endereco'],
-                'complemento' => $data['complemento'] ?: null,
+                'endereco' => $enderecoPedido,
+                'complemento' => $complementoPedido,
+                'cep_entrega' => $cepNorm,
                 'forma_pagamento' => $data['forma_pagamento'],
                 'pagamento_troco_para' => $pagamentoTrocoPara,
                 'observacoes' => $data['observacoes'] ?: null,
@@ -652,6 +836,10 @@ class PublicoController extends Controller
         });
 
         $this->setCarrinhoLines($slug, []);
+        session([$this->entregaPrefsKey($slug) => [
+            'modo' => $tipoEntrega,
+            'cep' => $cepNorm !== null ? $cepNorm : '',
+        ]]);
 
         return redirect()
             ->route('publico.pedido.show', ['slug' => $slug, 'codigo' => $pedido->codigo_publico])

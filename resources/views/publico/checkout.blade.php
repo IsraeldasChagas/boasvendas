@@ -11,6 +11,41 @@
                 <div class="col-lg-7">
                     <div class="vf-card p-3 mb-3">
                         <h2 class="h6 fw-bold mb-3">Seus dados e entrega</h2>
+                        <div class="mb-3">
+                            <span class="form-label small d-block mb-2">Como deseja receber</span>
+                            <div class="form-check">
+                                <input class="form-check-input vf-tipo-entrega" type="radio" name="tipo_entrega" id="tipo-entrega" value="{{ \App\Models\Pedido::TIPO_ENTREGA_ENTREGA }}" data-vf-entrega="1" @checked(old('tipo_entrega', $tipoCheckout) === \App\Models\Pedido::TIPO_ENTREGA_ENTREGA)>
+                                <label class="form-check-label small" for="tipo-entrega">Entrega no endereço</label>
+                            </div>
+                            @if ($permiteBalcao)
+                                <div class="form-check">
+                                    <input class="form-check-input vf-tipo-entrega" type="radio" name="tipo_entrega" id="tipo-balcao" value="{{ \App\Models\Pedido::TIPO_ENTREGA_BALCAO }}" data-vf-entrega="0" @checked(old('tipo_entrega', $tipoCheckout) === \App\Models\Pedido::TIPO_ENTREGA_BALCAO)>
+                                    <label class="form-check-label small" for="tipo-balcao">Retirada no balcão <span class="text-success">(sem taxa de entrega)</span></label>
+                                </div>
+                            @endif
+                            @error('tipo_entrega')<div class="text-danger small">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="row g-2" id="vf-checkout-entrega-fields">
+                            <div class="col-md-4">
+                                <label class="form-label small" for="cep_entrega">CEP</label>
+                                <input type="text" class="form-control @error('cep_entrega') is-invalid @enderror" id="cep_entrega" name="cep_entrega" value="{{ old('cep_entrega', $cepDigits !== '' ? substr($cepDigits, 0, 5).'-'.substr($cepDigits, 5) : '') }}" maxlength="9" placeholder="00000-000" autocomplete="postal-code">
+                                @error('cep_entrega')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-8 d-flex align-items-end">
+                                <p class="small text-muted mb-0">A taxa usa a <strong>faixa de CEP</strong> cadastrada pela loja; fora das faixas vale a taxa padrão.</p>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label small" for="endereco">Endereço de entrega</label>
+                                <input type="text" class="form-control @error('endereco') is-invalid @enderror" id="endereco" name="endereco" value="{{ old('endereco') }}" maxlength="255" data-vf-entrega-req="1">
+                                @error('endereco')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small" for="complemento">Complemento</label>
+                                <input type="text" class="form-control @error('complemento') is-invalid @enderror" id="complemento" name="complemento" value="{{ old('complemento') }}" maxlength="120">
+                                @error('complemento')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                        </div>
+                        <hr class="my-3">
                         <div class="row g-2">
                             <div class="col-md-6">
                                 <label class="form-label small" for="cliente_nome">Nome</label>
@@ -26,16 +61,6 @@
                                 <label class="form-label small" for="cliente_email">E-mail <span class="text-muted">(opcional)</span></label>
                                 <input type="email" class="form-control @error('cliente_email') is-invalid @enderror" id="cliente_email" name="cliente_email" value="{{ old('cliente_email') }}" maxlength="255">
                                 @error('cliente_email')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            </div>
-                            <div class="col-md-8">
-                                <label class="form-label small" for="endereco">Endereço de entrega</label>
-                                <input type="text" class="form-control @error('endereco') is-invalid @enderror" id="endereco" name="endereco" value="{{ old('endereco') }}" required maxlength="255">
-                                @error('endereco')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label small" for="complemento">Complemento</label>
-                                <input type="text" class="form-control @error('complemento') is-invalid @enderror" id="complemento" name="complemento" value="{{ old('complemento') }}" maxlength="120">
-                                @error('complemento')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                         </div>
                     </div>
@@ -120,9 +145,10 @@
                                     @include('partials.opcoes-pedido-item', ['opcoesLinha' => $l['opcoes'] === [] ? null : ['adicionais' => $l['opcoes']]])
                                 </li>
                             @endforeach
-                            <li class="d-flex justify-content-between py-1"><span>Entrega</span><span>R$ {{ number_format($taxa, 2, ',', '.') }}</span></li>
+                            <li class="d-flex justify-content-between py-1"><span>Taxa entrega</span><span id="vf-side-taxa">R$ {{ number_format($taxa, 2, ',', '.') }}</span></li>
+                            <li class="small text-muted py-0" id="vf-side-taxa-rotulo">{{ $taxaRotulo }}</li>
                         </ul>
-                        <div class="d-flex justify-content-between fw-bold mb-3"><span>Total</span><span class="text-success">R$ {{ number_format($total, 2, ',', '.') }}</span></div>
+                        <div class="d-flex justify-content-between fw-bold mb-3"><span>Total</span><span class="text-success" id="vf-side-total">R$ {{ number_format($total, 2, ',', '.') }}</span></div>
                         <button type="submit" class="btn btn-primary w-100">Confirmar pedido</button>
                         <a href="{{ route('publico.carrinho', ['slug' => $slug]) }}" class="btn btn-link w-100 mt-2">Voltar ao carrinho</a>
                     </div>
@@ -149,6 +175,46 @@
                         }
                     });
                 });
+
+                var entrega = '{{ \App\Models\Pedido::TIPO_ENTREGA_ENTREGA }}';
+                var sub = {{ number_format($subtotal, 2, '.', '') }};
+                var taxaEnt = {{ number_format($taxaSeEntrega, 2, '.', '') }};
+                var rotuloEnt = @json($rotuloSeEntrega);
+                var rotuloBal = 'Retirada no balcão';
+                var fmt = function (n) {
+                    return n.toFixed(2).replace('.', ',');
+                };
+                var boxEnt = document.getElementById('vf-checkout-entrega-fields');
+                var cepEl = document.getElementById('cep_entrega');
+                var endEl = document.getElementById('endereco');
+                var elTaxa = document.getElementById('vf-side-taxa');
+                var elRotulo = document.getElementById('vf-side-taxa-rotulo');
+                var elTotal = document.getElementById('vf-side-total');
+                function syncResumo(isEnt) {
+                    var taxa = isEnt ? taxaEnt : 0;
+                    var tot = Math.round((sub + taxa) * 100) / 100;
+                    if (elTaxa) elTaxa.textContent = 'R$ ' + fmt(taxa);
+                    if (elRotulo) elRotulo.textContent = isEnt ? rotuloEnt : rotuloBal;
+                    if (elTotal) elTotal.textContent = 'R$ ' + fmt(tot);
+                }
+                function syncEntregaFields() {
+                    var r = document.querySelector('.vf-tipo-entrega:checked');
+                    var isEnt = r && r.value === entrega;
+                    if (boxEnt) {
+                        boxEnt.classList.toggle('d-none', !isEnt);
+                    }
+                    if (cepEl) {
+                        cepEl.required = !!isEnt;
+                    }
+                    if (endEl) {
+                        endEl.required = !!isEnt;
+                    }
+                    syncResumo(!!isEnt);
+                }
+                document.querySelectorAll('.vf-tipo-entrega').forEach(function (r) {
+                    r.addEventListener('change', syncEntregaFields);
+                });
+                syncEntregaFields();
             })();
         </script>
     @endpush

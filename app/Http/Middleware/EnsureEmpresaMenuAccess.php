@@ -121,6 +121,9 @@ class EnsureEmpresaMenuAccess
         if (str_starts_with($routeName, 'empresa.chamados.')) {
             return 'suporte';
         }
+        if (str_starts_with($routeName, 'empresa.loja-entrega-faixas')) {
+            return 'loja_online';
+        }
         if (str_starts_with($routeName, 'empresa.configuracoes.')) {
             return 'configuracoes';
         }

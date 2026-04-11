@@ -197,6 +197,11 @@
             <i class="bi bi-headset"></i> Suporte
         </a>
     @endif
+    @if ($tem('loja_online'))
+        <a class="nav-link {{ request()->routeIs('empresa.loja-entrega-faixas.*') ? 'active' : '' }}" href="{{ route('empresa.loja-entrega-faixas.index') }}">
+            <i class="bi bi-truck"></i> Frete por CEP
+        </a>
+    @endif
     @if ($tem('configuracoes'))
         <a class="nav-link {{ request()->routeIs('empresa.configuracoes.*') ? 'active' : '' }}" href="{{ route('empresa.configuracoes.index') }}">
             <i class="bi bi-gear"></i> Configurações

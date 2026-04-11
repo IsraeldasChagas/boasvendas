@@ -18,6 +18,7 @@ use App\Http\Controllers\Empresa\DashboardController as EmpresaDashboardControll
 use App\Http\Controllers\Empresa\EntregaController;
 use App\Http\Controllers\Empresa\FidelidadeController;
 use App\Http\Controllers\Empresa\FinanceiroController;
+use App\Http\Controllers\Empresa\LojaEntregaFaixaController;
 use App\Http\Controllers\Empresa\PedidoController;
 use App\Http\Controllers\Empresa\ProdutoController;
 use App\Http\Controllers\Empresa\RelatorioController;
@@ -68,6 +69,9 @@ Route::post('/loja/{slug}/carrinho/adicionar', [PublicoController::class, 'carri
 Route::get('/loja/{slug}/carrinho', [PublicoController::class, 'carrinho'])->name('publico.carrinho');
 Route::post('/loja/{slug}/carrinho/atualizar', [PublicoController::class, 'carrinhoAtualizar'])->name('publico.carrinho.atualizar');
 Route::post('/loja/{slug}/carrinho/remover', [PublicoController::class, 'carrinhoRemover'])->name('publico.carrinho.remover');
+Route::post('/loja/{slug}/carrinho/entrega-prefs', [PublicoController::class, 'carrinhoEntregaPrefs'])
+    ->middleware('throttle:60,1')
+    ->name('publico.carrinho.entrega-prefs');
 Route::get('/loja/{slug}/checkout', [PublicoController::class, 'checkout'])->name('publico.checkout');
 Route::post('/loja/{slug}/checkout', [PublicoController::class, 'checkoutFinalizar'])
     ->middleware('throttle:20,1')
@@ -175,6 +179,10 @@ Route::middleware(['auth', 'empresa.painel', 'empresa.menu'])->prefix('empresa')
     Route::get('/relatorios', [RelatorioController::class, 'index'])->name('relatorios.index');
     Route::get('/configuracoes', [ConfiguracaoController::class, 'index'])->name('configuracoes.index');
     Route::put('/configuracoes', [ConfiguracaoController::class, 'update'])->name('configuracoes.update');
+
+    Route::get('/loja-entrega/faixas-cep', [LojaEntregaFaixaController::class, 'index'])->name('loja-entrega-faixas.index');
+    Route::post('/loja-entrega/faixas-cep', [LojaEntregaFaixaController::class, 'store'])->name('loja-entrega-faixas.store');
+    Route::delete('/loja-entrega/faixas-cep/{faixa}', [LojaEntregaFaixaController::class, 'destroy'])->name('loja-entrega-faixas.destroy');
     Route::get('/usuarios', [UsuarioController::class, 'index'])->name('usuarios.index');
     Route::get('/usuarios/novo', [UsuarioController::class, 'create'])->name('usuarios.create');
     Route::post('/usuarios', [UsuarioController::class, 'store'])

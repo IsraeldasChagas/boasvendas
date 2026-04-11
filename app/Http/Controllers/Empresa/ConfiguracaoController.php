@@ -8,6 +8,7 @@ use App\Models\EmpresaSlug;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -44,7 +45,7 @@ class ConfiguracaoController extends Controller
             : null;
         $request->merge(['slug' => $slugNormalizado]);
 
-        $data = $request->validate([
+        $rules = [
             'nome' => ['required', 'string', 'max:255'],
             'slug' => [
                 'nullable',
@@ -63,12 +64,29 @@ class ConfiguracaoController extends Controller
             'loja_pix_chave_valor' => ['nullable', 'string', 'max:255'],
             'loja_pix_banco' => ['nullable', 'string', 'max:120'],
             'loja_pix_copia_cola' => ['nullable', 'string', 'max:8192'],
-        ]);
+        ];
+
+        if (Schema::hasColumn('empresas', 'loja_taxa_entrega_padrao')) {
+            $rules['loja_taxa_entrega_padrao'] = ['nullable', 'numeric', 'min:0', 'max:99999999.99'];
+        }
+        if (Schema::hasColumn('empresas', 'loja_permite_retirada_balcao')) {
+            $rules['loja_permite_retirada_balcao'] = ['nullable', 'in:0,1'];
+        }
+
+        $data = $request->validate($rules);
 
         // Evita quebrar a vitrine ao salvar sem slug: se a empresa já tem slug,
         // não permitimos que ele vire null por acidente ao editar outras infos.
         if (! isset($data['slug']) || $data['slug'] === null || $data['slug'] === '') {
             unset($data['slug']);
+        }
+
+        if (Schema::hasColumn('empresas', 'loja_taxa_entrega_padrao')) {
+            $v = $data['loja_taxa_entrega_padrao'] ?? null;
+            $data['loja_taxa_entrega_padrao'] = ($v === null || $v === '') ? null : round((float) $v, 2);
+        }
+        if (Schema::hasColumn('empresas', 'loja_permite_retirada_balcao') && $request->has('loja_permite_retirada_balcao')) {
+            $data['loja_permite_retirada_balcao'] = (string) $request->input('loja_permite_retirada_balcao') === '1';
         }
 
         $slugAnterior = (string) ($empresa->slug ?? '');

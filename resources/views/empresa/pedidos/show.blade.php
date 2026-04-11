@@ -21,7 +21,7 @@
                 <div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
                     <div>
                         <h2 class="h5 fw-bold mb-1">{{ $pedido->codigo_publico }}</h2>
-                        <div class="small text-muted">Criado em {{ $pedido->created_at->format('d/m/Y H:i') }} · Canal {{ $pedido->canal === \App\Models\Pedido::CANAL_LOJA ? 'loja online' : $pedido->canal }}</div>
+                        <div class="small text-muted">Criado em {{ $pedido->created_at->format('d/m/Y H:i') }} · Canal {{ $pedido->canal === \App\Models\Pedido::CANAL_LOJA ? 'loja online' : $pedido->canal }} · {{ $pedido->rotuloTipoEntrega() }}@if ($pedido->cep_entrega) · CEP {{ substr($pedido->cep_entrega, 0, 5) }}-{{ substr($pedido->cep_entrega, 5) }}@endif</div>
                     </div>
                     <span class="vf-badge {{ $pedido->classeBadgeStatus() }} align-self-start">{{ $pedido->rotuloStatus() }}</span>
                 </div>
@@ -42,7 +42,7 @@
                         </tbody>
                         <tfoot>
                             <tr><th colspan="2">Subtotal</th><th class="text-end">R$ {{ number_format((float) $pedido->subtotal, 2, ',', '.') }}</th></tr>
-                            <tr><th colspan="2">Entrega</th><th class="text-end">R$ {{ number_format((float) $pedido->taxa_entrega, 2, ',', '.') }}</th></tr>
+                            <tr><th colspan="2">{{ ($pedido->tipo_entrega ?? \App\Models\Pedido::TIPO_ENTREGA_ENTREGA) === \App\Models\Pedido::TIPO_ENTREGA_BALCAO ? 'Retirada' : 'Taxa entrega' }}</th><th class="text-end">R$ {{ number_format((float) $pedido->taxa_entrega, 2, ',', '.') }}</th></tr>
                             <tr><th colspan="2">Total</th><th class="text-end text-success">R$ {{ number_format((float) $pedido->total, 2, ',', '.') }}</th></tr>
                         </tfoot>
                     </table>

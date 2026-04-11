@@ -84,12 +84,13 @@
                 @endforeach
             </ul>
             <div class="d-flex justify-content-between small mt-2 text-muted"><span>Subtotal</span><span>R$ {{ number_format((float) $pedido->subtotal, 2, ',', '.') }}</span></div>
-            <div class="d-flex justify-content-between small text-muted"><span>Entrega</span><span>R$ {{ number_format((float) $pedido->taxa_entrega, 2, ',', '.') }}</span></div>
+            <div class="d-flex justify-content-between small text-muted"><span>{{ ($pedido->tipo_entrega ?? \App\Models\Pedido::TIPO_ENTREGA_ENTREGA) === \App\Models\Pedido::TIPO_ENTREGA_BALCAO ? 'Retirada' : 'Taxa entrega' }}</span><span>R$ {{ number_format((float) $pedido->taxa_entrega, 2, ',', '.') }}</span></div>
             <div class="d-flex justify-content-between fw-bold mt-2"><span>Total</span><span class="text-success">R$ {{ number_format((float) $pedido->total, 2, ',', '.') }}</span></div>
         </div>
 
         <div class="vf-card p-3 mb-3">
             <h2 class="h6 fw-bold mb-2">Entrega e pagamento</h2>
+            <p class="small mb-2"><span class="vf-badge bg-secondary-subtle text-secondary">{{ $pedido->rotuloTipoEntrega() }}</span>@if ($pedido->cep_entrega) <span class="text-muted">· CEP {{ substr($pedido->cep_entrega, 0, 5) }}-{{ substr($pedido->cep_entrega, 5) }}</span>@endif</p>
             <p class="small mb-1"><strong>{{ $pedido->cliente_nome }}</strong> — {{ $pedido->cliente_telefone }}</p>
             @if ($pedido->cliente_email)
                 <p class="small text-muted mb-1">{{ $pedido->cliente_email }}</p>

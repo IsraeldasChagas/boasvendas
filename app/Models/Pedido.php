@@ -12,6 +12,10 @@ class Pedido extends Model
 
     public const CANAL_LOJA = 'loja';
 
+    public const TIPO_ENTREGA_ENTREGA = 'entrega';
+
+    public const TIPO_ENTREGA_BALCAO = 'balcao';
+
     public const STATUS_RECEBIDO = 'recebido';
 
     public const STATUS_PREPARO = 'preparo';
@@ -41,11 +45,13 @@ class Pedido extends Model
         'empresa_id',
         'codigo_publico',
         'canal',
+        'tipo_entrega',
         'cliente_nome',
         'cliente_telefone',
         'cliente_email',
         'endereco',
         'complemento',
+        'cep_entrega',
         'forma_pagamento',
         'pagamento_troco_para',
         'observacoes',
@@ -120,6 +126,14 @@ class Pedido extends Model
     public function rotuloFormaPagamento(): string
     {
         return self::formasPagamentoRotulos()[$this->forma_pagamento] ?? $this->forma_pagamento;
+    }
+
+    public function rotuloTipoEntrega(): string
+    {
+        return match ($this->tipo_entrega) {
+            self::TIPO_ENTREGA_BALCAO => 'Retirada no balcão',
+            default => 'Entrega',
+        };
     }
 
     /** Texto para exibição ao cliente e na empresa (forma + troco em dinheiro). */

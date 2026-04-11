@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class Empresa extends Model
@@ -20,6 +21,8 @@ class Empresa extends Model
         'logo',
         'endereco',
         'whatsapp',
+        'loja_taxa_entrega_padrao',
+        'loja_permite_retirada_balcao',
         'loja_pix_instrucoes',
         'loja_pix_chave_tipo',
         'loja_pix_chave_valor',
@@ -39,6 +42,8 @@ class Empresa extends Model
         return [
             'cliente_desde' => 'date',
             'menu_acessos' => 'array',
+            'loja_taxa_entrega_padrao' => 'decimal:2',
+            'loja_permite_retirada_balcao' => 'boolean',
         ];
     }
 
@@ -130,6 +135,25 @@ class Empresa extends Model
     public function pedidos(): HasMany
     {
         return $this->hasMany(Pedido::class, 'empresa_id');
+    }
+
+    public function entregaFaixasCep(): HasMany
+    {
+        return $this->hasMany(EmpresaEntregaFaixaCep::class, 'empresa_id')->orderBy('cep_inicio');
+    }
+
+    /** Taxa padrão da loja ou valor global do sistema. */
+    public function lojaTaxaEntregaPadraoEfetiva(): float
+    {
+        if (! Schema::hasColumn('empresas', 'loja_taxa_entrega_padrao')) {
+            return (float) config('vendaffacil.taxa_entrega_padrao', 5.99);
+        }
+
+        if ($this->loja_taxa_entrega_padrao !== null) {
+            return (float) $this->loja_taxa_entrega_padrao;
+        }
+
+        return (float) config('vendaffacil.taxa_entrega_padrao', 5.99);
     }
 
     public function slugs(): HasMany

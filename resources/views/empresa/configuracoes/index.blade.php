@@ -132,6 +132,30 @@
                     </div>
                     @endif
                 </div>
+
+                @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_taxa_entrega_padrao') && $empresa->temTelaMenu('loja_online'))
+                    <div class="vf-card p-4 mb-3">
+                        <h2 class="h6 fw-bold mb-3">Frete na loja online</h2>
+                        <p class="small text-muted mb-3">Taxa usada quando o CEP do cliente <strong>não</strong> estiver em nenhuma faixa cadastrada em <a href="{{ route('empresa.loja-entrega-faixas.index') }}">Frete por CEP</a>. Deixe em branco para usar o valor global do sistema (<code>VENDAFFACIL_TAXA_ENTREGA</code>).</p>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="loja_taxa_entrega_padrao">Taxa padrão de entrega (R$)</label>
+                                <input type="number" step="0.01" min="0" class="form-control form-control-sm @error('loja_taxa_entrega_padrao') is-invalid @enderror" id="loja_taxa_entrega_padrao" name="loja_taxa_entrega_padrao" value="{{ old('loja_taxa_entrega_padrao', $empresa->loja_taxa_entrega_padrao) }}" placeholder="Ex.: 6,00">
+                                @error('loja_taxa_entrega_padrao')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_permite_retirada_balcao'))
+                                <div class="col-md-6">
+                                    <label class="form-label" for="loja_permite_retirada_balcao">Retirada no balcão</label>
+                                    <select class="form-select form-select-sm @error('loja_permite_retirada_balcao') is-invalid @enderror" id="loja_permite_retirada_balcao" name="loja_permite_retirada_balcao">
+                                        <option value="1" @selected(old('loja_permite_retirada_balcao', $empresa->loja_permite_retirada_balcao ? '1' : '0') === '1')>Sim — cliente pode retirar sem taxa</option>
+                                        <option value="0" @selected(old('loja_permite_retirada_balcao', $empresa->loja_permite_retirada_balcao ? '1' : '0') === '0')>Não — só entrega</option>
+                                    </select>
+                                    @error('loja_permite_retirada_balcao')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @endif
             </div>
 
             <div class="col-lg-4">
