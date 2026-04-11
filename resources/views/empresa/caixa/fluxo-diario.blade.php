@@ -8,6 +8,19 @@
         ['label' => 'Fluxo do dia', 'url' => route('empresa.caixa.fluxo-diario')],
     ]])
 
+    @if (session('status'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('status') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    @endif
+    @if (session('warning'))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            {{ session('warning') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    @endif
+
     <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
         <div>
             <h2 class="h5 fw-bold mb-1">Fluxo de caixa do dia</h2>
@@ -76,6 +89,44 @@
     <div class="vf-card p-3 mb-3">
         <h3 class="h6 fw-bold mb-2">Resumo do mês ({{ $dataRef->translatedFormat('F/Y') }})</h3>
         <p class="small text-muted mb-0">Entradas R$ {{ number_format($entradasMes, 2, ',', '.') }} · Saídas R$ {{ number_format($saidasMes, 2, ',', '.') }} · Líquido movimentos R$ {{ number_format($entradasMes - $saidasMes, 2, ',', '.') }}</p>
+    </div>
+
+    <div class="vf-card p-3 mb-3">
+        <h3 class="h6 fw-bold mb-2">Entrada e saída manual</h3>
+        @if (! $turnoAberto)
+            <p class="small text-muted mb-0">Abra o caixa na <a href="{{ route('empresa.caixa.index') }}">visão geral do caixa</a> para registrar movimentos.</p>
+        @else
+            @if (! $dataRef->isSameDay(\Carbon\Carbon::today()))
+                <p class="small text-warning mb-2 mb-md-3">Você está vendo outro dia: o lançamento será gravado com a <strong>data e hora atuais</strong> no turno aberto (aparece no fluxo de hoje).</p>
+            @endif
+            <form action="{{ route('empresa.caixa.movimento') }}" method="post" class="row g-3 align-items-end">
+                @csrf
+                <div class="col-md-3">
+                    <label class="form-label" for="fluxo-tipo-mov">Tipo</label>
+                    <select class="form-select @error('tipo') is-invalid @enderror" id="fluxo-tipo-mov" name="tipo" required>
+                        <option value="{{ \App\Models\CaixaMovimento::TIPO_ENTRADA_MANUAL }}" @selected(old('tipo') === \App\Models\CaixaMovimento::TIPO_ENTRADA_MANUAL)>Entrada manual</option>
+                        <option value="{{ \App\Models\CaixaMovimento::TIPO_SAIDA_MANUAL }}" @selected(old('tipo') === \App\Models\CaixaMovimento::TIPO_SAIDA_MANUAL)>Saída manual</option>
+                        <option value="{{ \App\Models\CaixaMovimento::TIPO_VENDA_AVULSA }}" @selected(old('tipo') === \App\Models\CaixaMovimento::TIPO_VENDA_AVULSA)>Venda (dinheiro)</option>
+                        <option value="{{ \App\Models\CaixaMovimento::TIPO_SUPRIMENTO }}" @selected(old('tipo') === \App\Models\CaixaMovimento::TIPO_SUPRIMENTO)>Suprimento</option>
+                        <option value="{{ \App\Models\CaixaMovimento::TIPO_SANGRIA }}" @selected(old('tipo') === \App\Models\CaixaMovimento::TIPO_SANGRIA)>Sangria</option>
+                    </select>
+                    @error('tipo')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="fluxo-desc-mov">Descrição</label>
+                    <input type="text" class="form-control @error('descricao') is-invalid @enderror" id="fluxo-desc-mov" name="descricao" value="{{ old('descricao') }}" placeholder="Ex.: Troco, compra avulsa…" required>
+                    @error('descricao')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="fluxo-valor-mov">Valor (R$)</label>
+                    <input type="number" step="0.01" min="0.01" class="form-control @error('valor') is-invalid @enderror" id="fluxo-valor-mov" name="valor" value="{{ old('valor') }}" required>
+                    @error('valor')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Registrar</button>
+                </div>
+            </form>
+        @endif
     </div>
 
     <div class="vf-card p-0 overflow-hidden mb-3">

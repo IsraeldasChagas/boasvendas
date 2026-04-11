@@ -15,6 +15,10 @@ class CaixaMovimento extends Model
 
     public const TIPO_VENDA_AVULSA = 'venda_avulsa';
 
+    public const TIPO_ENTRADA_MANUAL = 'entrada_manual';
+
+    public const TIPO_SAIDA_MANUAL = 'saida_manual';
+
     protected $fillable = [
         'caixa_turno_id',
         'user_id',
@@ -42,7 +46,11 @@ class CaixaMovimento extends Model
 
     public function isEntrada(): bool
     {
-        return in_array($this->tipo, [self::TIPO_SUPRIMENTO, self::TIPO_VENDA_AVULSA], true);
+        return in_array($this->tipo, [
+            self::TIPO_SUPRIMENTO,
+            self::TIPO_VENDA_AVULSA,
+            self::TIPO_ENTRADA_MANUAL,
+        ], true);
     }
 
     public static function rotuloTipo(string $tipo): string
@@ -51,6 +59,8 @@ class CaixaMovimento extends Model
             self::TIPO_SUPRIMENTO => 'Suprimento',
             self::TIPO_SANGRIA => 'Sangria',
             self::TIPO_VENDA_AVULSA => 'Venda (dinheiro)',
+            self::TIPO_ENTRADA_MANUAL => 'Entrada manual',
+            self::TIPO_SAIDA_MANUAL => 'Saída manual',
             default => $tipo,
         };
     }

@@ -127,8 +127,14 @@ class CaixaController extends Controller
         $diaSeguinte = $dataRef->copy()->addDay()->format('Y-m-d');
         $hojeStr = Carbon::today()->format('Y-m-d');
 
+        $turnoAberto = CaixaTurno::query()
+            ->where('empresa_id', $empresa->id)
+            ->where('status', CaixaTurno::STATUS_ABERTO)
+            ->first();
+
         return view('empresa.caixa.fluxo-diario', compact(
             'empresa',
+            'turnoAberto',
             'dataRef',
             'saldoAnterior',
             'ultimoFechamento',
@@ -206,6 +212,8 @@ class CaixaController extends Controller
                 CaixaMovimento::TIPO_SUPRIMENTO,
                 CaixaMovimento::TIPO_SANGRIA,
                 CaixaMovimento::TIPO_VENDA_AVULSA,
+                CaixaMovimento::TIPO_ENTRADA_MANUAL,
+                CaixaMovimento::TIPO_SAIDA_MANUAL,
             ])],
             'descricao' => ['required', 'string', 'max:500'],
             'valor' => ['required', 'numeric', 'min:0.01', 'max:99999999.99'],
@@ -219,7 +227,7 @@ class CaixaController extends Controller
             'valor' => $data['valor'],
         ]);
 
-        return redirect()->route('empresa.caixa.index')->with('status', 'Movimento registrado.');
+        return redirect()->back()->with('status', 'Movimento registrado.');
     }
 
     public function fechar(Request $request): RedirectResponse
