@@ -15,6 +15,12 @@ class Empresa extends Model
 {
     protected $table = 'empresas';
 
+    /** Usa faixas de CEP cadastradas e, fora delas, a taxa padrão. */
+    public const LOJA_FRETE_FAIXAS_CEP = 'faixas_cep';
+
+    /** Sempre a taxa padrão da loja (ou global); ignora faixas de CEP. */
+    public const LOJA_FRETE_PADRAO_UNICO = 'padrao_unico';
+
     protected $fillable = [
         'nome',
         'slug',
@@ -23,6 +29,7 @@ class Empresa extends Model
         'whatsapp',
         'loja_taxa_entrega_padrao',
         'loja_permite_retirada_balcao',
+        'loja_frete_modo',
         'loja_pix_instrucoes',
         'loja_pix_chave_tipo',
         'loja_pix_chave_valor',
@@ -140,6 +147,26 @@ class Empresa extends Model
     public function entregaFaixasCep(): HasMany
     {
         return $this->hasMany(EmpresaEntregaFaixaCep::class, 'empresa_id')->orderBy('cep_inicio');
+    }
+
+    /** @return array<string, string> valor => rótulo */
+    public static function lojaFreteModosRotulos(): array
+    {
+        return [
+            self::LOJA_FRETE_FAIXAS_CEP => 'Faixas de CEP + taxa padrão (fora da faixa)',
+            self::LOJA_FRETE_PADRAO_UNICO => 'Só taxa padrão (ignora faixas de CEP)',
+        ];
+    }
+
+    public function lojaFreteModoEfetivo(): string
+    {
+        if (! Schema::hasColumn('empresas', 'loja_frete_modo')) {
+            return self::LOJA_FRETE_FAIXAS_CEP;
+        }
+
+        $m = (string) ($this->loja_frete_modo ?? self::LOJA_FRETE_FAIXAS_CEP);
+
+        return $m === self::LOJA_FRETE_PADRAO_UNICO ? self::LOJA_FRETE_PADRAO_UNICO : self::LOJA_FRETE_FAIXAS_CEP;
     }
 
     /** Taxa padrão da loja ou valor global do sistema. */

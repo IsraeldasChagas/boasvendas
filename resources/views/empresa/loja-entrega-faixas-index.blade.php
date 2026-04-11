@@ -22,6 +22,12 @@
         </div>
     </div>
 
+    @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_frete_modo') && ($empresa->lojaFreteModoEfetivo() === \App\Models\Empresa::LOJA_FRETE_PADRAO_UNICO))
+        <div class="alert alert-info small mb-3">
+            A loja está em <strong>“Só taxa padrão”</strong> nas <a href="{{ route('empresa.configuracoes.index') }}">configurações</a>. As faixas abaixo não entram no cálculo até você voltar ao modo <strong>Faixas de CEP</strong>.
+        </div>
+    @endif
+
     <div class="vf-card p-3 mb-4">
         <h3 class="h6 fw-bold mb-3">Nova faixa</h3>
         <form action="{{ route('empresa.loja-entrega-faixas.store') }}" method="post" class="row g-2 align-items-end">

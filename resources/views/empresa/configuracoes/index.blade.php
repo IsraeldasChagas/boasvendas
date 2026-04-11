@@ -136,7 +136,19 @@
                 @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_taxa_entrega_padrao') && $empresa->temTelaMenu('loja_online'))
                     <div class="vf-card p-4 mb-3">
                         <h2 class="h6 fw-bold mb-3">Frete na loja online</h2>
-                        <p class="small text-muted mb-3">Taxa usada quando o CEP do cliente <strong>não</strong> estiver em nenhuma faixa cadastrada em <a href="{{ route('empresa.loja-entrega-faixas.index') }}">Frete por CEP</a>. Deixe em branco para usar o valor global do sistema (<code>VENDAFFACIL_TAXA_ENTREGA</code>).</p>
+                        @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_frete_modo'))
+                            <div class="mb-3">
+                                <label class="form-label" for="loja_frete_modo">Como calcular o frete</label>
+                                <select class="form-select form-select-sm @error('loja_frete_modo') is-invalid @enderror" id="loja_frete_modo" name="loja_frete_modo" required>
+                                    @foreach (\App\Models\Empresa::lojaFreteModosRotulos() as $val => $rotulo)
+                                        <option value="{{ $val }}" @selected(old('loja_frete_modo', $empresa->loja_frete_modo ?? \App\Models\Empresa::LOJA_FRETE_FAIXAS_CEP) === $val)>{{ $rotulo }}</option>
+                                    @endforeach
+                                </select>
+                                @error('loja_frete_modo')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <p class="small text-muted mb-0 mt-2">Você pode mudar quando quiser. <strong>Por km</strong> (OpenStreetMap ou Google) pode ser acrescentado depois sem perder essas opções.</p>
+                            </div>
+                        @endif
+                        <p class="small text-muted mb-3">No modo <strong>faixas</strong>, a taxa padrão vale quando o CEP do cliente <strong>não</strong> cai em nenhuma faixa em <a href="{{ route('empresa.loja-entrega-faixas.index') }}">Frete por CEP</a>. No modo <strong>só taxa padrão</strong>, as faixas são ignoradas. Deixe o valor em branco para usar o global (<code>VENDAFFACIL_TAXA_ENTREGA</code>).</p>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label" for="loja_taxa_entrega_padrao">Taxa padrão de entrega (R$)</label>

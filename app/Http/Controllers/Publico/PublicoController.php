@@ -335,6 +335,13 @@ class PublicoController extends Controller
             return ['taxa' => 0.0, 'rotulo' => 'Retirada no balcão'];
         }
 
+        if ($empresa->lojaFreteModoEfetivo() === Empresa::LOJA_FRETE_PADRAO_UNICO) {
+            return [
+                'taxa' => round($empresa->lojaTaxaEntregaPadraoEfetiva(), 2),
+                'rotulo' => 'Taxa fixa da loja (modo sem faixas)',
+            ];
+        }
+
         $cep8 = Cep::normalizar8($cepSoDigitos);
         if ($cep8 === null || $cepSoDigitos === null || $cepSoDigitos === '') {
             return [
@@ -735,7 +742,9 @@ class PublicoController extends Controller
                     ->withInput()
                     ->withErrors(['cep_entrega' => 'Informe um CEP válido (8 dígitos).']);
             }
-            if (Schema::hasTable('empresa_entrega_faixas_cep')) {
+            if ($empresa->lojaFreteModoEfetivo() === Empresa::LOJA_FRETE_PADRAO_UNICO) {
+                $taxaVal = $empresa->lojaTaxaEntregaPadraoEfetiva();
+            } elseif (Schema::hasTable('empresa_entrega_faixas_cep')) {
                 $porFaixa = EmpresaEntregaFaixaCep::taxaParaCep((int) $empresa->id, $cepNorm);
                 $taxaVal = $porFaixa !== null ? (float) $porFaixa : $empresa->lojaTaxaEntregaPadraoEfetiva();
             } else {

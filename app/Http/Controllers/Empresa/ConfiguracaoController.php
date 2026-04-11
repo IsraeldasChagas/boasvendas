@@ -72,6 +72,9 @@ class ConfiguracaoController extends Controller
         if (Schema::hasColumn('empresas', 'loja_permite_retirada_balcao')) {
             $rules['loja_permite_retirada_balcao'] = ['nullable', 'in:0,1'];
         }
+        if (Schema::hasColumn('empresas', 'loja_frete_modo')) {
+            $rules['loja_frete_modo'] = ['required', 'string', Rule::in(array_keys(Empresa::lojaFreteModosRotulos()))];
+        }
 
         $data = $request->validate($rules);
 
