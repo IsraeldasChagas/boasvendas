@@ -13,6 +13,7 @@ use App\Models\PedidoItem;
 use App\Models\Produto;
 use App\Support\Cep;
 use App\Support\GoogleMapsDistanceMatrix;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -734,6 +735,31 @@ class PublicoController extends Controller
         return redirect()
             ->route('publico.carrinho', ['slug' => $slug])
             ->with('status', 'Item removido.');
+    }
+
+    public function freteResumoJson(Request $request, string $slug): JsonResponse
+    {
+        $empresa = $this->empresaLojaAtiva($slug);
+        $request->validate([
+            'cep' => ['nullable', 'string', 'max:16'],
+        ]);
+        $digits = preg_replace('/\D+/', '', (string) $request->input('cep', ''));
+        if (strlen($digits) > 0 && strlen($digits) < 8) {
+            return response()->json([
+                'ok' => true,
+                'incomplete' => true,
+            ]);
+        }
+        $cepParam = strlen($digits) === 8 ? $digits : null;
+        $resumo = $this->calcularTaxaResumo($empresa, Pedido::TIPO_ENTREGA_ENTREGA, $cepParam);
+
+        return response()->json([
+            'ok' => true,
+            'incomplete' => false,
+            'taxa' => $resumo['taxa'],
+            'rotulo' => $resumo['rotulo'],
+            'entrega_bloqueada' => (bool) ($resumo['entrega_bloqueada'] ?? false),
+        ]);
     }
 
     public function checkout(string $slug): View|RedirectResponse

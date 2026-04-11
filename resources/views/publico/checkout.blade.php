@@ -130,7 +130,7 @@
                                 <input type="number" class="form-control @error('pagamento_troco_para') is-invalid @enderror" name="pagamento_troco_para" id="pagamento_troco_para" value="{{ old('pagamento_troco_para') }}" min="0" step="0.01" placeholder="Ex.: 100,00">
                             </div>
                             @error('pagamento_troco_para')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                            <p class="small text-muted mb-0 mt-2">Informe o valor da cédula ou do montante (deve ser ≥ total R$ {{ number_format($total, 2, ',', '.') }}) para o entregador levar o troco. Deixe em branco se for pagar o valor exato.</p>
+                            <p class="small text-muted mb-0 mt-2">Informe o valor da cédula ou do montante (deve ser ≥ total <span id="vf-dinheiro-min-total">R$ {{ number_format($total, 2, ',', '.') }}</span>) para o entregador levar o troco. Deixe em branco se for pagar o valor exato.</p>
                         </div>
                     </div>
                     <div class="vf-card p-3">
@@ -190,6 +190,7 @@
                 var rotuloEnt = @json($rotuloSeEntrega);
                 var entregaBloq = {{ ($freteEntregaBloqueadaSeEntrega ?? false) ? 'true' : 'false' }};
                 var rotuloBal = 'Retirada no balcão';
+                var freteUrl = @json(route('publico.frete.resumo', ['slug' => $slug]));
                 var fmt = function (n) {
                     return n.toFixed(2).replace('.', ',');
                 };
@@ -201,6 +202,10 @@
                 var elTotal = document.getElementById('vf-side-total');
                 var elBloqMsg = document.getElementById('vf-frete-bloqueado-msg');
                 var btnSubmit = document.getElementById('vf-checkout-submit');
+                var elDinMinTot = document.getElementById('vf-dinheiro-min-total');
+                var csrf = document.querySelector('meta[name="csrf-token"]');
+                var csrfToken = csrf ? csrf.getAttribute('content') : '';
+                var debounceTimer = null;
                 function syncResumo(isEnt) {
                     var bloq = !!(isEnt && entregaBloq);
                     var taxa = isEnt ? taxaEnt : 0;
@@ -212,8 +217,41 @@
                     if (elTaxa) elTaxa.textContent = 'R$ ' + fmt(taxa);
                     if (elRotulo) elRotulo.textContent = isEnt ? rotuloEnt : rotuloBal;
                     if (elTotal) elTotal.textContent = 'R$ ' + fmt(tot);
+                    if (elDinMinTot) elDinMinTot.textContent = 'R$ ' + fmt(tot);
                     if (elBloqMsg) elBloqMsg.classList.toggle('d-none', !bloq);
                     if (btnSubmit) btnSubmit.disabled = bloq;
+                }
+                function pedirFreteAtualizado() {
+                    if (!cepEl || !freteUrl || !csrfToken) return;
+                    var r = document.querySelector('.vf-tipo-entrega:checked');
+                    if (!r || r.value !== entrega) return;
+                    if (elTaxa) elTaxa.textContent = '…';
+                    fetch(freteUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: JSON.stringify({ cep: cepEl.value })
+                    }).then(function (res) { return res.json(); }).then(function (data) {
+                        if (!data || !data.ok || data.incomplete) {
+                            syncResumo(true);
+                            return;
+                        }
+                        taxaEnt = parseFloat(data.taxa);
+                        if (isNaN(taxaEnt)) taxaEnt = 0;
+                        rotuloEnt = data.rotulo || '';
+                        entregaBloq = !!data.entrega_bloqueada;
+                        syncResumo(true);
+                    }).catch(function () {
+                        syncResumo(true);
+                    });
+                }
+                function agendarFrete() {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(pedirFreteAtualizado, 450);
                 }
                 function syncEntregaFields() {
                     var r = document.querySelector('.vf-tipo-entrega:checked');
@@ -228,10 +266,21 @@
                         endEl.required = !!isEnt;
                     }
                     syncResumo(!!isEnt);
+                    if (isEnt) agendarFrete();
                 }
                 document.querySelectorAll('.vf-tipo-entrega').forEach(function (r) {
                     r.addEventListener('change', syncEntregaFields);
                 });
+                if (cepEl) {
+                    cepEl.addEventListener('input', function () {
+                        var r = document.querySelector('.vf-tipo-entrega:checked');
+                        if (r && r.value === entrega) agendarFrete();
+                    });
+                    cepEl.addEventListener('change', function () {
+                        var r = document.querySelector('.vf-tipo-entrega:checked');
+                        if (r && r.value === entrega) pedirFreteAtualizado();
+                    });
+                }
                 syncEntregaFields();
             })();
         </script>

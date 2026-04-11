@@ -72,6 +72,9 @@ Route::post('/loja/{slug}/carrinho/remover', [PublicoController::class, 'carrinh
 Route::post('/loja/{slug}/carrinho/entrega-prefs', [PublicoController::class, 'carrinhoEntregaPrefs'])
     ->middleware('throttle:60,1')
     ->name('publico.carrinho.entrega-prefs');
+Route::post('/loja/{slug}/frete-resumo', [PublicoController::class, 'freteResumoJson'])
+    ->middleware('throttle:90,1')
+    ->name('publico.frete.resumo');
 Route::get('/loja/{slug}/checkout', [PublicoController::class, 'checkout'])->name('publico.checkout');
 Route::post('/loja/{slug}/checkout', [PublicoController::class, 'checkoutFinalizar'])
     ->middleware('throttle:20,1')
