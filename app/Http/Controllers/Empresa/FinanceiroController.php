@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Empresa;
 
 use App\Http\Controllers\Controller;
 use App\Models\Empresa;
+use App\Models\FinanceiroDespesaFixa;
 use App\Models\FinanceiroTitulo;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class FinanceiroController extends Controller
@@ -76,6 +78,14 @@ class FinanceiroController extends Controller
 
         $chartMax = max(1, ...$chartEntrada, ...$chartSaida);
 
+        $totalDespesasFixasMensal = 0.0;
+        if (Schema::hasTable('financeiro_despesas_fixas')) {
+            $totalDespesasFixasMensal = (float) FinanceiroDespesaFixa::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('ativo', true)
+                ->sum('valor_mensal');
+        }
+
         return view('empresa.financeiro.index', compact(
             'empresa',
             'aReceber',
@@ -84,8 +94,91 @@ class FinanceiroController extends Controller
             'chartEntrada',
             'chartSaida',
             'chartLabels',
-            'chartMax'
+            'chartMax',
+            'totalDespesasFixasMensal'
         ));
+    }
+
+    public function despesasFixasIndex(Request $request): View|RedirectResponse
+    {
+        $empresa = $request->user()->empresa;
+        if (! $empresa) {
+            return redirect()->route('empresa.dashboard')->with('warning', 'Vincule sua empresa.');
+        }
+
+        $despesas = FinanceiroDespesaFixa::query()
+            ->where('empresa_id', $empresa->id)
+            ->orderBy('nome')
+            ->limit(500)
+            ->get();
+
+        $totalMensal = (float) $despesas->where('ativo', true)->sum('valor_mensal');
+
+        return view('empresa.financeiro.despesas-fixas-index', compact('empresa', 'despesas', 'totalMensal'));
+    }
+
+    public function despesasFixasCreate(Request $request): View|RedirectResponse
+    {
+        $empresa = $request->user()->empresa;
+        if (! $empresa) {
+            return redirect()->route('empresa.dashboard')->with('warning', 'Vincule sua empresa.');
+        }
+
+        return view('empresa.financeiro.despesas-fixa-form', [
+            'empresa' => $empresa,
+            'despesa' => new FinanceiroDespesaFixa(['ativo' => true, 'valor_mensal' => '0']),
+        ]);
+    }
+
+    public function despesasFixasStore(Request $request): RedirectResponse
+    {
+        $empresa = $request->user()->empresa;
+        if (! $empresa) {
+            return redirect()->route('empresa.dashboard')->with('warning', 'Vincule sua empresa.');
+        }
+
+        FinanceiroDespesaFixa::query()->create(
+            $this->validatedDespesaFixa($request) + ['empresa_id' => $empresa->id]
+        );
+
+        return redirect()->route('empresa.financeiro.despesas-fixas.index')->with('status', 'Despesa fixa cadastrada.');
+    }
+
+    public function despesasFixasEdit(Request $request, FinanceiroDespesaFixa $financeiroDespesaFixa): View|RedirectResponse
+    {
+        $empresa = $request->user()->empresa;
+        if (! $empresa || (int) $financeiroDespesaFixa->empresa_id !== (int) $empresa->id) {
+            abort(404);
+        }
+
+        return view('empresa.financeiro.despesas-fixa-form', [
+            'empresa' => $empresa,
+            'despesa' => $financeiroDespesaFixa,
+        ]);
+    }
+
+    public function despesasFixasUpdate(Request $request, FinanceiroDespesaFixa $financeiroDespesaFixa): RedirectResponse
+    {
+        $empresa = $request->user()->empresa;
+        if (! $empresa || (int) $financeiroDespesaFixa->empresa_id !== (int) $empresa->id) {
+            abort(404);
+        }
+
+        $financeiroDespesaFixa->update($this->validatedDespesaFixa($request));
+
+        return redirect()->route('empresa.financeiro.despesas-fixas.index')->with('status', 'Despesa fixa atualizada.');
+    }
+
+    public function despesasFixasDestroy(Request $request, FinanceiroDespesaFixa $financeiroDespesaFixa): RedirectResponse
+    {
+        $empresa = $request->user()->empresa;
+        if (! $empresa || (int) $financeiroDespesaFixa->empresa_id !== (int) $empresa->id) {
+            abort(404);
+        }
+
+        $financeiroDespesaFixa->delete();
+
+        return redirect()->route('empresa.financeiro.despesas-fixas.index')->with('status', 'Despesa fixa removida.');
     }
 
     public function receberIndex(Request $request): View|RedirectResponse
@@ -340,6 +433,22 @@ class FinanceiroController extends Controller
 
         $data['status'] = FinanceiroTitulo::STATUS_ABERTO;
         $data['pago_em'] = null;
+
+        return $data;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function validatedDespesaFixa(Request $request): array
+    {
+        $data = $request->validate([
+            'nome' => ['required', 'string', 'max:255'],
+            'valor_mensal' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
+            'categoria' => ['nullable', 'string', 'max:120'],
+            'observacoes' => ['nullable', 'string', 'max:5000'],
+        ]);
+        $data['ativo'] = $request->boolean('ativo');
 
         return $data;
     }

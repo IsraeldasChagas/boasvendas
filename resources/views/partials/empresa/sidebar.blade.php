@@ -122,6 +122,7 @@
             'financeiro_visao' => ['active' => request()->routeIs('empresa.financeiro.index'), 'url' => route('empresa.financeiro.index'), 'icon' => 'bi-currency-dollar', 'label' => 'Visão geral'],
             'financeiro_receber' => ['active' => request()->routeIs('empresa.financeiro.contas-receber*'), 'url' => route('empresa.financeiro.contas-receber'), 'icon' => 'bi-arrow-down-circle', 'label' => 'Contas a receber'],
             'financeiro_pagar' => ['active' => request()->routeIs('empresa.financeiro.contas-pagar*'), 'url' => route('empresa.financeiro.contas-pagar'), 'icon' => 'bi-arrow-up-circle', 'label' => 'Contas a pagar'],
+            'financeiro_despesas_fixas' => ['active' => request()->routeIs('empresa.financeiro.despesas-fixas.*'), 'url' => route('empresa.financeiro.despesas-fixas.index'), 'icon' => 'bi-receipt-cutoff', 'label' => 'Despesas fixas'],
         ];
         $temAlgumFin = false;
         $finAtivo = false;

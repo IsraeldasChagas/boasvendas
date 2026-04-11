@@ -88,6 +88,9 @@ class EnsureEmpresaMenuAccess
             return 'entregas';
         }
         if (str_starts_with($routeName, 'empresa.financeiro.')) {
+            if (str_starts_with($routeName, 'empresa.financeiro.despesas-fixas')) {
+                return 'financeiro_despesas_fixas';
+            }
             if (str_starts_with($routeName, 'empresa.financeiro.contas-receber')) {
                 return 'financeiro_receber';
             }

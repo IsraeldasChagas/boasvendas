@@ -97,6 +97,11 @@ class Empresa extends Model
         return $this->hasMany(FinanceiroTitulo::class, 'empresa_id');
     }
 
+    public function financeiroDespesasFixas(): HasMany
+    {
+        return $this->hasMany(FinanceiroDespesaFixa::class, 'empresa_id');
+    }
+
     public function caixaTurnos(): HasMany
     {
         return $this->hasMany(CaixaTurno::class, 'empresa_id');
@@ -162,6 +167,7 @@ class Empresa extends Model
             'financeiro_visao' => 'Financeiro: Visão geral',
             'financeiro_receber' => 'Financeiro: Contas a receber',
             'financeiro_pagar' => 'Financeiro: Contas a pagar',
+            'financeiro_despesas_fixas' => 'Financeiro: Despesas fixas',
             'caixa_visao' => 'Caixa: Visão geral',
             'caixa_operacoes' => 'Caixa: Abrir/Movimentos/Fechar',
             'caixa_conferencia' => 'Caixa: Conferência',
@@ -221,6 +227,13 @@ class Empresa extends Model
             return true;
         }
         if (str_starts_with($key, 'fidelidade_') && in_array('fidelidade', $libs, true)) {
+            return true;
+        }
+
+        if ($key === 'financeiro_despesas_fixas' && (
+            in_array('financeiro_pagar', $libs, true)
+            || in_array('financeiro_visao', $libs, true)
+        )) {
             return true;
         }
 

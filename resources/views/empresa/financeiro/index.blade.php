@@ -44,6 +44,18 @@
                 <i class="bi bi-arrow-up-circle fs-3 text-danger opacity-50"></i>
             </div>
         </div>
+        @if (\Illuminate\Support\Facades\Schema::hasTable('financeiro_despesas_fixas'))
+            <div class="col-md-4">
+                <div class="vf-card vf-card-stat">
+                    <div>
+                        <div class="small text-muted">Despesas fixas (mês)</div>
+                        <div class="h4 mb-0 fw-bold text-secondary">R$ {{ number_format($totalDespesasFixasMensal, 2, ',', '.') }}</div>
+                        <div class="small text-muted mt-1">Soma das despesas ativas cadastradas</div>
+                    </div>
+                    <i class="bi bi-receipt-cutoff fs-3 text-secondary opacity-50"></i>
+                </div>
+            </div>
+        @endif
     </div>
     <div class="row g-3">
         <div class="col-md-6">
@@ -80,6 +92,9 @@
                 <div class="d-grid gap-2">
                     <a href="{{ route('empresa.financeiro.contas-receber') }}" class="btn btn-outline-primary text-start"><i class="bi bi-arrow-down-circle me-2"></i>Contas a receber</a>
                     <a href="{{ route('empresa.financeiro.contas-pagar') }}" class="btn btn-outline-danger text-start"><i class="bi bi-arrow-up-circle me-2"></i>Contas a pagar</a>
+                    @if (\Illuminate\Support\Facades\Schema::hasTable('financeiro_despesas_fixas'))
+                        <a href="{{ route('empresa.financeiro.despesas-fixas.index') }}" class="btn btn-outline-secondary text-start"><i class="bi bi-receipt-cutoff me-2"></i>Despesas fixas</a>
+                    @endif
                 </div>
             </div>
         </div>

@@ -6,6 +6,7 @@ use App\Models\Adicional;
 use App\Models\Categoria;
 use App\Models\Cliente;
 use App\Models\FidelidadeCartao;
+use App\Models\FinanceiroDespesaFixa;
 use App\Models\FinanceiroTitulo;
 use App\Models\Pedido;
 use App\Models\Produto;
@@ -124,6 +125,20 @@ class AppServiceProvider extends ServiceProvider
             abort_unless($empresaId, 404);
 
             return FinanceiroTitulo::query()
+                ->where('id', $value)
+                ->where('empresa_id', $empresaId)
+                ->firstOrFail();
+        });
+
+        Route::bind('financeiroDespesaFixa', function (string $value) {
+            if (! auth()->check()) {
+                abort(404);
+            }
+
+            $empresaId = auth()->user()->empresa_id;
+            abort_unless($empresaId, 404);
+
+            return FinanceiroDespesaFixa::query()
                 ->where('id', $value)
                 ->where('empresa_id', $empresaId)
                 ->firstOrFail();

@@ -140,6 +140,15 @@ Route::middleware(['auth', 'empresa.painel', 'empresa.menu'])->prefix('empresa')
 
     Route::get('/financeiro', [FinanceiroController::class, 'index'])->name('financeiro.index');
 
+    Route::prefix('financeiro/despesas-fixas')->name('financeiro.despesas-fixas.')->group(function () {
+        Route::get('/', [FinanceiroController::class, 'despesasFixasIndex'])->name('index');
+        Route::get('/novo', [FinanceiroController::class, 'despesasFixasCreate'])->name('create');
+        Route::post('/', [FinanceiroController::class, 'despesasFixasStore'])->name('store');
+        Route::get('/{financeiroDespesaFixa}/editar', [FinanceiroController::class, 'despesasFixasEdit'])->name('edit');
+        Route::put('/{financeiroDespesaFixa}', [FinanceiroController::class, 'despesasFixasUpdate'])->name('update');
+        Route::delete('/{financeiroDespesaFixa}', [FinanceiroController::class, 'despesasFixasDestroy'])->name('destroy');
+    });
+
     Route::get('/contas-receber', [FinanceiroController::class, 'receberIndex'])->name('financeiro.contas-receber');
     Route::get('/contas-receber/novo', [FinanceiroController::class, 'receberCreate'])->name('financeiro.contas-receber.create');
     Route::post('/contas-receber', [FinanceiroController::class, 'receberStore'])->name('financeiro.contas-receber.store');
