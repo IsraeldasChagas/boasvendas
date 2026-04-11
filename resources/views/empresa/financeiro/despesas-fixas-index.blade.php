@@ -38,6 +38,9 @@
                     <tr>
                         <th>Nome</th>
                         <th>Categoria</th>
+                        @if (\Illuminate\Support\Facades\Schema::hasColumn('financeiro_despesas_fixas', 'vencimento'))
+                            <th class="text-nowrap">Vencimento</th>
+                        @endif
                         <th class="text-end">Valor mensal (R$)</th>
                         <th>Status</th>
                         <th class="text-end">Ações</th>
@@ -48,6 +51,9 @@
                         <tr class="{{ $d->ativo ? '' : 'text-muted' }}">
                             <td class="fw-semibold">{{ $d->nome }}</td>
                             <td class="small">{{ $d->categoria ?: '—' }}</td>
+                            @if (\Illuminate\Support\Facades\Schema::hasColumn('financeiro_despesas_fixas', 'vencimento'))
+                                <td class="small text-nowrap">{{ $d->vencimento ? $d->vencimento->format('d/m/Y') : '—' }}</td>
+                            @endif
                             <td class="text-end">R$ {{ number_format((float) $d->valor_mensal, 2, ',', '.') }}</td>
                             <td><span class="vf-badge {{ $d->ativo ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary' }}">{{ $d->ativo ? 'Ativa' : 'Inativa' }}</span></td>
                             <td class="text-end text-nowrap">
@@ -61,7 +67,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center text-muted py-5">
+                            <td colspan="{{ \Illuminate\Support\Facades\Schema::hasColumn('financeiro_despesas_fixas', 'vencimento') ? 6 : 5 }}" class="text-center text-muted py-5">
                                 Nenhuma despesa fixa cadastrada.
                                 <a href="{{ route('empresa.financeiro.despesas-fixas.create') }}">Cadastrar</a>
                             </td>

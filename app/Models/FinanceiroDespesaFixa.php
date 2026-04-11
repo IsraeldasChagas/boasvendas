@@ -13,6 +13,7 @@ class FinanceiroDespesaFixa extends Model
         'empresa_id',
         'nome',
         'valor_mensal',
+        'vencimento',
         'categoria',
         'observacoes',
         'ativo',
@@ -22,6 +23,7 @@ class FinanceiroDespesaFixa extends Model
     {
         return [
             'valor_mensal' => 'decimal:2',
+            'vencimento' => 'date',
             'ativo' => 'boolean',
         ];
     }

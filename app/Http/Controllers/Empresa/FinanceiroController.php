@@ -442,13 +442,21 @@ class FinanceiroController extends Controller
      */
     private function validatedDespesaFixa(Request $request): array
     {
-        $data = $request->validate([
+        $rules = [
             'nome' => ['required', 'string', 'max:255'],
             'valor_mensal' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
             'categoria' => ['nullable', 'string', 'max:120'],
             'observacoes' => ['nullable', 'string', 'max:5000'],
-        ]);
+        ];
+        if (Schema::hasColumn('financeiro_despesas_fixas', 'vencimento')) {
+            $rules['vencimento'] = ['nullable', 'date'];
+        }
+
+        $data = $request->validate($rules);
         $data['ativo'] = $request->boolean('ativo');
+        if (Schema::hasColumn('financeiro_despesas_fixas', 'vencimento')) {
+            $data['vencimento'] = ! empty($data['vencimento']) ? $data['vencimento'] : null;
+        }
 
         return $data;
     }
