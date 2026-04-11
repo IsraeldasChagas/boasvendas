@@ -75,6 +75,18 @@ class ConfiguracaoController extends Controller
         if (Schema::hasColumn('empresas', 'loja_frete_modo')) {
             $rules['loja_frete_modo'] = ['required', 'string', Rule::in(array_keys(Empresa::lojaFreteModosRotulos()))];
         }
+        if (Schema::hasColumn('empresas', 'loja_frete_google_rs_por_km')) {
+            $rules['loja_frete_google_rs_por_km'] = ['nullable', 'numeric', 'min:0', 'max:99999999.99'];
+        }
+        if (Schema::hasColumn('empresas', 'loja_frete_google_taxa_minima')) {
+            $rules['loja_frete_google_taxa_minima'] = ['nullable', 'numeric', 'min:0', 'max:99999999.99'];
+        }
+        if (Schema::hasColumn('empresas', 'loja_frete_google_km_max')) {
+            $rules['loja_frete_google_km_max'] = ['nullable', 'numeric', 'min:0', 'max:9999'];
+        }
+        if (Schema::hasColumn('empresas', 'loja_frete_origem_endereco')) {
+            $rules['loja_frete_origem_endereco'] = ['nullable', 'string', 'max:500'];
+        }
 
         $data = $request->validate($rules);
 
@@ -90,6 +102,18 @@ class ConfiguracaoController extends Controller
         }
         if (Schema::hasColumn('empresas', 'loja_permite_retirada_balcao') && $request->has('loja_permite_retirada_balcao')) {
             $data['loja_permite_retirada_balcao'] = (string) $request->input('loja_permite_retirada_balcao') === '1';
+        }
+        if (Schema::hasColumn('empresas', 'loja_frete_google_rs_por_km')) {
+            $v = $data['loja_frete_google_rs_por_km'] ?? null;
+            $data['loja_frete_google_rs_por_km'] = ($v === null || $v === '') ? null : round((float) $v, 2);
+        }
+        if (Schema::hasColumn('empresas', 'loja_frete_google_taxa_minima')) {
+            $v = $data['loja_frete_google_taxa_minima'] ?? null;
+            $data['loja_frete_google_taxa_minima'] = ($v === null || $v === '') ? null : round((float) $v, 2);
+        }
+        if (Schema::hasColumn('empresas', 'loja_frete_google_km_max')) {
+            $v = $data['loja_frete_google_km_max'] ?? null;
+            $data['loja_frete_google_km_max'] = ($v === null || $v === '') ? null : round((float) $v, 2);
         }
 
         $slugAnterior = (string) ($empresa->slug ?? '');

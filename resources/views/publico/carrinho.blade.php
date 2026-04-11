@@ -97,7 +97,7 @@
                                     <input type="text" class="form-control" id="car-cep" name="cep" value="{{ $prefs['cep'] !== '' ? substr($prefs['cep'], 0, 5).'-'.substr($prefs['cep'], 5) : '' }}" placeholder="00000-000" maxlength="9" autocomplete="postal-code">
                                     <button type="submit" class="btn btn-outline-primary">Atualizar</button>
                                 </div>
-                                <p class="small text-muted mb-0">No checkout o CEP é obrigatório para entrega.</p>
+                                <p class="small text-muted mb-0">No checkout o CEP é obrigatório para entrega.@if ($empresa->lojaFreteModoEfetivo() === \App\Models\Empresa::LOJA_FRETE_GOOGLE_DISTANCIA) Com Google Maps, a simulação usa só o CEP; o valor final pode variar um pouco com o endereço completo.@endif</p>
                             </form>
                         </div>
                         <div class="vf-card p-3">
@@ -105,9 +105,16 @@
                             <div class="d-flex justify-content-between small mb-2"><span>Subtotal</span><span>R$ {{ number_format($subtotal, 2, ',', '.') }}</span></div>
                             <div class="d-flex justify-content-between small mb-1"><span>Taxa entrega</span><span>R$ {{ number_format($taxa, 2, ',', '.') }}</span></div>
                             <p class="small text-muted mb-2">{{ $taxaRotulo }}</p>
+                            @if (($prefs['modo'] === \App\Models\Pedido::TIPO_ENTREGA_ENTREGA) && ($freteEntregaBloqueada ?? false))
+                                <div class="alert alert-warning small py-2 mb-2">Este CEP parece fora da área de entrega (limite de km). Ajuste o CEP ou escolha retirada no balcão.</div>
+                            @endif
                             <hr>
                             <div class="d-flex justify-content-between fw-bold mb-3"><span>Total</span><span class="text-success">R$ {{ number_format($total, 2, ',', '.') }}</span></div>
-                            <a href="{{ route('publico.checkout', ['slug' => $slug]) }}" class="btn btn-success w-100">Ir para checkout</a>
+                            @if (($prefs['modo'] === \App\Models\Pedido::TIPO_ENTREGA_ENTREGA) && ($freteEntregaBloqueada ?? false))
+                                <span class="btn btn-secondary w-100 disabled" tabindex="-1" aria-disabled="true">Fora da área — ajuste o CEP</span>
+                            @else
+                                <a href="{{ route('publico.checkout', ['slug' => $slug]) }}" class="btn btn-success w-100">Ir para checkout</a>
+                            @endif
                         </div>
                     </div>
                 </div>

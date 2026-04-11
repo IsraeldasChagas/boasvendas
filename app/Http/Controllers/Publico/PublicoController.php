@@ -12,6 +12,7 @@ use App\Models\Pedido;
 use App\Models\PedidoItem;
 use App\Models\Produto;
 use App\Support\Cep;
+use App\Support\GoogleMapsDistanceMatrix;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -327,7 +328,7 @@ class PublicoController extends Controller
     }
 
     /**
-     * @return array{taxa: float, rotulo: string}
+     * @return array{taxa: float, rotulo: string, entrega_bloqueada?: bool}
      */
     private function calcularTaxaResumo(Empresa $empresa, string $modo, ?string $cepSoDigitos): array
     {
@@ -340,6 +341,15 @@ class PublicoController extends Controller
                 'taxa' => round($empresa->lojaTaxaEntregaPadraoEfetiva(), 2),
                 'rotulo' => 'Taxa fixa da loja (modo sem faixas)',
             ];
+        }
+
+        if ($empresa->lojaFreteModoEfetivo() === Empresa::LOJA_FRETE_GOOGLE_DISTANCIA) {
+            $cep8 = Cep::normalizar8($cepSoDigitos);
+            $destino = ($cep8 !== null && $cepSoDigitos !== null && $cepSoDigitos !== '')
+                ? $this->formatoDestinoFreteGoogleCep($cep8)
+                : '';
+
+            return $this->taxaFreteGoogleDistancia($empresa, $destino);
         }
 
         $cep8 = Cep::normalizar8($cepSoDigitos);
@@ -360,6 +370,91 @@ class PublicoController extends Controller
         return [
             'taxa' => round($empresa->lojaTaxaEntregaPadraoEfetiva(), 2),
             'rotulo' => 'Taxa padrão da loja',
+        ];
+    }
+
+    private function formatoDestinoFreteGoogleCep(string $cep8): string
+    {
+        return substr($cep8, 0, 5).'-'.substr($cep8, 5).', Brasil';
+    }
+
+    private function formatoDestinoFreteGoogleEnderecoCompleto(string $logradouro, string $cep8): string
+    {
+        $cepFmt = substr($cep8, 0, 5).'-'.substr($cep8, 5);
+
+        return $logradouro.', '.$cepFmt.', Brasil';
+    }
+
+    /**
+     * @return array{taxa: float, rotulo: string, entrega_bloqueada: bool}
+     */
+    private function taxaFreteGoogleDistancia(Empresa $empresa, string $destino): array
+    {
+        $padrao = round($empresa->lojaTaxaEntregaPadraoEfetiva(), 2);
+        $apiKey = config('services.google_maps.api_key');
+        $origem = $empresa->lojaFreteOrigemEnderecoEfetiva();
+        $rsKm = $empresa->lojaFreteGoogleRsPorKm();
+
+        if (trim($destino) === '') {
+            return [
+                'taxa' => $padrao,
+                'rotulo' => 'Informe o CEP para calcular o frete (Google Maps)',
+                'entrega_bloqueada' => false,
+            ];
+        }
+
+        if (! filled($apiKey)) {
+            return [
+                'taxa' => $padrao,
+                'rotulo' => 'Taxa padrão (Google Maps: configure GOOGLE_MAPS_API_KEY no servidor)',
+                'entrega_bloqueada' => false,
+            ];
+        }
+
+        if ($origem === null) {
+            return [
+                'taxa' => $padrao,
+                'rotulo' => 'Taxa padrão (informe o endereço de origem nas configurações da loja)',
+                'entrega_bloqueada' => false,
+            ];
+        }
+
+        if ($rsKm === null) {
+            return [
+                'taxa' => $padrao,
+                'rotulo' => 'Taxa padrão (defina R$ por km nas configurações)',
+                'entrega_bloqueada' => false,
+            ];
+        }
+
+        $km = GoogleMapsDistanceMatrix::distanciaKmRodoviaria($origem, $destino, is_string($apiKey) ? $apiKey : null);
+        if ($km === null) {
+            return [
+                'taxa' => $padrao,
+                'rotulo' => 'Taxa padrão (rota indisponível — verifique CEP/endereço ou tente depois)',
+                'entrega_bloqueada' => false,
+            ];
+        }
+
+        $kmMax = $empresa->lojaFreteGoogleKmMax();
+        if ($kmMax !== null && $km > $kmMax) {
+            return [
+                'taxa' => 0.0,
+                'rotulo' => 'Fora da área de entrega (máx. '.number_format($kmMax, 1, ',', '.').' km)',
+                'entrega_bloqueada' => true,
+            ];
+        }
+
+        $bruto = $km * $rsKm;
+        $min = $empresa->lojaFreteGoogleTaxaMinima();
+        if ($min !== null && $bruto < $min) {
+            $bruto = $min;
+        }
+
+        return [
+            'taxa' => round($bruto, 2),
+            'rotulo' => 'Google Maps (~'.number_format($km, 1, ',', '.').' km × R$ '.number_format($rsKm, 2, ',', '.').'/km)',
+            'entrega_bloqueada' => false,
         ];
     }
 
@@ -555,7 +650,8 @@ class PublicoController extends Controller
         );
         $taxa = $resumo['taxa'];
         $taxaRotulo = $resumo['rotulo'];
-        $total = round($subtotal + $taxa, 2);
+        $freteEntregaBloqueada = (bool) ($resumo['entrega_bloqueada'] ?? false);
+        $total = $freteEntregaBloqueada ? round($subtotal, 2) : round($subtotal + $taxa, 2);
         $permiteBalcao = $this->lojaPermiteRetiradaBalcao($empresa);
 
         return view('publico.carrinho', compact(
@@ -567,7 +663,8 @@ class PublicoController extends Controller
             'taxaRotulo',
             'total',
             'prefs',
-            'permiteBalcao'
+            'permiteBalcao',
+            'freteEntregaBloqueada'
         ));
     }
 
@@ -668,7 +765,8 @@ class PublicoController extends Controller
         );
         $taxa = $resumo['taxa'];
         $taxaRotulo = $resumo['rotulo'];
-        $total = round($subtotal + $taxa, 2);
+        $freteEntregaBloqueada = (bool) ($resumo['entrega_bloqueada'] ?? false);
+        $total = $freteEntregaBloqueada ? round($subtotal, 2) : round($subtotal + $taxa, 2);
         $permiteBalcao = $this->lojaPermiteRetiradaBalcao($empresa);
 
         $resumoEntregaCep = $this->calcularTaxaResumo(
@@ -678,6 +776,7 @@ class PublicoController extends Controller
         );
         $taxaSeEntrega = $resumoEntregaCep['taxa'];
         $rotuloSeEntrega = $resumoEntregaCep['rotulo'];
+        $freteEntregaBloqueadaSeEntrega = (bool) ($resumoEntregaCep['entrega_bloqueada'] ?? false);
 
         return view('publico.checkout', compact(
             'slug',
@@ -691,7 +790,9 @@ class PublicoController extends Controller
             'cepDigits',
             'permiteBalcao',
             'taxaSeEntrega',
-            'rotuloSeEntrega'
+            'rotuloSeEntrega',
+            'freteEntregaBloqueada',
+            'freteEntregaBloqueadaSeEntrega'
         ));
     }
 
@@ -742,19 +843,30 @@ class PublicoController extends Controller
                     ->withInput()
                     ->withErrors(['cep_entrega' => 'Informe um CEP válido (8 dígitos).']);
             }
-            if ($empresa->lojaFreteModoEfetivo() === Empresa::LOJA_FRETE_PADRAO_UNICO) {
-                $taxaVal = $empresa->lojaTaxaEntregaPadraoEfetiva();
-            } elseif (Schema::hasTable('empresa_entrega_faixas_cep')) {
-                $porFaixa = EmpresaEntregaFaixaCep::taxaParaCep((int) $empresa->id, $cepNorm);
-                $taxaVal = $porFaixa !== null ? (float) $porFaixa : $empresa->lojaTaxaEntregaPadraoEfetiva();
-            } else {
-                $taxaVal = $empresa->lojaTaxaEntregaPadraoEfetiva();
-            }
             $enderecoTrim = trim((string) ($data['endereco'] ?? ''));
             if ($enderecoTrim === '') {
                 return back()
                     ->withInput()
                     ->withErrors(['endereco' => 'Informe o endereço de entrega.']);
+            }
+            if ($empresa->lojaFreteModoEfetivo() === Empresa::LOJA_FRETE_PADRAO_UNICO) {
+                $taxaVal = $empresa->lojaTaxaEntregaPadraoEfetiva();
+            } elseif ($empresa->lojaFreteModoEfetivo() === Empresa::LOJA_FRETE_GOOGLE_DISTANCIA) {
+                $destino = $this->formatoDestinoFreteGoogleEnderecoCompleto($enderecoTrim, $cepNorm);
+                $rGoogle = $this->taxaFreteGoogleDistancia($empresa, $destino);
+                if ($rGoogle['entrega_bloqueada']) {
+                    return back()
+                        ->withInput()
+                        ->withErrors([
+                            'cep_entrega' => 'Este CEP/endereço está fora da área de entrega da loja.',
+                        ]);
+                }
+                $taxaVal = $rGoogle['taxa'];
+            } elseif (Schema::hasTable('empresa_entrega_faixas_cep')) {
+                $porFaixa = EmpresaEntregaFaixaCep::taxaParaCep((int) $empresa->id, $cepNorm);
+                $taxaVal = $porFaixa !== null ? (float) $porFaixa : $empresa->lojaTaxaEntregaPadraoEfetiva();
+            } else {
+                $taxaVal = $empresa->lojaTaxaEntregaPadraoEfetiva();
             }
             $enderecoPedido = $enderecoTrim;
         }

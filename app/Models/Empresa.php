@@ -21,6 +21,9 @@ class Empresa extends Model
     /** Sempre a taxa padrão da loja (ou global); ignora faixas de CEP. */
     public const LOJA_FRETE_PADRAO_UNICO = 'padrao_unico';
 
+    /** Frete por distância rodoviária (Google Distance Matrix). */
+    public const LOJA_FRETE_GOOGLE_DISTANCIA = 'google_distancia';
+
     protected $fillable = [
         'nome',
         'slug',
@@ -30,6 +33,10 @@ class Empresa extends Model
         'loja_taxa_entrega_padrao',
         'loja_permite_retirada_balcao',
         'loja_frete_modo',
+        'loja_frete_google_rs_por_km',
+        'loja_frete_google_taxa_minima',
+        'loja_frete_google_km_max',
+        'loja_frete_origem_endereco',
         'loja_pix_instrucoes',
         'loja_pix_chave_tipo',
         'loja_pix_chave_valor',
@@ -50,6 +57,9 @@ class Empresa extends Model
             'cliente_desde' => 'date',
             'menu_acessos' => 'array',
             'loja_taxa_entrega_padrao' => 'decimal:2',
+            'loja_frete_google_rs_por_km' => 'decimal:2',
+            'loja_frete_google_taxa_minima' => 'decimal:2',
+            'loja_frete_google_km_max' => 'decimal:2',
             'loja_permite_retirada_balcao' => 'boolean',
         ];
     }
@@ -152,10 +162,15 @@ class Empresa extends Model
     /** @return array<string, string> valor => rótulo */
     public static function lojaFreteModosRotulos(): array
     {
-        return [
+        $out = [
             self::LOJA_FRETE_FAIXAS_CEP => 'Faixas de CEP + taxa padrão (fora da faixa)',
             self::LOJA_FRETE_PADRAO_UNICO => 'Só taxa padrão (ignora faixas de CEP)',
         ];
+        if (Schema::hasColumn('empresas', 'loja_frete_google_rs_por_km')) {
+            $out[self::LOJA_FRETE_GOOGLE_DISTANCIA] = 'Distância pelo Google Maps (R$ por km)';
+        }
+
+        return $out;
     }
 
     public function lojaFreteModoEfetivo(): string
@@ -165,8 +180,77 @@ class Empresa extends Model
         }
 
         $m = (string) ($this->loja_frete_modo ?? self::LOJA_FRETE_FAIXAS_CEP);
+        if ($m === self::LOJA_FRETE_GOOGLE_DISTANCIA && ! Schema::hasColumn('empresas', 'loja_frete_google_rs_por_km')) {
+            return self::LOJA_FRETE_FAIXAS_CEP;
+        }
+        $permitidos = [
+            self::LOJA_FRETE_FAIXAS_CEP,
+            self::LOJA_FRETE_PADRAO_UNICO,
+            self::LOJA_FRETE_GOOGLE_DISTANCIA,
+        ];
 
-        return $m === self::LOJA_FRETE_PADRAO_UNICO ? self::LOJA_FRETE_PADRAO_UNICO : self::LOJA_FRETE_FAIXAS_CEP;
+        return in_array($m, $permitidos, true) ? $m : self::LOJA_FRETE_FAIXAS_CEP;
+    }
+
+    /** Endereço de saída das entregas: campo da loja, cadastro da empresa ou .env. */
+    public function lojaFreteOrigemEnderecoEfetiva(): ?string
+    {
+        if (Schema::hasColumn('empresas', 'loja_frete_origem_endereco')) {
+            $o = trim((string) ($this->loja_frete_origem_endereco ?? ''));
+            if ($o !== '') {
+                return $o;
+            }
+        }
+
+        $e = trim((string) ($this->endereco ?? ''));
+        if ($e !== '') {
+            return $e;
+        }
+
+        $g = trim((string) config('services.google_maps.default_origin_address', ''));
+
+        return $g !== '' ? $g : null;
+    }
+
+    /** Valor em R$ por km rodoviário, ou null se não configurado. */
+    public function lojaFreteGoogleRsPorKm(): ?float
+    {
+        if (! Schema::hasColumn('empresas', 'loja_frete_google_rs_por_km')) {
+            return null;
+        }
+        $v = $this->loja_frete_google_rs_por_km;
+        if ($v === null || (float) $v <= 0) {
+            return null;
+        }
+
+        return round((float) $v, 2);
+    }
+
+    public function lojaFreteGoogleTaxaMinima(): ?float
+    {
+        if (! Schema::hasColumn('empresas', 'loja_frete_google_taxa_minima')) {
+            return null;
+        }
+        $v = $this->loja_frete_google_taxa_minima;
+        if ($v === null || (float) $v < 0) {
+            return null;
+        }
+
+        return round((float) $v, 2);
+    }
+
+    /** Distância máxima em km; null = sem limite. */
+    public function lojaFreteGoogleKmMax(): ?float
+    {
+        if (! Schema::hasColumn('empresas', 'loja_frete_google_km_max')) {
+            return null;
+        }
+        $v = $this->loja_frete_google_km_max;
+        if ($v === null || (float) $v <= 0) {
+            return null;
+        }
+
+        return round((float) $v, 2);
     }
 
     /** Taxa padrão da loja ou valor global do sistema. */

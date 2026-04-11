@@ -28,6 +28,12 @@
         </div>
     @endif
 
+    @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_frete_modo') && ($empresa->lojaFreteModoEfetivo() === \App\Models\Empresa::LOJA_FRETE_GOOGLE_DISTANCIA))
+        <div class="alert alert-info small mb-3">
+            A loja está em <strong>“Distância pelo Google Maps”</strong> nas <a href="{{ route('empresa.configuracoes.index') }}">configurações</a>. As faixas abaixo ficam cadastradas, mas <strong>não entram</strong> no cálculo do frete.
+        </div>
+    @endif
+
     <div class="vf-card p-3 mb-4">
         <h3 class="h6 fw-bold mb-3">Nova faixa</h3>
         <form action="{{ route('empresa.loja-entrega-faixas.store') }}" method="post" class="row g-2 align-items-end">

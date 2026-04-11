@@ -3,6 +3,7 @@
 @section('title', 'Checkout — '.$empresa->nome)
 
 @section('content')
+    @php $modoFreteLoja = $empresa->lojaFreteModoEfetivo(); @endphp
     <div class="container">
         <h1 class="h4 fw-bold mb-3">Finalizar pedido</h1>
         <form action="{{ route('publico.checkout.finalizar', ['slug' => $slug]) }}" method="post">
@@ -32,7 +33,13 @@
                                 @error('cep_entrega')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="col-md-8 d-flex align-items-end">
-                                <p class="small text-muted mb-0">A taxa usa a <strong>faixa de CEP</strong> cadastrada pela loja; fora das faixas vale a taxa padrão.</p>
+                                @if ($modoFreteLoja === \App\Models\Empresa::LOJA_FRETE_GOOGLE_DISTANCIA)
+                                    <p class="small text-muted mb-0">O frete usa a <strong>rota de carro</strong> (Google) entre a loja e o endereço informado. No carrinho a simulação usa só o CEP; no pedido vale o endereço completo.</p>
+                                @elseif ($modoFreteLoja === \App\Models\Empresa::LOJA_FRETE_PADRAO_UNICO)
+                                    <p class="small text-muted mb-0">Esta loja usa <strong>taxa fixa</strong> de entrega (sem faixas de CEP).</p>
+                                @else
+                                    <p class="small text-muted mb-0">A taxa usa a <strong>faixa de CEP</strong> cadastrada pela loja; fora das faixas vale a taxa padrão.</p>
+                                @endif
                             </div>
                             <div class="col-md-8">
                                 <label class="form-label small" for="endereco">Endereço de entrega</label>
@@ -148,8 +155,9 @@
                             <li class="d-flex justify-content-between py-1"><span>Taxa entrega</span><span id="vf-side-taxa">R$ {{ number_format($taxa, 2, ',', '.') }}</span></li>
                             <li class="small text-muted py-0" id="vf-side-taxa-rotulo">{{ $taxaRotulo }}</li>
                         </ul>
+                        <div class="alert alert-warning small py-2 mb-3 {{ (($freteEntregaBloqueada ?? false) && ($tipoCheckout === \App\Models\Pedido::TIPO_ENTREGA_ENTREGA)) ? '' : 'd-none' }}" id="vf-frete-bloqueado-msg" role="alert">Este CEP está fora da área de entrega. Ajuste o CEP ou escolha retirada no balcão.</div>
                         <div class="d-flex justify-content-between fw-bold mb-3"><span>Total</span><span class="text-success" id="vf-side-total">R$ {{ number_format($total, 2, ',', '.') }}</span></div>
-                        <button type="submit" class="btn btn-primary w-100">Confirmar pedido</button>
+                        <button type="submit" class="btn btn-primary w-100" id="vf-checkout-submit" @if (($freteEntregaBloqueada ?? false) && ($tipoCheckout === \App\Models\Pedido::TIPO_ENTREGA_ENTREGA)) disabled @endif>Confirmar pedido</button>
                         <a href="{{ route('publico.carrinho', ['slug' => $slug]) }}" class="btn btn-link w-100 mt-2">Voltar ao carrinho</a>
                     </div>
                 </div>
@@ -180,6 +188,7 @@
                 var sub = {{ number_format($subtotal, 2, '.', '') }};
                 var taxaEnt = {{ number_format($taxaSeEntrega, 2, '.', '') }};
                 var rotuloEnt = @json($rotuloSeEntrega);
+                var entregaBloq = {{ ($freteEntregaBloqueadaSeEntrega ?? false) ? 'true' : 'false' }};
                 var rotuloBal = 'Retirada no balcão';
                 var fmt = function (n) {
                     return n.toFixed(2).replace('.', ',');
@@ -190,12 +199,21 @@
                 var elTaxa = document.getElementById('vf-side-taxa');
                 var elRotulo = document.getElementById('vf-side-taxa-rotulo');
                 var elTotal = document.getElementById('vf-side-total');
+                var elBloqMsg = document.getElementById('vf-frete-bloqueado-msg');
+                var btnSubmit = document.getElementById('vf-checkout-submit');
                 function syncResumo(isEnt) {
+                    var bloq = !!(isEnt && entregaBloq);
                     var taxa = isEnt ? taxaEnt : 0;
                     var tot = Math.round((sub + taxa) * 100) / 100;
+                    if (bloq) {
+                        taxa = 0;
+                        tot = Math.round(sub * 100) / 100;
+                    }
                     if (elTaxa) elTaxa.textContent = 'R$ ' + fmt(taxa);
                     if (elRotulo) elRotulo.textContent = isEnt ? rotuloEnt : rotuloBal;
                     if (elTotal) elTotal.textContent = 'R$ ' + fmt(tot);
+                    if (elBloqMsg) elBloqMsg.classList.toggle('d-none', !bloq);
+                    if (btnSubmit) btnSubmit.disabled = bloq;
                 }
                 function syncEntregaFields() {
                     var r = document.querySelector('.vf-tipo-entrega:checked');

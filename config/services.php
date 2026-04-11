@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    /*
+    | Chave usada no backend (Geocoding / Distance Matrix). Não coloque no JavaScript
+    | sem restrições HTTP no Google Cloud (referrer / IP).
+    */
+    'google_maps' => [
+        'api_key' => env('GOOGLE_MAPS_API_KEY'),
+        'default_origin_address' => env('GOOGLE_MAPS_DEFAULT_ORIGIN_ADDRESS'),
+    ],
+
 ];
