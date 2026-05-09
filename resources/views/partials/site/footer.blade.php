@@ -2,7 +2,7 @@
     <div class="container">
         <div class="row g-4">
             <div class="col-md-4">
-                <div class="fw-bold text-white mb-2"><i class="bi bi-bag-heart-fill me-1"></i>{{ config('app.name') }}</div>
+                <div class="fw-bold text-white mb-2"><i class="bi bi-bag-heart-fill me-1"></i>Delivery e gestão</div>
                 <p class="small mb-3">Delivery, cardápio digital e gestão para quem vende na rua e online.</p>
                 <div class="small">
                     <div class="text-white-50 text-uppercase fw-semibold mb-1">Contato</div>
@@ -36,7 +36,7 @@
         <hr class="border-secondary opacity-25 my-4">
         <p class="small text-center mb-0 d-flex align-items-center justify-content-center gap-2 flex-wrap text-white-50">
             @include('partials.icons.motorbike-delivery', ['class' => 'text-white flex-shrink-0 opacity-90', 'size' => 20])
-            <span>&copy; {{ date('Y') }} {{ config('app.name') }}</span>
+            <span>&copy; {{ date('Y') }}</span>
         </p>
     </div>
 </footer>

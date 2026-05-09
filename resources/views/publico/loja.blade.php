@@ -37,12 +37,14 @@
                             @foreach ($bannerSlides as $idx => $slide)
                                 <div class="carousel-item {{ $idx === 0 ? 'active' : '' }}">
                                     <img src="{{ $slide['url'] }}" alt="{{ $slide['nome'] }}" class="vf-loja-banner-img d-block w-100" loading="{{ $idx === 0 ? 'eager' : 'lazy' }}" decoding="async">
-                                    <div class="position-absolute bottom-0 start-0 end-0 vf-loja-banner-scrim vf-loja-banner-scrim--carousel px-3 py-3 text-white text-start">
+                                    <div class="position-absolute top-0 start-0 end-0 vf-loja-banner-scrim vf-loja-banner-scrim--category px-3 py-2 text-white text-start">
                                         <span class="h5 fw-bold mb-0 d-block">{{ $bannerCategoria->nome }}</span>
+                                    </div>
+                                    <div class="position-absolute bottom-0 start-0 end-0 vf-loja-banner-scrim vf-loja-banner-scrim--carousel px-3 py-3 text-white text-start">
                                         @if ($slideCount > 1)
                                             <span class="small d-block opacity-90 text-truncate">{{ $slide['nome'] }}</span>
                                         @endif
-                                        <a href="{{ route('publico.loja', ['slug' => $slug, 'categoria_id' => $bannerCategoria->id]) }}" class="small fw-semibold text-white text-decoration-underline mt-1 d-inline-block">Ver todos os produtos desta categoria</a>
+                                        <a href="{{ route('publico.loja', ['slug' => $slug, 'categoria_id' => $bannerCategoria->id]) }}" class="small fw-semibold text-white text-decoration-underline {{ $slideCount > 1 ? 'mt-1' : '' }} d-inline-block">Ver todos os produtos desta categoria</a>
                                     </div>
                                 </div>
                             @endforeach
@@ -58,9 +60,9 @@
                     </div>
                 @else
                     <a href="{{ route('publico.loja', ['slug' => $slug, 'categoria_id' => $bannerCategoria->id]) }}" class="d-block text-decoration-none">
-                        <div class="vf-card vf-loja-banner-media vf-loja-banner-fallback rounded-3 overflow-hidden border-0 shadow-sm bg-primary text-white d-flex flex-column align-items-center justify-content-center text-center px-3 py-3">
-                            <span class="h5 fw-bold mb-1 d-block">{{ $bannerCategoria->nome }}</span>
-                            <span class="small opacity-90">Ver produtos desta categoria →</span>
+                        <div class="vf-card vf-loja-banner-media vf-loja-banner-fallback rounded-3 overflow-hidden border-0 shadow-sm bg-primary text-white d-flex flex-column align-items-start justify-content-start text-start px-3 pt-3 pb-3">
+                            <span class="h5 fw-bold mb-2 d-block">{{ $bannerCategoria->nome }}</span>
+                            <span class="small opacity-90 mt-auto">Ver produtos desta categoria →</span>
                         </div>
                     </a>
                 @endif
