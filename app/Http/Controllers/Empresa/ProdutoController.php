@@ -311,26 +311,27 @@ class ProdutoController extends Controller
 
         if ($itensIng === []) {
             $data['ingredientes_retirar_ui'] = null;
-
-            return;
+        } else {
+            $v = $request->input('ingredientes_retirar_ui');
+            if (in_array($v, [Produto::ING_RETIRAR_UI_STEPPER, Produto::ING_RETIRAR_UI_CHECKBOX], true)) {
+                $data['ingredientes_retirar_ui'] = $v;
+            } else {
+                // Campo ausente no POST (formulário grande, etc.)
+                $anterior = $produto?->ingredientes_retirar_ui;
+                if ($anterior !== null && in_array($anterior, [Produto::ING_RETIRAR_UI_STEPPER, Produto::ING_RETIRAR_UI_CHECKBOX], true)) {
+                    $data['ingredientes_retirar_ui'] = $anterior;
+                } else {
+                    $data['ingredientes_retirar_ui'] = Produto::ING_RETIRAR_UI_STEPPER;
+                }
+            }
         }
 
-        $v = $request->input('ingredientes_retirar_ui');
-        if (in_array($v, [Produto::ING_RETIRAR_UI_STEPPER, Produto::ING_RETIRAR_UI_CHECKBOX], true)) {
-            $data['ingredientes_retirar_ui'] = $v;
-
-            return;
+        /* Por último: o radio enviado pelo formulário sempre vence (evita apagar a escolha quando
+           $itensIng veio vazio por limite PHP/truncagem mas o cliente marcou stepper/checkbox). */
+        $vFinal = $request->input('ingredientes_retirar_ui');
+        if (in_array($vFinal, [Produto::ING_RETIRAR_UI_STEPPER, Produto::ING_RETIRAR_UI_CHECKBOX], true)) {
+            $data['ingredientes_retirar_ui'] = $vFinal;
         }
-
-        // Campo ausente no POST (formulário grande, max_input_vars, etc.): ao editar, não forçar stepper.
-        $anterior = $produto?->ingredientes_retirar_ui;
-        if ($anterior !== null && in_array($anterior, [Produto::ING_RETIRAR_UI_STEPPER, Produto::ING_RETIRAR_UI_CHECKBOX], true)) {
-            $data['ingredientes_retirar_ui'] = $anterior;
-
-            return;
-        }
-
-        $data['ingredientes_retirar_ui'] = Produto::ING_RETIRAR_UI_STEPPER;
     }
 
     /**
