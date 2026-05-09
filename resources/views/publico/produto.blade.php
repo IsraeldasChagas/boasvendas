@@ -142,13 +142,13 @@
                                                         <span class="vf-escolha-bar" aria-hidden="true"></span>
                                                         @if ($ing->urlFoto())
                                                             <div class="vf-escolha-thumb-wrap flex-shrink-0" aria-hidden="true">
-                                                                <img src="{{ $ing->urlFoto() }}" alt="" class="vf-escolha-thumb-ing rounded border" width="40" height="40">
+                                                                <img src="{{ $ing->urlFoto() }}" alt="" class="vf-escolha-thumb-ing rounded border" width="44" height="44">
                                                             </div>
                                                         @endif
-                                                        <div class="form-check m-0 flex-grow-1 min-w-0 d-flex align-items-start gap-2 py-2 px-2">
-                                                            <input class="form-check-input vf-retirar-chk mt-1 flex-shrink-0" type="checkbox" id="ret_ing_{{ $ing->id }}" autocomplete="off" aria-describedby="ret_ing_label_{{ $ing->id }}">
+                                                        <div class="vf-retirar-chk-wrap flex-grow-1 min-w-0 d-flex align-items-start gap-3 py-2 ps-2 pe-3">
+                                                            <input class="form-check-input vf-retirar-chk flex-shrink-0 mt-1" type="checkbox" id="ret_ing_{{ $ing->id }}" autocomplete="off" aria-describedby="ret_ing_label_{{ $ing->id }}">
+                                                            <label class="form-check-label mb-0 flex-grow-1" for="ret_ing_{{ $ing->id }}" id="ret_ing_label_{{ $ing->id }}">{{ $ing->nome }}</label>
                                                             <input type="hidden" name="retirar_qtd[{{ $ing->id }}]" value="0" class="vf-retirar-qty-input" autocomplete="off">
-                                                            <label class="form-check-label mb-0" for="ret_ing_{{ $ing->id }}" id="ret_ing_label_{{ $ing->id }}">{{ $ing->nome }}</label>
                                                         </div>
                                                     </div>
                                                 </div>

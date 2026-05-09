@@ -387,11 +387,49 @@ body.vf-body {
 
 .vf-escolha-card-inner--retirar-chk {
   flex-wrap: nowrap;
+  align-items: center;
+  min-height: 3.35rem;
+  overflow: visible;
+  gap: 0.35rem;
 }
 
-.vf-retirar-checkbox-grid .vf-escolha-card-inner--retirar-chk .form-check {
+.vf-retirar-checkbox-grid .vf-escolha-card-inner--retirar-chk {
+  overflow: visible !important;
+}
+
+.vf-retirar-checkbox-grid .vf-retirar-chk-wrap {
   flex: 1;
   min-width: 0;
+}
+
+.vf-retirar-checkbox-grid .vf-retirar-chk {
+  width: 1.35rem;
+  height: 1.35rem;
+  min-width: 1.35rem;
+  min-height: 1.35rem;
+  margin-top: 0.15rem !important;
+  margin-left: 0 !important;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: #ea580c;
+}
+
+.vf-retirar-checkbox-grid .form-check-label {
+  font-size: 0.95rem;
+  line-height: 1.35;
+  padding-top: 0.05rem;
+}
+
+/* Checkboxes de retirada: uma coluna no celular, duas no tablet+ */
+.vf-retirar-checkbox-grid.vf-personalizar-grid {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 480px) {
+  .vf-retirar-checkbox-grid.vf-personalizar-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+  }
 }
 
 .vf-escolha-bar {
