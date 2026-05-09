@@ -103,12 +103,11 @@ class ConfiguracaoController extends Controller
 
         $data = $request->validate($rules);
 
-        if (Schema::hasColumn('empresas', 'instagram_url')) {
-            $data['instagram_url'] = $this->normalizarUrlOpcional($request->input('instagram_url'), 'instagram_url');
-            $data['facebook_url'] = $this->normalizarUrlOpcional($request->input('facebook_url'), 'facebook_url');
-        } else {
-            unset($data['instagram_url'], $data['facebook_url']);
-        }
+        // Sempre gravar aqui: em vários hosts Schema::hasColumn('empresas', instagram_url)
+        // retorna false mesmo com a coluna criada (information_schema / permissões).
+        // O antigo else unset() fazia o salvamento nunca acontecer → vitrine sem ícones.
+        $data['instagram_url'] = $this->normalizarUrlOpcional($request->input('instagram_url'), 'instagram_url');
+        $data['facebook_url'] = $this->normalizarUrlOpcional($request->input('facebook_url'), 'facebook_url');
 
         if (Schema::hasColumn('empresas', 'cep')) {
             // Só altera o CEP no banco se o campo veio no POST (evita apagar ao salvar
@@ -214,6 +213,9 @@ class ConfiguracaoController extends Controller
         $v = $valor !== null ? trim($valor) : '';
         if ($v === '') {
             return null;
+        }
+        if ($campo === 'instagram_url' && str_starts_with($v, '@')) {
+            $v = 'https://instagram.com/'.ltrim($v, '@');
         }
         if (! preg_match('#^https?://#i', $v)) {
             $v = 'https://'.ltrim($v, '/');
