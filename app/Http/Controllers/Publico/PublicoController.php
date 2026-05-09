@@ -665,6 +665,16 @@ class PublicoController extends Controller
             $request->merge(['adicional_qtd' => $adicionalQtdRaw]);
         }
 
+        $retirarQtdRaw = $request->input('retirar_qtd', []);
+        if (is_array($retirarQtdRaw)) {
+            foreach ($retirarQtdRaw as $kid => $qv) {
+                if ($qv === '' || $qv === null) {
+                    $retirarQtdRaw[$kid] = 0;
+                }
+            }
+            $request->merge(['retirar_qtd' => $retirarQtdRaw]);
+        }
+
         $data = $request->validate([
             'produto_id' => ['required', 'integer'],
             'quantidade' => ['nullable', 'integer', 'min:1', 'max:99'],
@@ -674,6 +684,8 @@ class PublicoController extends Controller
             'adicional_qtd.*' => ['nullable', 'integer', 'min:0', 'max:999'],
             'retirar_ingrediente_ids' => ['nullable', 'array'],
             'retirar_ingrediente_ids.*' => ['integer'],
+            'retirar_qtd' => ['nullable', 'array'],
+            'retirar_qtd.*' => ['nullable', 'integer', 'min:0', 'max:1'],
             'observacao' => ['nullable', 'string', 'max:500'],
         ]);
 
@@ -757,7 +769,19 @@ class PublicoController extends Controller
             }
         }
 
-        $retReq = $this->normalizarIdsAdicionais($data['retirar_ingrediente_ids'] ?? []);
+        $retReq = [];
+        if (isset($data['retirar_qtd']) && is_array($data['retirar_qtd'])) {
+            foreach ($data['retirar_qtd'] as $kid => $qv) {
+                $id = (int) $kid;
+                $q = max(0, min(1, (int) $qv));
+                if ($id > 0 && $q > 0) {
+                    $retReq[] = $id;
+                }
+            }
+            $retReq = $this->normalizarIdsAdicionais($retReq);
+        } else {
+            $retReq = $this->normalizarIdsAdicionais($data['retirar_ingrediente_ids'] ?? []);
+        }
         $idsPermIng = $p->ingredientes->pluck('id')->map(fn ($id) => (int) $id)->all();
         $retOk = $this->normalizarIdsAdicionais(array_values(array_intersect($idsPermIng, $retReq)));
 

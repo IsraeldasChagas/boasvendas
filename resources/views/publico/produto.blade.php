@@ -75,9 +75,6 @@
                         @if ($temPersonalizar)
                             <div class="vf-card p-3 mb-3">
                                 <h2 class="h6 fw-bold mb-3">Personalizar</h2>
-                                @if ($temRetirarIng)
-                                    <p class="small text-muted mb-3 border-start border-3 border-secondary-subtle ps-2">Retirar ingredientes é opcional e <strong>não reduz</strong> o valor do produto.</p>
-                                @endif
 
                                 @if ($produto->permite_adicionais && $acres->isNotEmpty())
                                     <div class="d-flex justify-content-between align-items-start gap-2 mb-2 flex-wrap">
@@ -125,20 +122,30 @@
                                 @endif
 
                                 @if ($temRetirarIng)
-                                    <div class="d-flex justify-content-between align-items-baseline gap-2 mb-2 mt-3">
+                                    <p class="small text-muted mb-3 border-start border-3 border-secondary-subtle ps-2 {{ $produto->permite_adicionais && $acres->isNotEmpty() ? 'mt-3' : '' }}">Retirar ingredientes é opcional e <strong>não reduz</strong> o valor do produto.</p>
+                                    <div class="d-flex justify-content-between align-items-baseline gap-2 mb-2 flex-wrap">
                                         <span class="fw-semibold">Retirar ingrediente</span>
-                                        <span class="small text-muted text-end">Mínimo: 0 · Máximo: {{ $maxRet }}</span>
+                                        <span class="small text-muted text-end">Mínimo: 0 · Máximo: {{ $maxRet }} <span class="d-none d-sm-inline">(em conjunto)</span></span>
                                     </div>
-                                    <div class="vf-personalizar-grid">
+                                    <div class="vf-personalizar-grid vf-acrescimo-stepper-grid vf-retirar-stepper-grid mb-1"
+                                        id="vf-retirar-stepper"
+                                        data-max-total="{{ $maxRet }}">
                                         @foreach ($produto->ingredientes as $ing)
-                                            <label class="vf-personalizar-card vf-personalizar-card--retirar">
-                                                <input class="vf-personalizar-input visually-hidden vf-retirar-ing" type="checkbox" name="retirar_ingrediente_ids[]" id="ing_{{ $ing->id }}" value="{{ $ing->id }}" data-max="{{ $maxRet }}">
-                                                <span class="vf-personalizar-nome">Sem {{ $ing->nome }}</span>
-                                                <span class="vf-personalizar-btn vf-personalizar-btn--retirar" aria-hidden="true">
-                                                    <i class="bi bi-dash-lg vf-personalizar-ico-on"></i>
-                                                    <i class="bi bi-check-lg vf-personalizar-ico-off"></i>
-                                                </span>
-                                            </label>
+                                            <div class="vf-escolha-card vf-escolha-card--retirar" data-ing-id="{{ $ing->id }}">
+                                                <div class="vf-escolha-card-inner">
+                                                    <span class="vf-escolha-bar" aria-hidden="true"></span>
+                                                    <div class="vf-escolha-textos">
+                                                        <span class="vf-personalizar-nome">Sem {{ $ing->nome }}</span>
+                                                        <span class="vf-escolha-badge vf-escolha-badge--retirar"><i class="bi bi-dash-lg me-1"></i>Retirar</span>
+                                                    </div>
+                                                    <div class="vf-escolha-stepper" role="group" aria-label="Retirar {{ $ing->nome }}">
+                                                        <button type="button" class="vf-escolha-btn vf-escolha-btn--menos" aria-label="Não retirar">−</button>
+                                                        <span class="vf-escolha-qty-wrap"><span class="vf-escolha-qty-disp" aria-live="polite">0</span></span>
+                                                        <input type="hidden" name="retirar_qtd[{{ $ing->id }}]" value="0" class="vf-retirar-qty-input" autocomplete="off">
+                                                        <button type="button" class="vf-escolha-btn vf-escolha-btn--mais" aria-label="Retirar este ingrediente">+</button>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         @endforeach
                                     </div>
                                 @endif
@@ -254,16 +261,63 @@
                         });
                     }
 
-                    var firstRet = form.querySelector('.vf-retirar-ing');
-                    var maxRet = firstRet ? parseInt(firstRet.getAttribute('data-max') || '0', 10) : 0;
-                    if (maxRet > 0) {
-                        form.addEventListener('change', function (e) {
-                            if (!e.target.classList.contains('vf-retirar-ing')) return;
-                            var checked = form.querySelectorAll('.vf-retirar-ing:checked');
-                            if (checked.length > maxRet) {
-                                e.target.checked = false;
-                                alert('Você pode escolher no máximo ' + maxRet + ' ingrediente(s) para retirar.');
+                    var wrapRet = document.getElementById('vf-retirar-stepper');
+                    if (wrapRet) {
+                        var maxTotalRet = parseInt(wrapRet.getAttribute('data-max-total') || '0', 10);
+                        var maxPorIng = 1;
+
+                        function somaRet() {
+                            var t = 0;
+                            wrapRet.querySelectorAll('.vf-retirar-qty-input').forEach(function (inp) {
+                                t += parseInt(inp.value || '0', 10) || 0;
+                            });
+                            return t;
+                        }
+
+                        function atualizarCardRet(card) {
+                            var inp = card.querySelector('.vf-retirar-qty-input');
+                            var q = parseInt(inp.value || '0', 10) || 0;
+                            var disp = card.querySelector('.vf-escolha-qty-disp');
+                            var btnMais = card.querySelector('.vf-escolha-btn--mais');
+                            var btnMenos = card.querySelector('.vf-escolha-btn--menos');
+                            if (disp) disp.textContent = String(q);
+                            card.classList.toggle('vf-escolha-card--ativo', q > 0);
+                            if (btnMenos) btnMenos.disabled = q < 1;
+                            var total = somaRet();
+                            var podeMais = q < maxPorIng && total < maxTotalRet;
+                            if (btnMais) btnMais.disabled = !podeMais;
+                        }
+
+                        wrapRet.querySelectorAll('.vf-escolha-card--retirar').forEach(function (card) {
+                            var inp = card.querySelector('.vf-retirar-qty-input');
+                            var btnMais = card.querySelector('.vf-escolha-btn--mais');
+                            var btnMenos = card.querySelector('.vf-escolha-btn--menos');
+
+                            function setQ(novo) {
+                                var q = Math.max(0, parseInt(novo, 10) || 0);
+                                q = Math.min(q, maxPorIng);
+                                inp.value = String(q);
+                                wrapRet.querySelectorAll('.vf-escolha-card--retirar').forEach(atualizarCardRet);
                             }
+
+                            function tentarMaisRet() {
+                                var q = parseInt(inp.value || '0', 10) || 0;
+                                if (q >= maxPorIng) return;
+                                if (somaRet() >= maxTotalRet) {
+                                    alert('Você pode pedir para retirar no máximo ' + maxTotalRet + ' ingrediente(s) deste item.');
+                                    return;
+                                }
+                                setQ(q + 1);
+                            }
+
+                            if (btnMais) btnMais.addEventListener('click', tentarMaisRet);
+                            if (btnMenos) {
+                                btnMenos.addEventListener('click', function () {
+                                    var q = parseInt(inp.value || '0', 10) || 0;
+                                    setQ(q - 1);
+                                });
+                            }
+                            atualizarCardRet(card);
                         });
                     }
                 })();

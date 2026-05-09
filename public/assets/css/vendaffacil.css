@@ -388,6 +388,21 @@ body.vf-body {
   align-items: center;
 }
 
+/* Retirar ingrediente — mesmo stepper dos acréscimos; destaque âmbar quando ativo */
+.vf-escolha-card--retirar.vf-escolha-card--ativo .vf-escolha-card-inner {
+  background: rgba(254, 243, 199, 0.85);
+  border-color: rgba(217, 119, 6, 0.4);
+}
+
+.vf-escolha-card--retirar.vf-escolha-card--ativo .vf-escolha-bar {
+  background: #ea580c;
+}
+
+.vf-escolha-badge--retirar {
+  color: #9a3412;
+  background: rgba(251, 191, 36, 0.5);
+}
+
 .vf-escolha-stepper {
   display: flex;
   align-items: center;
