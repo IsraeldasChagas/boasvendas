@@ -187,6 +187,19 @@
                             </div>
                         @endif
 
+                        <div class="mb-3 {{ ($temPersonalizar ?? false) ? 'mt-1' : 'mt-2' }}">
+                            <label class="form-label small text-muted mb-1" for="observacao_produto">Observação <span class="fw-normal">(opcional)</span></label>
+                            <textarea
+                                class="form-control @error('observacao') is-invalid @enderror"
+                                name="observacao"
+                                id="observacao_produto"
+                                rows="2"
+                                maxlength="500"
+                                placeholder="Ex.: ponto da carne, sem cebola, embalar separado…">{{ old('observacao') }}</textarea>
+                            @error('observacao')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <div class="form-text">Até 500 caracteres. Aparece no pedido para o restaurante.</div>
+                        </div>
+
                         <div class="d-flex flex-wrap gap-2 align-items-end">
                             <div>
                                 <label class="form-label small text-muted mb-1" for="qtd">Quantidade</label>
