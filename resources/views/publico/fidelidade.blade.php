@@ -4,13 +4,6 @@
 
 @section('content')
     <div class="container" style="max-width: 32rem;">
-        <nav aria-label="breadcrumb" class="mb-3">
-            <ol class="breadcrumb small mb-0">
-                <li class="breadcrumb-item"><a href="{{ route('publico.loja', ['slug' => $slug]) }}">Vitrine</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Fidelidade</li>
-            </ol>
-        </nav>
-
         <div class="mb-3 d-flex flex-wrap align-items-center gap-2">
             <a href="{{ route('publico.loja', ['slug' => $slug]) }}" class="vf-badge bg-secondary-subtle text-secondary text-decoration-none">
                 Cardápio online
