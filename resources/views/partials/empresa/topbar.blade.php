@@ -18,7 +18,6 @@
         </div>
     </div>
     <div class="d-flex align-items-center gap-2 flex-shrink-0">
-        <span class="vf-badge bg-success-subtle text-success d-none d-md-inline">Loja aberta</span>
         @php
             $empresa = Auth::user()?->empresa;
             $slugLoja = $empresa?->slug;
@@ -26,6 +25,13 @@
         @endphp
         @if ($empresa && $empresa->urlLogo())
             <img src="{{ $empresa->urlLogo() }}" alt="" width="84" height="84" class="rounded bg-white border d-none d-lg-inline" style="object-fit: contain;">
+        @endif
+        @if ($empresa)
+            @if ($empresa->loja_aberta ?? true)
+                <span class="vf-badge bg-success-subtle text-success flex-shrink-0">Loja aberta</span>
+            @else
+                <span class="vf-badge bg-danger-subtle text-danger flex-shrink-0">Loja fechada</span>
+            @endif
         @endif
         @if ($temLoja && $slugLoja)
             <a href="{{ route('publico.loja', ['slug' => $slugLoja]) }}" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener">
