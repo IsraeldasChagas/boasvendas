@@ -19,21 +19,23 @@
     <div class="container py-2">
         <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
             <div class="d-flex align-items-center gap-2 min-width-0 flex-grow-1">
-                <a href="{{ route('publico.loja', ['slug' => $slugNav]) }}" class="text-decoration-none text-dark fw-bold d-flex align-items-center gap-2 min-width-0">
+                <a href="{{ route('publico.loja', ['slug' => $slugNav]) }}" class="text-decoration-none text-dark fw-bold d-flex align-items-start gap-2 min-width-0">
                     @if ($empresa && $empresa->urlLogo())
-                        <img src="{{ $empresa->urlLogo() }}" alt="" width="66" height="66" class="me-0 rounded bg-white border flex-shrink-0" style="object-fit: contain;">
+                        <img src="{{ $empresa->urlLogo() }}" alt="" width="66" height="66" class="rounded bg-white border flex-shrink-0 align-self-start" style="object-fit: contain;">
                     @else
-                        <i class="bi bi-shop text-primary flex-shrink-0"></i>
+                        <i class="bi bi-shop text-primary flex-shrink-0 align-self-start mt-1"></i>
                     @endif
-                    <span class="vf-store-name">{{ $nomeLoja }}</span>
+                    <span class="d-flex flex-column align-items-start gap-1 min-width-0">
+                        <span class="vf-store-name">{{ $nomeLoja }}</span>
+                        @if ($empresa)
+                            @if ($empresa->loja_aberta ?? true)
+                                <span class="badge rounded-pill bg-success vf-loja-status-badge align-self-start">Aberta</span>
+                            @else
+                                <span class="badge rounded-pill bg-danger vf-loja-status-badge align-self-start">Fechada</span>
+                            @endif
+                        @endif
+                    </span>
                 </a>
-                @if ($empresa)
-                    @if ($empresa->loja_aberta ?? true)
-                        <span class="badge rounded-pill bg-success flex-shrink-0 align-self-center">Aberta</span>
-                    @else
-                        <span class="badge rounded-pill bg-danger flex-shrink-0 align-self-center">Fechada</span>
-                    @endif
-                @endif
             </div>
             <div class="d-flex align-items-center gap-2 flex-shrink-0">
                 @if ($temContatoTopo)

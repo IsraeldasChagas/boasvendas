@@ -359,6 +359,10 @@ body.vf-body {
   line-height: 1.05;
 }
 
+.vf-loja-status-badge {
+  font-weight: 600;
+}
+
 @media (max-width: 575.98px) {
   .vf-store-name {
     font-size: clamp(0.78rem, 3.6vw, 0.95rem);
@@ -366,6 +370,11 @@ body.vf-body {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+
+  .vf-loja-status-badge {
+    font-size: 0.7rem;
+    padding: 0.35em 0.65em;
   }
 }
 
