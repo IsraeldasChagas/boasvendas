@@ -8,9 +8,27 @@
         ['label' => 'Configurações', 'url' => route('empresa.configuracoes.index')],
     ]])
 
+    @if ($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Não foi possível salvar.</strong> Corrija abaixo ou role a página para ver os campos em vermelho.
+            <ul class="mb-0 mt-2 small">
+                @foreach ($errors->all() as $message)
+                    <li>{{ $message }}</li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    @endif
+
     @if (session('status'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             {{ session('status') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    @endif
+    @if (session('warning'))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            {{ session('warning') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
         </div>
     @endif
@@ -24,7 +42,7 @@
         <h1 class="h5 fw-bold mb-0">Configurações</h1>
     </div>
 
-    <form action="{{ route('empresa.configuracoes.update') }}" method="post" enctype="multipart/form-data">
+    <form id="vf-config-empresa-form" action="{{ route('empresa.configuracoes.update') }}" method="post" enctype="multipart/form-data">
         @csrf
         @method('PUT')
 
@@ -296,9 +314,15 @@
                     <p class="small text-muted mb-0 mt-3">Liberação de módulos é feita pelo suporte ou administrador.</p>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100">Salvar alterações</button>
+                <button type="submit" class="btn btn-primary w-100 d-none d-lg-block">Salvar alterações</button>
             </div>
         </div>
+
+        {{-- No celular o formulário é longo (PIX, frete…): botão fixo para não precisar rolar até o fim --}}
+        <div class="d-lg-none vf-config-save-mobile position-fixed bottom-0 start-0 end-0 border-top bg-body shadow-sm px-3 py-2">
+            <button type="submit" class="btn btn-primary w-100 fw-semibold py-2">Salvar alterações</button>
+        </div>
+        <div class="d-lg-none" style="height: 5rem;" aria-hidden="true"></div>
     </form>
     @push('scripts')
         <script>

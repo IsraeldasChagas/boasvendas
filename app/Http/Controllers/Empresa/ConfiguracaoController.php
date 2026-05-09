@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Empresa;
 use App\Http\Controllers\Controller;
 use App\Models\Empresa;
 use App\Models\EmpresaSlug;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -201,7 +202,32 @@ class ConfiguracaoController extends Controller
             $this->removerLogoAnteriorDoDisco($empresa);
         }
 
-        $empresa->update($data);
+        try {
+            $empresa->update($data);
+        } catch (QueryException $e) {
+            $msg = $e->getMessage();
+            $code = $e->errorInfo[1] ?? null;
+            $unknownColumn = $code === 1054
+                || str_contains($msg, 'Unknown column')
+                || str_contains($msg, 'does not exist');
+
+            if (
+                $unknownColumn
+                && (str_contains($msg, 'instagram_url') || str_contains($msg, 'facebook_url'))
+            ) {
+                unset($data['instagram_url'], $data['facebook_url']);
+                $empresa->update($data);
+
+                return redirect()
+                    ->route('empresa.configuracoes.index')
+                    ->with(
+                        'warning',
+                        'Os demais dados foram salvos. Instagram e Facebook precisam das colunas no banco: peça para rodar php artisan migrate no servidor e salve os links de novo.'
+                    );
+            }
+
+            throw $e;
+        }
 
         return redirect()
             ->route('empresa.configuracoes.index')

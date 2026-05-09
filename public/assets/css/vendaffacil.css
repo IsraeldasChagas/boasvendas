@@ -372,6 +372,12 @@ body.vf-body {
   border-color: #1877f2;
 }
 
+/* Configurações da empresa: salvar fixo no celular (formulário longo) */
+.vf-config-save-mobile {
+  z-index: 1020;
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
 .vf-store-name {
   min-width: 0;
   overflow-wrap: anywhere;
