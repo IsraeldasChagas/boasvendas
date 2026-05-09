@@ -23,14 +23,21 @@
                         $slideCount = $bannerSlides->count();
                         $showArrows = $slideCount > 1;
                     @endphp
-                    <div id="{{ $carouselId }}" class="carousel slide vf-loja-banner-carousel vf-card vf-loja-banner-media rounded-3 overflow-hidden shadow-sm border border-primary-subtle position-relative"
-                        data-bs-ride="false"
-                        data-bs-interval="false">
+                    <div id="{{ $carouselId }}" class="carousel slide vf-loja-banner-carousel vf-card vf-loja-banner-media rounded-3 overflow-hidden shadow-sm border border-primary-subtle position-relative{{ $showArrows ? ' carousel-fade vf-loja-banner-carousel--fire' : '' }}"
+                        @if ($showArrows)
+                            data-bs-ride="carousel"
+                            data-bs-interval="4500"
+                            data-bs-pause="hover"
+                            data-bs-wrap="true"
+                        @else
+                            data-bs-ride="false"
+                            data-bs-interval="false"
+                        @endif>
                         <div class="carousel-inner">
                             @foreach ($bannerSlides as $idx => $slide)
                                 <div class="carousel-item {{ $idx === 0 ? 'active' : '' }}">
                                     <img src="{{ $slide['url'] }}" alt="{{ $slide['nome'] }}" class="vf-loja-banner-img d-block w-100" loading="{{ $idx === 0 ? 'eager' : 'lazy' }}" decoding="async">
-                                    <div class="position-absolute bottom-0 start-0 end-0 vf-loja-banner-scrim px-3 py-3 text-white text-start">
+                                    <div class="position-absolute bottom-0 start-0 end-0 vf-loja-banner-scrim vf-loja-banner-scrim--carousel px-3 py-3 text-white text-start">
                                         <span class="h5 fw-bold mb-0 d-block">{{ $bannerCategoria->nome }}</span>
                                         @if ($slideCount > 1)
                                             <span class="small d-block opacity-90 text-truncate">{{ $slide['nome'] }}</span>
@@ -135,3 +142,30 @@
         @endif
     </div>
 @endsection
+
+@if (($bannerCategoria ?? null) && ($bannerSlides ?? collect())->count() > 1)
+    @push('scripts')
+        <script>
+            (function () {
+                var el = document.getElementById('vfLojaBannerCat{{ $bannerCategoria->id }}');
+                if (!el || typeof bootstrap === 'undefined') return;
+                if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                    el.setAttribute('data-bs-interval', 'false');
+                    el.setAttribute('data-bs-ride', 'false');
+                    el.classList.remove('vf-loja-banner-carousel--fire', 'carousel-fade');
+                    return;
+                }
+                var t;
+                el.addEventListener('slide.bs.carousel', function () {
+                    clearTimeout(t);
+                    el.classList.add('vf-loja-banner--ignite');
+                });
+                el.addEventListener('slid.bs.carousel', function () {
+                    t = setTimeout(function () {
+                        el.classList.remove('vf-loja-banner--ignite');
+                    }, 620);
+                });
+            })();
+        </script>
+    @endpush
+@endif

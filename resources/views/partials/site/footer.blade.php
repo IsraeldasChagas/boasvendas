@@ -34,6 +34,9 @@
             </div>
         </div>
         <hr class="border-secondary opacity-25 my-4">
-        <p class="small text-center mb-0">&copy; {{ date('Y') }} {{ config('app.name') }}. Demonstração front-end.</p>
+        <p class="small text-center mb-0 d-flex align-items-center justify-content-center gap-2 flex-wrap text-white-50">
+            @include('partials.icons.motorbike-delivery', ['class' => 'text-white flex-shrink-0 opacity-90', 'size' => 20])
+            <span>&copy; {{ date('Y') }} {{ config('app.name') }}</span>
+        </p>
     </div>
 </footer>

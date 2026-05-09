@@ -1013,6 +1013,7 @@ body.vf-body {
 
 .vf-loja-banner-carousel .carousel-inner {
   height: 100%;
+  isolation: isolate;
 }
 
 .vf-loja-banner-carousel .carousel-item {
@@ -1033,6 +1034,108 @@ body.vf-body {
   border-radius: 50%;
   background-color: rgba(0, 0, 0, 0.45);
   background-size: 55% 55%;
+}
+
+/* Banner carrossel: troca automática + fade; camadas “fogo” + burst na troca */
+.vf-loja-banner-carousel.carousel-fade .carousel-item {
+  transition-duration: 0.75s;
+  transition-timing-function: ease-in-out;
+}
+
+.vf-loja-banner-scrim--carousel {
+  z-index: 4;
+}
+
+.vf-loja-banner-carousel--fire .carousel-inner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.38;
+  background:
+    radial-gradient(ellipse 85% 60% at 50% 105%, rgba(255, 55, 0, 0.5) 0%, transparent 58%),
+    radial-gradient(ellipse 55% 45% at 22% 98%, rgba(255, 160, 40, 0.42) 0%, transparent 52%),
+    radial-gradient(ellipse 55% 45% at 78% 98%, rgba(255, 90, 0, 0.38) 0%, transparent 52%);
+  mix-blend-mode: screen;
+  animation: vfBannerFireAmbient 2.8s ease-in-out infinite;
+}
+
+@keyframes vfBannerFireAmbient {
+  0%,
+  100% {
+    opacity: 0.32;
+    transform: translateY(0) scaleY(1);
+    filter: saturate(1);
+  }
+  50% {
+    opacity: 0.48;
+    transform: translateY(-2px) scaleY(1.03);
+    filter: saturate(1.35);
+  }
+}
+
+.vf-loja-banner-carousel--fire .carousel-inner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    radial-gradient(ellipse 110% 85% at 50% 115%, rgba(255, 40, 0, 0.65) 0%, transparent 58%),
+    radial-gradient(ellipse 70% 50% at 50% 100%, rgba(255, 200, 60, 0.45) 0%, transparent 55%);
+  mix-blend-mode: screen;
+}
+
+.vf-loja-banner-carousel--fire.vf-loja-banner--ignite .carousel-inner::after {
+  animation: vfBannerFireBurst 0.78s ease-out forwards;
+}
+
+@keyframes vfBannerFireBurst {
+  0% {
+    opacity: 0;
+    transform: scaleY(0.92);
+    filter: brightness(1);
+  }
+  35% {
+    opacity: 0.95;
+    transform: scaleY(1.08);
+    filter: brightness(1.35) saturate(1.75);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleY(1);
+    filter: brightness(1);
+  }
+}
+
+.vf-loja-banner-carousel--fire.vf-loja-banner--ignite .carousel-item.active .vf-loja-banner-img {
+  animation: vfBannerImgFlare 0.75s ease-out;
+}
+
+@keyframes vfBannerImgFlare {
+  0% {
+    filter: brightness(1) saturate(1);
+  }
+  40% {
+    filter: brightness(1.22) saturate(1.35) contrast(1.05);
+  }
+  100% {
+    filter: brightness(1) saturate(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vf-loja-banner-carousel--fire .carousel-inner::before,
+  .vf-loja-banner-carousel--fire .carousel-inner::after {
+    animation: none !important;
+    opacity: 0.22 !important;
+  }
+
+  .vf-loja-banner-carousel.carousel-fade .carousel-item {
+    transition-duration: 0.01ms !important;
+  }
 }
 
 .vf-loja-banner:focus-visible .vf-loja-banner-media {
