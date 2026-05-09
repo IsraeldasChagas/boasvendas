@@ -101,21 +101,9 @@
                             }
                         @endphp
                         @include('partials.empresa.produto-ingredientes-form', ['linhas' => $ingredientesLinhas])
-                        @php
-                            $temErroOpcoesPagas = $errors->has('adicional_ids') || $errors->has('adicional_ids.*')
-                                || $errors->has('permite_adicionais')
-                                || $errors->has('acrescimo_escolhas_min') || $errors->has('acrescimo_escolhas_max');
-                            $oldAdIdsOpcoes = old('adicional_ids');
-                            $marcouAdicionalOpcoes = is_array($oldAdIdsOpcoes)
-                                && count(array_filter($oldAdIdsOpcoes, fn ($id) => (int) $id > 0)) > 0;
-                            $opcoesPagasAberto = $temErroOpcoesPagas || $marcouAdicionalOpcoes || (bool) old('permite_adicionais')
-                                || $produto->permite_adicionais
-                                || $produto->adicionais->where('tipo', \App\Models\Adicional::TIPO_ACRESCENTAR)->isNotEmpty();
-                        @endphp
                         @include('partials.empresa.produto-opcoes-pagas-form', [
                             'adicionais' => $adicionais,
                             'produto' => $produto,
-                            'opcoesPagasAberto' => $opcoesPagasAberto,
                         ])
                 <div class="col-12">
                     <div class="form-check">
