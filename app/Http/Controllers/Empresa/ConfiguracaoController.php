@@ -101,6 +101,9 @@ class ConfiguracaoController extends Controller
         if (Schema::hasColumn('empresas', 'loja_frete_origem_endereco')) {
             $rules['loja_frete_origem_endereco'] = ['nullable', 'string', 'max:500'];
         }
+        if (Schema::hasColumn('empresas', 'loja_aberta')) {
+            $rules['loja_aberta'] = ['required', 'in:0,1'];
+        }
 
         $data = $request->validate($rules);
 
@@ -109,6 +112,12 @@ class ConfiguracaoController extends Controller
         // O antigo else unset() fazia o salvamento nunca acontecer → vitrine sem ícones.
         $data['instagram_url'] = $this->normalizarUrlOpcional($request->input('instagram_url'), 'instagram_url');
         $data['facebook_url'] = $this->normalizarUrlOpcional($request->input('facebook_url'), 'facebook_url');
+
+        if (Schema::hasColumn('empresas', 'loja_aberta')) {
+            $data['loja_aberta'] = ((string) $request->input('loja_aberta')) === '1';
+        } else {
+            unset($data['loja_aberta']);
+        }
 
         if (Schema::hasColumn('empresas', 'cep')) {
             // Só altera o CEP no banco se o campo veio no POST (evita apagar ao salvar
@@ -213,16 +222,20 @@ class ConfiguracaoController extends Controller
 
             if (
                 $unknownColumn
-                && (str_contains($msg, 'instagram_url') || str_contains($msg, 'facebook_url'))
+                && (
+                    str_contains($msg, 'instagram_url')
+                    || str_contains($msg, 'facebook_url')
+                    || str_contains($msg, 'loja_aberta')
+                )
             ) {
-                unset($data['instagram_url'], $data['facebook_url']);
+                unset($data['instagram_url'], $data['facebook_url'], $data['loja_aberta']);
                 $empresa->update($data);
 
                 return redirect()
                     ->route('empresa.configuracoes.index')
                     ->with(
                         'warning',
-                        'Os demais dados foram salvos. Instagram e Facebook precisam das colunas no banco: peça para rodar php artisan migrate no servidor e salve os links de novo.'
+                        'Os demais dados foram salvos. Rode php artisan migrate no servidor para criar colunas novas (Instagram/Facebook/status da loja) e salve de novo.'
                     );
             }
 

@@ -27,6 +27,7 @@ class Empresa extends Model
 
     protected $fillable = [
         'nome',
+        'loja_aberta',
         'slug',
         'logo',
         'endereco',
@@ -65,6 +66,7 @@ class Empresa extends Model
             'loja_frete_google_taxa_minima' => 'decimal:2',
             'loja_frete_google_km_max' => 'decimal:2',
             'loja_permite_retirada_balcao' => 'boolean',
+            'loja_aberta' => 'boolean',
         ];
     }
 

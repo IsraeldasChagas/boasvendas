@@ -336,6 +336,22 @@ body.vf-body {
   padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
 }
 
+.vf-loja-aberta-group .btn-check:checked + .btn-outline-success {
+  color: #fff;
+  background-color: var(--bs-success);
+  border-color: var(--bs-success);
+}
+
+.vf-loja-aberta-group .btn-check:checked + .btn-outline-danger {
+  color: #fff;
+  background-color: var(--bs-danger);
+  border-color: var(--bs-danger);
+}
+
+.vf-loja-status-card {
+  border-left: 4px solid rgba(13, 110, 253, 0.35);
+}
+
 .vf-store-name {
   min-width: 0;
   overflow-wrap: anywhere;

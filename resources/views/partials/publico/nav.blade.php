@@ -17,15 +17,24 @@
 @endphp
 <header class="vf-publico-header sticky-top shadow-sm">
     <div class="container py-2">
-        <div class="d-flex align-items-center justify-content-between gap-3">
-            <a href="{{ route('publico.loja', ['slug' => $slugNav]) }}" class="text-decoration-none text-dark fw-bold me-2 d-flex align-items-center gap-1" style="min-width: 0;">
-                @if ($empresa && $empresa->urlLogo())
-                    <img src="{{ $empresa->urlLogo() }}" alt="" width="66" height="66" class="me-2 rounded bg-white border" style="object-fit: contain;">
-                @else
-                    <i class="bi bi-shop text-primary me-1"></i>
+        <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
+            <div class="d-flex align-items-center gap-2 min-width-0 flex-grow-1">
+                <a href="{{ route('publico.loja', ['slug' => $slugNav]) }}" class="text-decoration-none text-dark fw-bold d-flex align-items-center gap-2 min-width-0">
+                    @if ($empresa && $empresa->urlLogo())
+                        <img src="{{ $empresa->urlLogo() }}" alt="" width="66" height="66" class="me-0 rounded bg-white border flex-shrink-0" style="object-fit: contain;">
+                    @else
+                        <i class="bi bi-shop text-primary flex-shrink-0"></i>
+                    @endif
+                    <span class="vf-store-name">{{ $nomeLoja }}</span>
+                </a>
+                @if ($empresa)
+                    @if ($empresa->loja_aberta ?? true)
+                        <span class="badge rounded-pill bg-success flex-shrink-0 align-self-center">Aberta</span>
+                    @else
+                        <span class="badge rounded-pill bg-danger flex-shrink-0 align-self-center">Fechada</span>
+                    @endif
                 @endif
-                <span class="vf-store-name">{{ $nomeLoja }}</span>
-            </a>
+            </div>
             <div class="d-flex align-items-center gap-2 flex-shrink-0">
                 @if ($temContatoTopo)
                     <button class="btn btn-sm btn-outline-secondary" type="button"

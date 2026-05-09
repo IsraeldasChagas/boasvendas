@@ -48,6 +48,27 @@
 
         <div class="row g-3">
             <div class="col-lg-8">
+                @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_aberta'))
+                    @php
+                        $lojaAbertaVal = old('loja_aberta');
+                        if ($lojaAbertaVal === null) {
+                            $lojaAbertaVal = ($empresa->loja_aberta ?? true) ? '1' : '0';
+                        } else {
+                            $lojaAbertaVal = (string) $lojaAbertaVal;
+                        }
+                    @endphp
+                    <div class="vf-card p-4 mb-3 vf-loja-status-card">
+                        <h2 class="h6 fw-bold mb-2">Loja na vitrine — aberta ou fechada</h2>
+                        <p class="small text-muted mb-3">Toque no botão para trocar. Na loja pública aparece um selo <span class="text-success fw-semibold">verde (Aberta)</span> ou <span class="text-danger fw-semibold">vermelho (Fechada)</span> ao lado do nome.</p>
+                        <div class="btn-group w-100 vf-loja-aberta-group" role="group" aria-label="Loja aberta ou fechada">
+                            <input type="radio" class="btn-check" name="loja_aberta" id="vf-loja-aberta-1" value="1" autocomplete="off" @checked($lojaAbertaVal === '1') required>
+                            <label class="btn btn-lg btn-outline-success vf-loja-aberta-touch py-3" for="vf-loja-aberta-1"><i class="bi bi-shop-window me-2"></i>Aberta</label>
+                            <input type="radio" class="btn-check" name="loja_aberta" id="vf-loja-aberta-0" value="0" autocomplete="off" @checked($lojaAbertaVal === '0')>
+                            <label class="btn btn-lg btn-outline-danger vf-loja-aberta-touch py-3" for="vf-loja-aberta-0"><i class="bi bi-door-closed me-2"></i>Fechada</label>
+                        </div>
+                        @error('loja_aberta')<div class="invalid-feedback d-block mt-2">{{ $message }}</div>@enderror
+                    </div>
+                @endif
                 <div class="vf-card p-4 mb-3">
                     <h2 class="h6 fw-bold mb-3">Dados da empresa</h2>
                     <div class="row g-3">
