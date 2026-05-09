@@ -30,7 +30,19 @@
                 </div>
             </div>
             <div class="col-md-6">
-                <h1 class="h3 fw-bold mt-2">{{ $produto->nome }}</h1>
+                <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mt-2 mb-0">
+                    <h1 class="h3 fw-bold mb-0">{{ $produto->nome }}</h1>
+                    @php
+                        $vfWaProdutoLink = route('publico.produto', ['slug' => $slug, 'produto_id' => $produto->id]);
+                        $vfWaTexto = $produto->nome.' — '.$empresa->nome."\n".$vfWaProdutoLink;
+                        $vfWaHref = 'https://wa.me/?text='.rawurlencode($vfWaTexto);
+                    @endphp
+                    <a href="{{ $vfWaHref }}" target="_blank" rel="noopener noreferrer"
+                       class="btn btn-success btn-sm flex-shrink-0 align-self-start"
+                       aria-label="Compartilhar este produto no WhatsApp">
+                        <i class="bi bi-whatsapp me-1" aria-hidden="true"></i>Compartilhar
+                    </a>
+                </div>
                 @if ($produto->estoque === null || $produto->estoque > 0)
                     <div class="vf-produto-estrelas mb-3" id="vf-produto-estrelas-wrap">
                         <span class="small text-muted d-block mb-1">Sua nota <span class="fw-normal">(opcional)</span></span>
