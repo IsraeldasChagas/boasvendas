@@ -182,7 +182,7 @@
                         var usaLimite = wrap.getAttribute('data-usa-limite') === '1';
                         var min = parseInt(wrap.getAttribute('data-min') || '0', 10);
                         var max = parseInt(wrap.getAttribute('data-max') || '99999', 10);
-                        var maxPorOpcao = usaLimite ? 999 : 1;
+                        var maxPorOpcao = 999;
 
                         function soma() {
                             var t = 0;
@@ -206,9 +206,6 @@
                             if (usaLimite && podeMais && total >= max) {
                                 podeMais = false;
                             }
-                            if (!usaLimite && q >= 1) {
-                                podeMais = false;
-                            }
                             if (btnMais) btnMais.disabled = !podeMais;
                         }
 
@@ -226,13 +223,8 @@
 
                             function tentarMais() {
                                 var q = parseInt(inp.value || '0', 10) || 0;
-                                if (!usaLimite) {
-                                    if (q >= 1) return;
-                                    setQ(1);
-                                    return;
-                                }
                                 if (q >= maxPorOpcao) return;
-                                if (soma() >= max) {
+                                if (usaLimite && soma() >= max) {
                                     alert('Você já atingiu o máximo de ' + max + ' opções (somando as quantidades).');
                                     return;
                                 }
