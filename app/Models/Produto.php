@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class Produto extends Model
@@ -120,6 +121,27 @@ class Produto extends Model
         $mi = max(1, min((int) $m, 255));
 
         return min($mi, $n);
+    }
+
+    /**
+     * Modo de UI na vitrine (stepper vs checkbox), normalizado — evita falha por espaços/caso no banco.
+     */
+    public function modoRetirarIngredientesNaLoja(): string
+    {
+        if (! Schema::hasColumn('produtos', 'ingredientes_retirar_ui')) {
+            return self::ING_RETIRAR_UI_STEPPER;
+        }
+
+        $raw = $this->getAttributes()['ingredientes_retirar_ui'] ?? null;
+        if ($raw === null || $raw === '') {
+            return self::ING_RETIRAR_UI_STEPPER;
+        }
+
+        $v = strtolower(trim((string) $raw));
+
+        return $v === self::ING_RETIRAR_UI_CHECKBOX
+            ? self::ING_RETIRAR_UI_CHECKBOX
+            : self::ING_RETIRAR_UI_STEPPER;
     }
 
     /**

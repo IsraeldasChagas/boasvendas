@@ -706,7 +706,7 @@ class PublicoController extends Controller
         return view('publico.loja', compact('slug', 'empresa', 'produtos', 'categorias'));
     }
 
-    public function produto(string $slug, string $produto_id): View
+    public function produto(string $slug, string $produto_id): Response
     {
         $empresa = $this->empresaLojaAtiva($slug);
 
@@ -728,11 +728,14 @@ class PublicoController extends Controller
             abort(404, 'Este produto não está disponível na vitrine ou foi removido.');
         }
 
-        return view('publico.produto', [
-            'slug' => $slug,
-            'empresa' => $empresa,
-            'produto' => $produtoModel,
-        ]);
+        return response()
+            ->view('publico.produto', [
+                'slug' => $slug,
+                'empresa' => $empresa,
+                'produto' => $produtoModel,
+            ])
+            ->header('Cache-Control', 'private, no-store, no-cache, must-revalidate')
+            ->header('Pragma', 'no-cache');
     }
 
     public function carrinhoAdicionar(Request $request, string $slug): RedirectResponse

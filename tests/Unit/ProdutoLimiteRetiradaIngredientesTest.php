@@ -66,4 +66,13 @@ class ProdutoLimiteRetiradaIngredientesTest extends TestCase
 
         $this->assertSame(1, $p->limiteRetiradaIngredientesNaLoja());
     }
+
+    public function test_modo_retirar_normaliza_checkbox(): void
+    {
+        $p = Produto::query()->make([
+            'ingredientes_retirar_ui' => ' Checkbox ',
+        ]);
+
+        $this->assertSame(Produto::ING_RETIRAR_UI_CHECKBOX, $p->modoRetirarIngredientesNaLoja());
+    }
 }

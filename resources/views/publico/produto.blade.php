@@ -96,9 +96,7 @@
                     $minEsc = $colEscolhas ? $produto->acrescimo_escolhas_min : null;
                     $maxEsc = $colEscolhas ? $produto->acrescimo_escolhas_max : null;
                     $temLimiteAcrescimo = $produto->permite_adicionais && $acres->isNotEmpty() && ($minEsc !== null || $maxEsc !== null);
-                    $uiRetirarIng = Schema::hasColumn('produtos', 'ingredientes_retirar_ui')
-                        ? ($produto->ingredientes_retirar_ui ?? \App\Models\Produto::ING_RETIRAR_UI_STEPPER)
-                        : \App\Models\Produto::ING_RETIRAR_UI_STEPPER;
+                    $uiRetirarIng = $produto->modoRetirarIngredientesNaLoja();
                 @endphp
                 <p class="h4 text-success mb-1">R$ {{ number_format((float) $produto->preco, 2, ',', '.') }}</p>
                 @if ($produto->estoque !== null)
