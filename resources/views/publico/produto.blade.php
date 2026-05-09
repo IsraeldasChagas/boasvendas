@@ -291,17 +291,21 @@
                                 ? 'https://wa.me/'.$vfWaLojaDig.'?text='.rawurlencode('Olá! Vim pela vitrine e estou vendo o produto '.$produto->nome.'. ')
                                 : '';
                         @endphp
-                        <div class="d-flex flex-wrap gap-2 gap-md-3 align-items-end">
+                        <div class="vf-produto-barra-acoes d-flex flex-column gap-3">
                             <div>
                                 <label class="form-label small text-muted mb-1" for="qtd">Quantidade</label>
                                 <input type="number" class="form-control" id="qtd" name="quantidade" value="1" min="1" max="{{ $produto->estoque !== null ? min(99, $produto->estoque) : 99 }}" style="max-width: 5rem;">
                             </div>
-                            <button type="submit" class="btn btn-primary"><i class="bi bi-cart-plus me-1"></i>Adicionar ao carrinho</button>
-                            @if ($vfWaLojaHref !== '')
-                                <a href="{{ $vfWaLojaHref }}" target="_blank" rel="noopener noreferrer" class="btn btn-success vf-produto-wa-loja-btn">
-                                    <i class="bi bi-whatsapp me-1" aria-hidden="true"></i><span class="d-none d-sm-inline">WhatsApp da loja</span><span class="d-sm-none">WhatsApp</span>
-                                </a>
-                            @endif
+                            <div class="d-flex flex-row gap-2 align-items-stretch">
+                                <button type="submit" class="btn btn-primary flex-fill">
+                                    <i class="bi bi-cart-plus me-1"></i>Adicionar ao carrinho
+                                </button>
+                                @if ($vfWaLojaHref !== '')
+                                    <a href="{{ $vfWaLojaHref }}" target="_blank" rel="noopener noreferrer" class="btn btn-success vf-produto-wa-loja-btn flex-fill">
+                                        <i class="bi bi-whatsapp me-1" aria-hidden="true"></i><span class="d-none d-sm-inline">WhatsApp da loja</span><span class="d-sm-none">WhatsApp</span>
+                                    </a>
+                                @endif
+                            </div>
                         </div>
                     </form>
                 @endif
