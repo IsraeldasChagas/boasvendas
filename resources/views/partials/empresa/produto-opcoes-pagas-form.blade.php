@@ -18,6 +18,16 @@
     } else {
         $permiteChecked = false;
     }
+    $acrescimosUiOld = old('acrescimos_loja_ui');
+    if ($acrescimosUiOld !== null && $acrescimosUiOld !== '') {
+        $acrescimosUiSel = strtolower((string) $acrescimosUiOld) === \App\Models\Produto::ACRESCIMO_LOJA_UI_CHECKBOX
+            ? \App\Models\Produto::ACRESCIMO_LOJA_UI_CHECKBOX
+            : \App\Models\Produto::ACRESCIMO_LOJA_UI_STEPPER;
+    } elseif (isset($produto)) {
+        $acrescimosUiSel = $produto->modoAcrescimosNaLoja();
+    } else {
+        $acrescimosUiSel = \App\Models\Produto::ACRESCIMO_LOJA_UI_STEPPER;
+    }
 @endphp
 
 <div class="col-12 vf-opcoes-pagas-wrap">
@@ -44,6 +54,23 @@
                 <i class="bi bi-chevron-up me-1"></i>Recolher
             </button>
         </div>
+
+        @if (\Illuminate\Support\Facades\Schema::hasColumn('produtos', 'acrescimos_loja_ui'))
+            <fieldset class="border rounded p-3 mb-3 bg-white">
+                <legend class="float-none w-auto fs-6 px-1 mb-2">Na vitrine da loja</legend>
+                <p class="small text-muted mb-2 mb-md-3">Como o cliente escolhe os <strong>acréscimos pagos</strong> deste produto (opções com preço).</p>
+                <div class="d-flex flex-column gap-2">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="acrescimos_loja_ui" id="acrescimos_loja_ui_stepper" value="{{ \App\Models\Produto::ACRESCIMO_LOJA_UI_STEPPER }}" @checked($acrescimosUiSel === \App\Models\Produto::ACRESCIMO_LOJA_UI_STEPPER)>
+                        <label class="form-check-label" for="acrescimos_loja_ui_stepper">Botões − e + (quantidade por opção)</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="acrescimos_loja_ui" id="acrescimos_loja_ui_checkbox" value="{{ \App\Models\Produto::ACRESCIMO_LOJA_UI_CHECKBOX }}" @checked($acrescimosUiSel === \App\Models\Produto::ACRESCIMO_LOJA_UI_CHECKBOX)>
+                        <label class="form-check-label" for="acrescimos_loja_ui_checkbox">Caixas — marcar só o que quer (ex.: leite)</label>
+                    </div>
+                </div>
+            </fieldset>
+        @endif
 
         <fieldset id="vf-opcoes-pagas-fieldset" class="border-0 p-0 m-0" @disabled(!$opcoesPagasAberto)>
             <div class="form-check mb-2">

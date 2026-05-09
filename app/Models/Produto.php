@@ -17,6 +17,12 @@ class Produto extends Model
     /** Na vitrine: cliente marca checkboxes (1 por ingrediente, até o máximo). */
     public const ING_RETIRAR_UI_CHECKBOX = 'checkbox';
 
+    /** Na vitrine: acréscimos pagos com −/+ por opção. */
+    public const ACRESCIMO_LOJA_UI_STEPPER = 'stepper';
+
+    /** Na vitrine: acréscimos pagos com uma caixa por opção (marcar se quer). */
+    public const ACRESCIMO_LOJA_UI_CHECKBOX = 'checkbox';
+
     protected $table = 'produtos';
 
     protected $fillable = [
@@ -35,6 +41,7 @@ class Produto extends Model
         'acrescimo_escolhas_max',
         'max_ingredientes_retirar',
         'ingredientes_retirar_ui',
+        'acrescimos_loja_ui',
     ];
 
     protected function casts(): array
@@ -142,6 +149,25 @@ class Produto extends Model
         return $v === self::ING_RETIRAR_UI_CHECKBOX
             ? self::ING_RETIRAR_UI_CHECKBOX
             : self::ING_RETIRAR_UI_STEPPER;
+    }
+
+    /** Como mostrar acréscimos pagos na loja (stepper ou checkbox). */
+    public function modoAcrescimosNaLoja(): string
+    {
+        if (! Schema::hasColumn('produtos', 'acrescimos_loja_ui')) {
+            return self::ACRESCIMO_LOJA_UI_STEPPER;
+        }
+
+        $raw = $this->getAttributes()['acrescimos_loja_ui'] ?? null;
+        if ($raw === null || $raw === '') {
+            return self::ACRESCIMO_LOJA_UI_STEPPER;
+        }
+
+        $v = strtolower(trim((string) $raw));
+
+        return $v === self::ACRESCIMO_LOJA_UI_CHECKBOX
+            ? self::ACRESCIMO_LOJA_UI_CHECKBOX
+            : self::ACRESCIMO_LOJA_UI_STEPPER;
     }
 
     /**

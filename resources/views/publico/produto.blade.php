@@ -97,6 +97,7 @@
                     $maxEsc = $colEscolhas ? $produto->acrescimo_escolhas_max : null;
                     $temLimiteAcrescimo = $produto->permite_adicionais && $acres->isNotEmpty() && ($minEsc !== null || $maxEsc !== null);
                     $uiRetirarIng = $produto->modoRetirarIngredientesNaLoja();
+                    $uiAcrescimos = $produto->modoAcrescimosNaLoja();
                 @endphp
                 <p class="h4 text-success mb-1">R$ {{ number_format((float) $produto->preco, 2, ',', '.') }}</p>
                 @if ($produto->estoque !== null)
@@ -151,34 +152,60 @@
                                     @else
                                         <p class="fw-semibold mb-2">Opções</p>
                                     @endif
-                                    <div class="vf-personalizar-grid vf-acrescimo-stepper-grid mb-1"
-                                        id="vf-acrescimos-stepper"
-                                        data-usa-limite="{{ $temLimiteAcrescimo ? '1' : '0' }}"
-                                        data-min="{{ $temLimiteAcrescimo && $minEsc !== null ? (int) $minEsc : 0 }}"
-                                        data-max="{{ $temLimiteAcrescimo && $maxEsc !== null ? (int) $maxEsc : 99999 }}">
-                                        @foreach ($acres as $ad)
-                                            <div class="vf-escolha-card" data-ad-id="{{ $ad->id }}">
-                                                <div class="vf-escolha-card-inner">
-                                                    <span class="vf-escolha-bar" aria-hidden="true"></span>
-                                                    <div class="vf-escolha-textos">
-                                                        <span class="vf-personalizar-nome">
-                                                            {{ $ad->nome }}
-                                                            @if ((float) $ad->preco > 0)
-                                                                <span class="d-block small text-success fw-normal mt-1">+ R$ {{ number_format((float) $ad->preco, 2, ',', '.') }} @if ($temLimiteAcrescimo)<span class="text-muted">cada</span>@endif</span>
-                                                            @endif
-                                                        </span>
-                                                        <span class="vf-escolha-badge"><i class="bi bi-check-lg me-1"></i>Selecionado</span>
-                                                    </div>
-                                                    <div class="vf-escolha-stepper" role="group" aria-label="Quantidade {{ $ad->nome }}">
-                                                        <button type="button" class="vf-escolha-btn vf-escolha-btn--menos" aria-label="Diminuir quantidade">−</button>
-                                                        <span class="vf-escolha-qty-wrap"><span class="vf-escolha-qty-disp" aria-live="polite">0</span></span>
-                                                        <input type="hidden" name="adicional_qtd[{{ $ad->id }}]" value="{{ (int) old('adicional_qtd.'.$ad->id, 0) }}" class="vf-acrescimo-qty-input" autocomplete="off">
-                                                        <button type="button" class="vf-escolha-btn vf-escolha-btn--mais" aria-label="Aumentar quantidade">+</button>
+                                    @if ($uiAcrescimos === \App\Models\Produto::ACRESCIMO_LOJA_UI_CHECKBOX)
+                                        <div class="vf-personalizar-grid vf-retirar-checkbox-grid vf-acrescimo-checkbox-grid mb-1"
+                                            id="vf-acrescimos-checkbox"
+                                            data-usa-limite="{{ $temLimiteAcrescimo ? '1' : '0' }}"
+                                            data-min="{{ $temLimiteAcrescimo && $minEsc !== null ? (int) $minEsc : 0 }}"
+                                            data-max="{{ $temLimiteAcrescimo && $maxEsc !== null ? (int) $maxEsc : 99999 }}">
+                                            @foreach ($acres as $ad)
+                                                <div class="vf-escolha-card vf-escolha-card--acrescimo-chk" data-ad-id="{{ $ad->id }}">
+                                                    <div class="vf-escolha-card-inner vf-escolha-card-inner--retirar-chk">
+                                                        <span class="vf-escolha-bar" aria-hidden="true"></span>
+                                                        <div class="vf-retirar-chk-wrap flex-grow-1 min-w-0 d-flex align-items-start gap-3 py-2 ps-2 pe-3">
+                                                            <input class="form-check-input vf-acrescimo-chk flex-shrink-0 mt-1" type="checkbox" id="acre_ad_{{ $ad->id }}" autocomplete="off" aria-describedby="acre_ad_label_{{ $ad->id }}" @checked(((int) old('adicional_qtd.'.$ad->id, 0)) > 0)>
+                                                            <label class="form-check-label mb-0 flex-grow-1" for="acre_ad_{{ $ad->id }}" id="acre_ad_label_{{ $ad->id }}">
+                                                                {{ $ad->nome }}
+                                                                @if ((float) $ad->preco > 0)
+                                                                    <span class="d-block small text-success fw-normal mt-1">+ R$ {{ number_format((float) $ad->preco, 2, ',', '.') }} @if ($temLimiteAcrescimo)<span class="text-muted">cada</span>@endif</span>
+                                                                @endif
+                                                            </label>
+                                                            <input type="hidden" name="adicional_qtd[{{ $ad->id }}]" value="{{ (int) old('adicional_qtd.'.$ad->id, 0) }}" class="vf-acrescimo-qty-input" autocomplete="off">
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <div class="vf-personalizar-grid vf-acrescimo-stepper-grid mb-1"
+                                            id="vf-acrescimos-stepper"
+                                            data-usa-limite="{{ $temLimiteAcrescimo ? '1' : '0' }}"
+                                            data-min="{{ $temLimiteAcrescimo && $minEsc !== null ? (int) $minEsc : 0 }}"
+                                            data-max="{{ $temLimiteAcrescimo && $maxEsc !== null ? (int) $maxEsc : 99999 }}">
+                                            @foreach ($acres as $ad)
+                                                <div class="vf-escolha-card" data-ad-id="{{ $ad->id }}">
+                                                    <div class="vf-escolha-card-inner">
+                                                        <span class="vf-escolha-bar" aria-hidden="true"></span>
+                                                        <div class="vf-escolha-textos">
+                                                            <span class="vf-personalizar-nome">
+                                                                {{ $ad->nome }}
+                                                                @if ((float) $ad->preco > 0)
+                                                                    <span class="d-block small text-success fw-normal mt-1">+ R$ {{ number_format((float) $ad->preco, 2, ',', '.') }} @if ($temLimiteAcrescimo)<span class="text-muted">cada</span>@endif</span>
+                                                                @endif
+                                                            </span>
+                                                            <span class="vf-escolha-badge"><i class="bi bi-check-lg me-1"></i>Selecionado</span>
+                                                        </div>
+                                                        <div class="vf-escolha-stepper" role="group" aria-label="Quantidade {{ $ad->nome }}">
+                                                            <button type="button" class="vf-escolha-btn vf-escolha-btn--menos" aria-label="Diminuir quantidade">−</button>
+                                                            <span class="vf-escolha-qty-wrap"><span class="vf-escolha-qty-disp" aria-live="polite">0</span></span>
+                                                            <input type="hidden" name="adicional_qtd[{{ $ad->id }}]" value="{{ (int) old('adicional_qtd.'.$ad->id, 0) }}" class="vf-acrescimo-qty-input" autocomplete="off">
+                                                            <button type="button" class="vf-escolha-btn vf-escolha-btn--mais" aria-label="Aumentar quantidade">+</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
                                 @endif
 
                                 @if ($temRetirarIng)
@@ -357,6 +384,16 @@
                                 }
                             });
                         }
+                        var wAcreChk = document.getElementById('vf-acrescimos-checkbox');
+                        if (wAcreChk) {
+                            wAcreChk.querySelectorAll('.vf-escolha-card--acrescimo-chk').forEach(function (card) {
+                                var chkA = card.querySelector('.vf-acrescimo-chk');
+                                var hidA = card.querySelector('.vf-acrescimo-qty-input');
+                                if (chkA && hidA) {
+                                    hidA.value = chkA.checked ? '1' : '0';
+                                }
+                            });
+                        }
                         form.querySelectorAll('.vf-acrescimo-qty-input, .vf-retirar-qty-input').forEach(function (inp) {
                             var n = parseInt(inp.value || '0', 10);
                             if (isNaN(n)) {
@@ -440,6 +477,60 @@
                             if (s < min || s > max) {
                                 e.preventDefault();
                                 alert('Escolha entre ' + min + ' e ' + max + ' opções de acréscimo (somando as quantidades).');
+                                return false;
+                            }
+                        });
+                    }
+
+                    var wrapAcreChk = document.getElementById('vf-acrescimos-checkbox');
+                    if (wrapAcreChk) {
+                        var usaLimiteA = wrapAcreChk.getAttribute('data-usa-limite') === '1';
+                        var minA = parseInt(wrapAcreChk.getAttribute('data-min') || '0', 10);
+                        var maxA = parseInt(wrapAcreChk.getAttribute('data-max') || '99999', 10);
+
+                        function somaAcreChk() {
+                            var t = 0;
+                            wrapAcreChk.querySelectorAll('.vf-acrescimo-qty-input').forEach(function (inp) {
+                                t += parseInt(inp.value || '0', 10) || 0;
+                            });
+                            return t;
+                        }
+
+                        wrapAcreChk.querySelectorAll('.vf-escolha-card--acrescimo-chk').forEach(function (card) {
+                            var chk = card.querySelector('.vf-acrescimo-chk');
+                            var hid = card.querySelector('.vf-acrescimo-qty-input');
+                            if (!chk || !hid) return;
+                            function sync() {
+                                hid.value = chk.checked ? '1' : '0';
+                                card.classList.toggle('vf-escolha-card--ativo', chk.checked);
+                            }
+                            chk.addEventListener('change', function () {
+                                if (chk.checked && usaLimiteA) {
+                                    var outros = 0;
+                                    wrapAcreChk.querySelectorAll('.vf-acrescimo-qty-input').forEach(function (h) {
+                                        if (h !== hid) outros += parseInt(h.value || '0', 10) || 0;
+                                    });
+                                    if (outros + 1 > maxA) {
+                                        chk.checked = false;
+                                        alert('Você já atingiu o máximo de ' + maxA + ' opções (somando as quantidades).');
+                                    }
+                                }
+                                sync();
+                            });
+                            sync();
+                        });
+
+                        form.addEventListener('submit', function (e) {
+                            wrapAcreChk.querySelectorAll('.vf-escolha-card--acrescimo-chk').forEach(function (card) {
+                                var ch = card.querySelector('.vf-acrescimo-chk');
+                                var hi = card.querySelector('.vf-acrescimo-qty-input');
+                                if (ch && hi) hi.value = ch.checked ? '1' : '0';
+                            });
+                            if (!usaLimiteA) return;
+                            var s = somaAcreChk();
+                            if (s < minA || s > maxA) {
+                                e.preventDefault();
+                                alert('Escolha entre ' + minA + ' e ' + maxA + ' opções de acréscimo (somando as quantidades).');
                                 return false;
                             }
                         });

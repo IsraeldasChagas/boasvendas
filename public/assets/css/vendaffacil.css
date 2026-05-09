@@ -570,6 +570,18 @@ body.vf-body {
   padding-top: 0.05rem;
 }
 
+.vf-acrescimo-checkbox-grid .vf-acrescimo-chk {
+  width: 1.35rem;
+  height: 1.35rem;
+  min-width: 1.35rem;
+  min-height: 1.35rem;
+  margin-top: 0.15rem !important;
+  margin-left: 0 !important;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: #16a34a;
+}
+
 /* Retirar (checkbox): mesmo ritmo — 1 coluna até md (herda .vf-personalizar-grid) */
 @media (min-width: 768px) {
   .vf-retirar-checkbox-grid.vf-personalizar-grid {

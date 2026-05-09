@@ -254,6 +254,13 @@ class ProdutoController extends Controller
             ])];
         }
 
+        if (Schema::hasColumn('produtos', 'acrescimos_loja_ui')) {
+            $rules['acrescimos_loja_ui'] = ['nullable', 'string', Rule::in([
+                Produto::ACRESCIMO_LOJA_UI_STEPPER,
+                Produto::ACRESCIMO_LOJA_UI_CHECKBOX,
+            ])];
+        }
+
         $data = $request->validate($rules);
 
         $data['visivel_loja'] = $request->boolean('visivel_loja');
@@ -294,9 +301,37 @@ class ProdutoController extends Controller
             }
         }
 
+        $this->aplicarAcrescimosLojaUi($request, $data, $produto);
+
         unset($data['foto'], $data['ingrediente_nomes'], $data['ingrediente_foto_atual'], $data['ingrediente_fotos']);
 
         return $data;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function aplicarAcrescimosLojaUi(Request $request, array &$data, ?Produto $produto): void
+    {
+        if (! Schema::hasColumn('produtos', 'acrescimos_loja_ui')) {
+            return;
+        }
+
+        $v = $request->input('acrescimos_loja_ui');
+        if (in_array($v, [Produto::ACRESCIMO_LOJA_UI_STEPPER, Produto::ACRESCIMO_LOJA_UI_CHECKBOX], true)) {
+            $data['acrescimos_loja_ui'] = $v;
+
+            return;
+        }
+
+        if ($produto !== null) {
+            $prev = $produto->getAttributes()['acrescimos_loja_ui'] ?? null;
+            $data['acrescimos_loja_ui'] = in_array($prev, [Produto::ACRESCIMO_LOJA_UI_STEPPER, Produto::ACRESCIMO_LOJA_UI_CHECKBOX], true)
+                ? $prev
+                : Produto::ACRESCIMO_LOJA_UI_STEPPER;
+        } else {
+            $data['acrescimos_loja_ui'] = Produto::ACRESCIMO_LOJA_UI_STEPPER;
+        }
     }
 
     /**

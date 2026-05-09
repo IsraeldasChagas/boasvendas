@@ -839,6 +839,12 @@ class PublicoController extends Controller
         }
         ksort($mapFiltrado);
 
+        if ($p->modoAcrescimosNaLoja() === Produto::ACRESCIMO_LOJA_UI_CHECKBOX) {
+            foreach ($mapFiltrado as $aid => $q) {
+                $mapFiltrado[$aid] = ((int) $q > 0) ? 1 : 0;
+            }
+        }
+
         $mapOk = array_filter($mapFiltrado, fn (int $q) => $q > 0);
 
         if ($temLimite) {
