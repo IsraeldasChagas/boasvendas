@@ -43,24 +43,6 @@
                     $minEsc = $colEscolhas ? $produto->acrescimo_escolhas_min : null;
                     $maxEsc = $colEscolhas ? $produto->acrescimo_escolhas_max : null;
                     $temLimiteAcrescimo = $produto->permite_adicionais && $acres->isNotEmpty() && ($minEsc !== null || $maxEsc !== null);
-                    $txtRegraOpcoes = '';
-                    $msgAlertaTotalAcrescimos = '';
-                    if ($temLimiteAcrescimo) {
-                        $mi = $minEsc !== null ? (int) $minEsc : null;
-                        $ma = $maxEsc !== null ? (int) $maxEsc : null;
-                        if ($mi !== null && $ma !== null && $mi === $ma) {
-                            $txtRegraOpcoes = 'Escolha exatamente '.$mi.' '.($mi === 1 ? 'unidade' : 'unidades').' no total (somando as quantidades abaixo).';
-                        } elseif ($mi !== null && $ma !== null) {
-                            $txtRegraOpcoes = 'Escolha entre '.$mi.' e '.$ma.' unidades no total (somando as quantidades abaixo).';
-                        } elseif ($mi !== null) {
-                            $txtRegraOpcoes = 'Escolha no mínimo '.$mi.' '.($mi === 1 ? 'unidade' : 'unidades').' no total (somando as quantidades abaixo).';
-                        } elseif ($ma !== null) {
-                            $txtRegraOpcoes = 'Escolha no máximo '.$ma.' '.($ma === 1 ? 'unidade' : 'unidades').' no total (somando as quantidades abaixo).';
-                        }
-                        if ($txtRegraOpcoes !== '') {
-                            $msgAlertaTotalAcrescimos = $txtRegraOpcoes.' Ajuste as quantidades e tente de novo.';
-                        }
-                    }
                 @endphp
                 <p class="h4 text-success mb-1">R$ {{ number_format((float) $produto->preco, 2, ',', '.') }}</p>
                 @if ($produto->estoque !== null)
@@ -90,8 +72,11 @@
                         @if ($temPersonalizar)
                             @php
                                 $limitesNoCard = [];
+                                if ($temLimiteAcrescimo && ($minEsc !== null || $maxEsc !== null)) {
+                                    $limitesNoCard[] = 'Opções — mín. '.($minEsc ?? '—').' · máx. '.($maxEsc ?? '—');
+                                }
                                 if ($temRetirarIng) {
-                                    $limitesNoCard[] = 'Ingredientes — no máx. '.$maxRet.' para retirar';
+                                    $limitesNoCard[] = 'Ingredientes — mín. 0 · máx. '.$maxRet;
                                 }
                             @endphp
                             <div class="vf-card p-3 mb-3 vf-card-personalizar-produto">
@@ -107,20 +92,16 @@
                                 </div>
 
                                 @if ($produto->permite_adicionais && $acres->isNotEmpty())
-                                    <p class="fw-semibold mb-1">Opções</p>
-                                    @if ($txtRegraOpcoes !== '')
-                                        <p class="small text-body-secondary mb-2" id="vf-opcoes-regra-acrescimos">{{ $txtRegraOpcoes }}</p>
+                                    @if ($temLimiteAcrescimo && $minEsc !== null && $maxEsc !== null && (int) $minEsc === (int) $maxEsc)
+                                        <p class="fw-semibold mb-2">Escolha {{ $minEsc }} opções</p>
+                                    @else
+                                        <p class="fw-semibold mb-2">Opções</p>
                                     @endif
                                     <div class="vf-personalizar-grid vf-acrescimo-stepper-grid mb-1"
                                         id="vf-acrescimos-stepper"
                                         data-usa-limite="{{ $temLimiteAcrescimo ? '1' : '0' }}"
                                         data-min="{{ $temLimiteAcrescimo && $minEsc !== null ? (int) $minEsc : 0 }}"
-                                        data-max="{{ $temLimiteAcrescimo && $maxEsc !== null ? (int) $maxEsc : 99999 }}"
-                                        @if ($txtRegraOpcoes !== '')
-                                            aria-describedby="vf-opcoes-regra-acrescimos"
-                                            data-msg-validacao="{{ e($msgAlertaTotalAcrescimos) }}"
-                                        @endif
-                                        >
+                                        data-max="{{ $temLimiteAcrescimo && $maxEsc !== null ? (int) $maxEsc : 99999 }}">
                                         @foreach ($acres as $ad)
                                             <div class="vf-escolha-card" data-ad-id="{{ $ad->id }}">
                                                 <div class="vf-escolha-card-inner">
@@ -275,8 +256,7 @@
                             var s = soma();
                             if (s < min || s > max) {
                                 e.preventDefault();
-                                var custom = wrap.getAttribute('data-msg-validacao');
-                                alert(custom && custom.length ? custom : ('A soma das opções deve ficar entre ' + min + ' e ' + max + '.'));
+                                alert('Escolha entre ' + min + ' e ' + max + ' opções de acréscimo (somando as quantidades).');
                                 return false;
                             }
                         });

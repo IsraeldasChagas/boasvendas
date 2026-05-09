@@ -86,21 +86,20 @@
                             </div>
                             @error('adicional_ids')<div class="text-danger small">{{ $message }}</div>@enderror
                             @if (\Illuminate\Support\Facades\Schema::hasColumn('produtos', 'acrescimo_escolhas_min'))
-                                <p class="fw-semibold small mt-3 mb-2">Limites das opções pagas na vitrine</p>
-                                <p class="small text-muted mb-2">Estes valores são <strong>salvos neste produto</strong> e aparecem na loja em <strong>Personalizar</strong>, junto às opções de acréscimo.</p>
-                                <div class="row g-2">
+                                <div class="row g-2 mt-3">
                                     <div class="col-md-4">
-                                        <label class="form-label" for="acrescimo_escolhas_min">Mín. escolhas (acréscimos)</label>
-                                        <input type="number" class="form-control @error('acrescimo_escolhas_min') is-invalid @enderror" id="acrescimo_escolhas_min" name="acrescimo_escolhas_min" value="{{ old('acrescimo_escolhas_min', $produto->acrescimo_escolhas_min) }}" min="0" max="999" placeholder="Opcional">
+                                        <label class="form-label" for="acrescimo_escolhas_min">Mínimo neste produto</label>
+                                        <input type="number" class="form-control @error('acrescimo_escolhas_min') is-invalid @enderror" id="acrescimo_escolhas_min" name="acrescimo_escolhas_min" value="{{ old('acrescimo_escolhas_min', $produto->acrescimo_escolhas_min) }}" min="0" max="999">
                                         @error('acrescimo_escolhas_min')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        <div class="form-text">Total de acréscimos (soma das quantidades). Em branco = sem mínimo na vitrine.</div>
                                     </div>
                                     <div class="col-md-4">
-                                        <label class="form-label" for="acrescimo_escolhas_max">Máx. escolhas (acréscimos)</label>
-                                        <input type="number" class="form-control @error('acrescimo_escolhas_max') is-invalid @enderror" id="acrescimo_escolhas_max" name="acrescimo_escolhas_max" value="{{ old('acrescimo_escolhas_max', $produto->acrescimo_escolhas_max) }}" min="0" max="999" placeholder="Opcional">
+                                        <label class="form-label" for="acrescimo_escolhas_max">Máximo neste produto</label>
+                                        <input type="number" class="form-control @error('acrescimo_escolhas_max') is-invalid @enderror" id="acrescimo_escolhas_max" name="acrescimo_escolhas_max" value="{{ old('acrescimo_escolhas_max', $produto->acrescimo_escolhas_max) }}" min="0" max="999">
                                         @error('acrescimo_escolhas_max')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        <div class="form-text">Total de acréscimos (soma das quantidades). Em branco = sem máximo na vitrine.</div>
                                     </div>
                                 </div>
-                                <p class="small text-muted mb-0">Total de unidades somadas nas opções (ex.: “escolha 3”). Deixe em branco para acréscimos opcionais sem contagem mínima/máxima na vitrine.</p>
                             @endif
                 </div>
                 <div class="col-12">
