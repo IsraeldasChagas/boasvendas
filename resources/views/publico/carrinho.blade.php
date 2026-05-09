@@ -49,7 +49,20 @@
                                                     @endif
                                                     <div>
                                                         <a href="{{ route('publico.produto', ['slug' => $slug, 'produto_id' => $p->id]) }}" class="text-decoration-none text-dark">{{ $p->nome }}</a>
-                                                        @include('partials.opcoes-pedido-item', ['opcoesLinha' => $l['opcoes'] === [] ? null : ['adicionais' => $l['opcoes']]])
+                                                        @php
+                                                            $__opShow = [];
+                                                            if (($l['opcoes'] ?? []) !== []) {
+                                                                $__opShow['adicionais'] = $l['opcoes'];
+                                                            }
+                                                            if (($l['observacao'] ?? '') !== '') {
+                                                                $__opShow['observacao'] = $l['observacao'];
+                                                            }
+                                                            $__nota = (int) ($l['nota_produto'] ?? 0);
+                                                            if ($__nota >= 1 && $__nota <= 5) {
+                                                                $__opShow['nota_produto'] = $__nota;
+                                                            }
+                                                        @endphp
+                                                        @include('partials.opcoes-pedido-item', ['opcoesLinha' => $__opShow === [] ? null : $__opShow])
                                                     </div>
                                                 </div>
                                             </td>

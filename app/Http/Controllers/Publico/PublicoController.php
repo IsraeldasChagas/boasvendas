@@ -58,7 +58,7 @@ class PublicoController extends Controller
     }
 
     /**
-     * @return list<array{produto_id: int, quantidade: int, adicional_qtd: array<int, int>, retirar_qtd: array<int, int>, observacao: string}>
+     * @return list<array{produto_id: int, quantidade: int, adicional_qtd: array<int, int>, retirar_qtd: array<int, int>, observacao: string, nota_produto: int}>
      */
     private function getCarrinhoLines(string $slug): array
     {
@@ -79,6 +79,7 @@ class PublicoController extends Controller
                     'adicional_qtd' => $this->linhaParaMapaAdicionalQtd($line),
                     'retirar_qtd' => $this->linhaParaMapaRetirarQtd($line),
                     'observacao' => $this->normalizarObservacao($line['observacao'] ?? null),
+                    'nota_produto' => $this->normalizarNotaProduto($line['nota_produto'] ?? null),
                 ];
             }
 
@@ -100,6 +101,7 @@ class PublicoController extends Controller
                 'adicional_qtd' => [],
                 'retirar_qtd' => [],
                 'observacao' => '',
+                'nota_produto' => 0,
             ];
         }
 
@@ -239,7 +241,7 @@ class PublicoController extends Controller
      * @param  array<int, int>  $adicionalQtdMap
      * @param  array<int, int>  $retirarQtdMap
      */
-    private function fingerprintLinha(int $produtoId, array $adicionalQtdMap, array $retirarQtdMap, string $observacaoNormalizada): string
+    private function fingerprintLinha(int $produtoId, array $adicionalQtdMap, array $retirarQtdMap, string $observacaoNormalizada, int $notaProduto = 0): string
     {
         ksort($adicionalQtdMap);
         ksort($retirarQtdMap);
@@ -260,7 +262,9 @@ class PublicoController extends Controller
             }
         }
 
-        return $produtoId.'|a:'.implode(',', $partsA).'|r:'.implode(',', $partsR).'|'.sha1($observacaoNormalizada);
+        $notaProduto = max(0, min(5, $notaProduto));
+
+        return $produtoId.'|a:'.implode(',', $partsA).'|r:'.implode(',', $partsR).'|'.sha1($observacaoNormalizada).'|n:'.$notaProduto;
     }
 
     private function normalizarObservacao(?string $text): string
@@ -280,6 +284,19 @@ class PublicoController extends Controller
         return $t;
     }
 
+    private function normalizarNotaProduto(mixed $v): int
+    {
+        if ($v === null || $v === '' || $v === false) {
+            return 0;
+        }
+        $n = (int) $v;
+        if ($n < 1 || $n > 5) {
+            return 0;
+        }
+
+        return $n;
+    }
+
     private function setCarrinhoLines(string $slug, array $lines): void
     {
         session([$this->carrinhoKey($slug) => array_values($lines)]);
@@ -294,7 +311,8 @@ class PublicoController extends Controller
      *   opcoes: list<array{id:int,nome:string,tipo:string,preco:float,quantidade?:int}>,
      *   preco_unitario: float,
      *   subtotal: float,
-     *   observacao: string
+     *   observacao: string,
+     *   nota_produto: int
      * }>
      */
     private function linhasCarrinho(Empresa $empresa, string $slug): array
@@ -387,6 +405,7 @@ class PublicoController extends Controller
             }
 
             $obsLinha = $this->normalizarObservacao($line['observacao'] ?? null);
+            $notaLinha = $this->normalizarNotaProduto($line['nota_produto'] ?? null);
 
             $opcoes = [];
             $extraUnit = 0.0;
@@ -444,6 +463,7 @@ class PublicoController extends Controller
                 'adicional_qtd' => $mapOk,
                 'retirar_qtd' => $retOk,
                 'observacao' => $obsLinha,
+                'nota_produto' => $notaLinha,
             ];
 
             $linhas[] = [
@@ -455,6 +475,7 @@ class PublicoController extends Controller
                 'preco_unitario' => $precoUnit,
                 'subtotal' => $subtotal,
                 'observacao' => $obsLinha,
+                'nota_produto' => $notaLinha,
             ];
             $idx++;
         }
@@ -750,10 +771,12 @@ class PublicoController extends Controller
             'retirar_qtd' => ['nullable', 'array'],
             'retirar_qtd.*' => ['nullable', 'integer', 'min:0', 'max:999'],
             'observacao' => ['nullable', 'string', 'max:500'],
+            'nota_produto' => ['nullable', 'integer', 'min:1', 'max:5'],
         ]);
 
         $qty = $data['quantidade'] ?? 1;
         $obsNorm = $this->normalizarObservacao($data['observacao'] ?? null);
+        $notaNorm = $this->normalizarNotaProduto($data['nota_produto'] ?? null);
 
         $p = Produto::query()
             ->where('empresa_id', $empresa->id)
@@ -876,15 +899,17 @@ class PublicoController extends Controller
         }
 
         $lines = $this->getCarrinhoLines($slug);
-        $fp = $this->fingerprintLinha((int) $p->id, $mapOk, $retOk, $obsNorm);
+        $fp = $this->fingerprintLinha((int) $p->id, $mapOk, $retOk, $obsNorm, $notaNorm);
         $found = false;
         foreach ($lines as $i => $line) {
             $lineObs = $this->normalizarObservacao($line['observacao'] ?? null);
+            $lineNota = $this->normalizarNotaProduto($line['nota_produto'] ?? null);
             $lineFp = $this->fingerprintLinha(
                 (int) $line['produto_id'],
                 $this->linhaParaMapaAdicionalQtd($line),
                 $this->linhaParaMapaRetirarQtd($line),
-                $lineObs
+                $lineObs,
+                $lineNota
             );
             if ($lineFp === $fp) {
                 $lines[$i]['quantidade'] = (int) $lines[$i]['quantidade'] + $qty;
@@ -900,6 +925,7 @@ class PublicoController extends Controller
                 'adicional_qtd' => $mapOk,
                 'retirar_qtd' => $retOk,
                 'observacao' => $obsNorm,
+                'nota_produto' => $notaNorm,
             ];
         }
 
@@ -1239,6 +1265,10 @@ class PublicoController extends Controller
                 }
                 if (($l['observacao'] ?? '') !== '') {
                     $opLinha['observacao'] = $l['observacao'];
+                }
+                $notaItem = (int) ($l['nota_produto'] ?? 0);
+                if ($notaItem >= 1 && $notaItem <= 5) {
+                    $opLinha['nota_produto'] = $notaItem;
                 }
 
                 PedidoItem::query()->create([

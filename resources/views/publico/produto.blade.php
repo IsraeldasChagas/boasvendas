@@ -31,6 +31,27 @@
             </div>
             <div class="col-md-6">
                 <h1 class="h3 fw-bold mt-2">{{ $produto->nome }}</h1>
+                @if ($produto->estoque === null || $produto->estoque > 0)
+                    <div class="vf-produto-estrelas mb-3" id="vf-produto-estrelas-wrap">
+                        <span class="small text-muted d-block mb-1">Sua nota <span class="fw-normal">(opcional)</span></span>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <div class="d-inline-flex align-items-center vf-estrelas-grupo" role="group" aria-label="Dar de 1 a 5 estrelas ao produto">
+                                @for ($s = 1; $s <= 5; $s++)
+                                    <button type="button" class="btn btn-link p-1 lh-1 vf-estrela-produto-btn text-warning text-decoration-none border-0"
+                                        data-vf-estrela="{{ $s }}"
+                                        aria-label="{{ $s }} estrela{{ $s > 1 ? 's' : '' }}">
+                                        <i class="bi bi-star vf-estrela-produto-ico fs-5" aria-hidden="true"></i>
+                                    </button>
+                                @endfor
+                            </div>
+                            <button type="button" class="btn btn-link btn-sm text-muted p-0 align-baseline vf-estrela-limpar" id="vf_estrela_limpar">Limpar</button>
+                        </div>
+                        <input type="hidden" name="nota_produto" id="vf_nota_produto" form="vf-form-carrinho-produto" value="{{ old('nota_produto') }}">
+                        @error('nota_produto')
+                            <div class="small text-danger mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+                @endif
                 <p class="text-muted" style="white-space: pre-wrap;">{{ $produto->descricao !== null && $produto->descricao !== '' ? $produto->descricao : 'Sem descrição cadastrada.' }}</p>
                 @php
                     use Illuminate\Support\Facades\Schema;
@@ -68,7 +89,7 @@
                             </ul>
                         </div>
                     @endif
-                    <form action="{{ route('publico.carrinho.adicionar', ['slug' => $slug]) }}" method="post" class="mb-4 vf-form-carrinho-produto">
+                    <form id="vf-form-carrinho-produto" action="{{ route('publico.carrinho.adicionar', ['slug' => $slug]) }}" method="post" class="mb-4 vf-form-carrinho-produto">
                         @csrf
                         <input type="hidden" name="produto_id" value="{{ $produto->id }}">
 
@@ -188,11 +209,6 @@
                         @endif
 
                         <div class="mb-3 {{ ($temPersonalizar ?? false) ? 'mt-1' : 'mt-2' }}">
-                            <div class="text-warning lh-1 mb-2" id="observacao-estrelas" role="img" aria-label="Nível de uso do limite (5 estrelas = até 500 caracteres)">
-                                @for ($i = 0; $i < 5; $i++)
-                                    <i class="bi bi-star obs-estrela-vf" aria-hidden="true"></i>
-                                @endfor
-                            </div>
                             <label class="form-label small text-muted mb-1" for="observacao_produto">Observação <span class="fw-normal">(opcional)</span></label>
                             <textarea
                                 class="form-control @error('observacao') is-invalid @enderror"
@@ -200,7 +216,7 @@
                                 id="observacao_produto"
                                 rows="5"
                                 maxlength="500"
-                                aria-describedby="observacao-estrelas observacao_limite_ajuda"
+                                aria-describedby="observacao_limite_ajuda"
                                 placeholder="Ex.: ponto da carne, sem cebola, embalar separado…">{{ old('observacao') }}</textarea>
                             @error('observacao')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             <div id="observacao_limite_ajuda" class="form-text mt-1">
@@ -227,25 +243,57 @@
             <script>
                 (function () {
                     var ta = document.getElementById('observacao_produto');
-                    if (!ta) return;
-                    var countEl = document.getElementById('observacao-count');
-                    var wrap = document.getElementById('observacao-estrelas');
-                    var stars = wrap ? wrap.querySelectorAll('.obs-estrela-vf') : [];
-
-                    function syncObservacaoLimite() {
-                        var len = ta.value.length;
-                        if (countEl) {
-                            countEl.textContent = String(len);
+                    if (ta) {
+                        var countEl = document.getElementById('observacao-count');
+                        function syncObservacaoContagem() {
+                            if (countEl) {
+                                countEl.textContent = String(ta.value.length);
+                            }
                         }
-                        var filled = len === 0 ? 0 : Math.min(5, Math.ceil(len / 100));
-                        for (var i = 0; i < stars.length; i++) {
-                            stars[i].classList.toggle('bi-star-fill', i < filled);
-                            stars[i].classList.toggle('bi-star', i >= filled);
-                        }
+                        ta.addEventListener('input', syncObservacaoContagem);
+                        syncObservacaoContagem();
                     }
 
-                    ta.addEventListener('input', syncObservacaoLimite);
-                    syncObservacaoLimite();
+                    var hid = document.getElementById('vf_nota_produto');
+                    var btns = document.querySelectorAll('.vf-estrela-produto-btn');
+                    var limpar = document.getElementById('vf_estrela_limpar');
+                    if (hid && btns.length) {
+                        function paintEstrelas(valor) {
+                            var n = parseInt(String(valor || ''), 10);
+                            if (isNaN(n) || n < 1 || n > 5) {
+                                n = 0;
+                            }
+                            btns.forEach(function (btn, i) {
+                                var alvo = i + 1;
+                                var ico = btn.querySelector('.vf-estrela-produto-ico');
+                                var ligado = n >= 1 && alvo <= n;
+                                if (ico) {
+                                    ico.classList.toggle('bi-star-fill', ligado);
+                                    ico.classList.toggle('bi-star', !ligado);
+                                }
+                            });
+                        }
+
+                        btns.forEach(function (btn) {
+                            btn.addEventListener('click', function () {
+                                var val = parseInt(btn.getAttribute('data-vf-estrela'), 10);
+                                var cur = parseInt(String(hid.value || ''), 10);
+                                if (!isNaN(cur) && cur === val) {
+                                    hid.value = '';
+                                } else {
+                                    hid.value = String(val);
+                                }
+                                paintEstrelas(hid.value);
+                            });
+                        });
+                        if (limpar) {
+                            limpar.addEventListener('click', function () {
+                                hid.value = '';
+                                paintEstrelas(0);
+                            });
+                        }
+                        paintEstrelas(hid.value);
+                    }
                 })();
             </script>
         @endpush
