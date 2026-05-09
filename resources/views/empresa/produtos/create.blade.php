@@ -19,9 +19,6 @@
                             $uiRetirarIng = old('ingredientes_retirar_ui', \App\Models\Produto::ING_RETIRAR_UI_STEPPER);
                         }
                     @endphp
-                    @if ($uiRetirarIng !== null)
-                        @include('partials.empresa.produto-ingredientes-retirar-ui', ['valorUi' => $uiRetirarIng, 'section' => 'hidden'])
-                    @endif
                     <div class="row g-3">
                         <div class="col-12">
                             <label class="form-label" for="foto">Foto do produto</label>
@@ -66,7 +63,7 @@
                             @error('descricao')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         @if ($uiRetirarIng !== null)
-                            @include('partials.empresa.produto-ingredientes-retirar-ui', ['valorUi' => $uiRetirarIng, 'section' => 'radios'])
+                            @include('partials.empresa.produto-ingredientes-retirar-ui', ['valorUi' => $uiRetirarIng])
                         @endif
                         @php
                             if (old('ingrediente_nomes') !== null) {
