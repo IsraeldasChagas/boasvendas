@@ -59,7 +59,16 @@
                 @endif
 
                 @if ($produto->estoque === null || $produto->estoque > 0)
-                    <form action="{{ route('publico.carrinho.adicionar', ['slug' => $slug]) }}" method="post" class="mb-4">
+                    @if ($errors->any())
+                        <div class="alert alert-danger small mb-3">
+                            <ul class="mb-0 ps-3">
+                                @foreach ($errors->all() as $err)
+                                    <li>{{ $err }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+                    <form action="{{ route('publico.carrinho.adicionar', ['slug' => $slug]) }}" method="post" class="mb-4 vf-form-carrinho-produto">
                         @csrf
                         <input type="hidden" name="produto_id" value="{{ $produto->id }}">
 
@@ -154,18 +163,21 @@
         @push('scripts')
             <script>
                 (function () {
-                    const form = document.querySelector('form[action*="carrinho.adicionar"]');
+                    var form = document.querySelector('form.vf-form-carrinho-produto');
+                    if (!form) {
+                        form = document.querySelector('form[action*="carrinho.adicionar"]');
+                    }
                     if (!form) return;
 
-                    const wrap = document.getElementById('vf-acrescimos-stepper');
+                    var wrap = document.getElementById('vf-acrescimos-stepper');
                     if (wrap) {
-                        const usaLimite = wrap.dataset.usaLimite === '1';
-                        const min = parseInt(wrap.dataset.min || '0', 10);
-                        const max = parseInt(wrap.dataset.max || '99999', 10);
-                        const maxPorOpcao = usaLimite ? 999 : 1;
+                        var usaLimite = wrap.getAttribute('data-usa-limite') === '1';
+                        var min = parseInt(wrap.getAttribute('data-min') || '0', 10);
+                        var max = parseInt(wrap.getAttribute('data-max') || '99999', 10);
+                        var maxPorOpcao = usaLimite ? 999 : 1;
 
                         function soma() {
-                            let t = 0;
+                            var t = 0;
                             wrap.querySelectorAll('.vf-acrescimo-qty-input').forEach(function (inp) {
                                 t += parseInt(inp.value || '0', 10) || 0;
                             });
@@ -173,16 +185,16 @@
                         }
 
                         function atualizarCard(card) {
-                            const inp = card.querySelector('.vf-acrescimo-qty-input');
-                            const q = parseInt(inp.value || '0', 10) || 0;
-                            const disp = card.querySelector('.vf-escolha-qty-disp');
-                            const btnMais = card.querySelector('.vf-escolha-btn--mais');
-                            const btnMenos = card.querySelector('.vf-escolha-btn--menos');
+                            var inp = card.querySelector('.vf-acrescimo-qty-input');
+                            var q = parseInt(inp.value || '0', 10) || 0;
+                            var disp = card.querySelector('.vf-escolha-qty-disp');
+                            var btnMais = card.querySelector('.vf-escolha-btn--mais');
+                            var btnMenos = card.querySelector('.vf-escolha-btn--menos');
                             if (disp) disp.textContent = String(q);
                             card.classList.toggle('vf-escolha-card--ativo', q > 0);
                             if (btnMenos) btnMenos.disabled = q < 1;
-                            const total = soma();
-                            let podeMais = q < maxPorOpcao;
+                            var total = soma();
+                            var podeMais = q < maxPorOpcao;
                             if (usaLimite && podeMais && total >= max) {
                                 podeMais = false;
                             }
@@ -193,19 +205,19 @@
                         }
 
                         wrap.querySelectorAll('.vf-escolha-card').forEach(function (card) {
-                            const inp = card.querySelector('.vf-acrescimo-qty-input');
-                            const btnMais = card.querySelector('.vf-escolha-btn--mais');
-                            const btnMenos = card.querySelector('.vf-escolha-btn--menos');
+                            var inp = card.querySelector('.vf-acrescimo-qty-input');
+                            var btnMais = card.querySelector('.vf-escolha-btn--mais');
+                            var btnMenos = card.querySelector('.vf-escolha-btn--menos');
 
                             function setQ(novo) {
-                                let q = Math.max(0, parseInt(novo, 10) || 0);
+                                var q = Math.max(0, parseInt(novo, 10) || 0);
                                 q = Math.min(q, maxPorOpcao);
                                 inp.value = String(q);
                                 wrap.querySelectorAll('.vf-escolha-card').forEach(atualizarCard);
                             }
 
                             function tentarMais() {
-                                const q = parseInt(inp.value || '0', 10) || 0;
+                                var q = parseInt(inp.value || '0', 10) || 0;
                                 if (!usaLimite) {
                                     if (q >= 1) return;
                                     setQ(1);
@@ -224,7 +236,7 @@
                             }
                             if (btnMenos) {
                                 btnMenos.addEventListener('click', function () {
-                                    const q = parseInt(inp.value || '0', 10) || 0;
+                                    var q = parseInt(inp.value || '0', 10) || 0;
                                     setQ(q - 1);
                                 });
                             }
@@ -233,7 +245,7 @@
 
                         form.addEventListener('submit', function (e) {
                             if (!usaLimite) return;
-                            const s = soma();
+                            var s = soma();
                             if (s < min || s > max) {
                                 e.preventDefault();
                                 alert('Escolha entre ' + min + ' e ' + max + ' opções de acréscimo (somando as quantidades).');
@@ -242,11 +254,12 @@
                         });
                     }
 
-                    const maxRet = parseInt(form.querySelector('.vf-retirar-ing')?.dataset.max || '0', 10);
+                    var firstRet = form.querySelector('.vf-retirar-ing');
+                    var maxRet = firstRet ? parseInt(firstRet.getAttribute('data-max') || '0', 10) : 0;
                     if (maxRet > 0) {
                         form.addEventListener('change', function (e) {
                             if (!e.target.classList.contains('vf-retirar-ing')) return;
-                            const checked = form.querySelectorAll('.vf-retirar-ing:checked');
+                            var checked = form.querySelectorAll('.vf-retirar-ing:checked');
                             if (checked.length > maxRet) {
                                 e.target.checked = false;
                                 alert('Você pode escolher no máximo ' + maxRet + ' ingrediente(s) para retirar.');

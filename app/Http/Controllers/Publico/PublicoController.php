@@ -655,13 +655,23 @@ class PublicoController extends Controller
     {
         $empresa = $this->empresaLojaAtiva($slug);
 
+        $adicionalQtdRaw = $request->input('adicional_qtd', []);
+        if (is_array($adicionalQtdRaw)) {
+            foreach ($adicionalQtdRaw as $kid => $qv) {
+                if ($qv === '' || $qv === null) {
+                    $adicionalQtdRaw[$kid] = 0;
+                }
+            }
+            $request->merge(['adicional_qtd' => $adicionalQtdRaw]);
+        }
+
         $data = $request->validate([
             'produto_id' => ['required', 'integer'],
             'quantidade' => ['nullable', 'integer', 'min:1', 'max:99'],
             'adicional_ids' => ['nullable', 'array'],
             'adicional_ids.*' => ['integer'],
             'adicional_qtd' => ['nullable', 'array'],
-            'adicional_qtd.*' => ['integer', 'min:0', 'max:999'],
+            'adicional_qtd.*' => ['nullable', 'integer', 'min:0', 'max:999'],
             'retirar_ingrediente_ids' => ['nullable', 'array'],
             'retirar_ingrediente_ids.*' => ['integer'],
             'observacao' => ['nullable', 'string', 'max:500'],
