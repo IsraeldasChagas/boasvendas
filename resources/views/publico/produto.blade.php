@@ -89,7 +89,7 @@
                     use Illuminate\Support\Facades\Schema;
                     $acres = $produto->adicionais->where('tipo', \App\Models\Adicional::TIPO_ACRESCENTAR);
                     $temAcrescimo = $produto->permite_adicionais && $acres->isNotEmpty();
-                    $maxRet = (int) ($produto->max_ingredientes_retirar ?? 0);
+                    $maxRet = $produto->limiteRetiradaIngredientesNaLoja();
                     $temRetirarIng = $produto->ingredientes->isNotEmpty() && $maxRet > 0;
                     $temPersonalizar = ($produto->permite_adicionais && $acres->isNotEmpty()) || $temRetirarIng;
                     $colEscolhas = Schema::hasColumn('produtos', 'acrescimo_escolhas_min');

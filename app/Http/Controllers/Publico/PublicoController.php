@@ -393,7 +393,7 @@ class PublicoController extends Controller
                 $retFiltrado[$rid] = ($retFiltrado[$rid] ?? 0) + $rq;
             }
             ksort($retFiltrado);
-            $maxR = (int) ($p->max_ingredientes_retirar ?? 0);
+            $maxR = $p->limiteRetiradaIngredientesNaLoja();
             if ($p->ingredientes->isEmpty() || $maxR === 0) {
                 $retOk = [];
             } else {
@@ -884,7 +884,7 @@ class PublicoController extends Controller
         }
         ksort($retOk);
 
-        $maxR = (int) ($p->max_ingredientes_retirar ?? 0);
+        $maxR = $p->limiteRetiradaIngredientesNaLoja();
         if ($p->ingredientes->isEmpty() || $maxR === 0) {
             $retOk = [];
         } else {

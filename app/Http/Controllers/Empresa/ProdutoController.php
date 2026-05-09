@@ -155,9 +155,9 @@ class ProdutoController extends Controller
         $itensIng = $this->coletaIngredientesDoRequest($request, $empresa);
         $this->validarLimiteRetirarIngredientes($request, $itensIng, $produto);
         if (count($itensIng) > 0) {
-            $data['max_ingredientes_retirar'] = $request->has('max_ingredientes_retirar')
-                ? (int) $request->input('max_ingredientes_retirar')
-                : (int) $produto->max_ingredientes_retirar;
+            $data['max_ingredientes_retirar'] = array_key_exists('max_ingredientes_retirar', $request->all())
+                ? max(0, min(255, (int) $request->input('max_ingredientes_retirar')))
+                : $produto->max_ingredientes_retirar;
         } else {
             $data['max_ingredientes_retirar'] = null;
         }

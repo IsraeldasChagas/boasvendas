@@ -97,6 +97,32 @@ class Produto extends Model
     }
 
     /**
+     * Total permitido para retirada na loja (soma das quantidades nos ingredientes).
+     * Se max_ingredientes_retirar é null mas há ingredientes cadastrados, usa quantidade de ingredientes (padrão),
+     * para não tratar “não configurado” como zero na vitrine.
+     */
+    public function limiteRetiradaIngredientesNaLoja(): int
+    {
+        $n = $this->relationLoaded('ingredientes')
+            ? $this->ingredientes->count()
+            : (int) $this->ingredientes()->count();
+
+        if ($n === 0) {
+            return 0;
+        }
+
+        $m = $this->max_ingredientes_retirar;
+
+        if ($m === null) {
+            return min(99, $n);
+        }
+
+        $mi = max(0, (int) $m);
+
+        return min($mi, $n, 255);
+    }
+
+    /**
      * Caminho absoluto no disco do arquivo de foto (public/uploads ou storage/app/public).
      */
     public function resolveFotoAbsolutePath(): ?string
