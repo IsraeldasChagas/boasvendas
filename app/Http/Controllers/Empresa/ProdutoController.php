@@ -226,16 +226,26 @@ class ProdutoController extends Controller
         $data['permite_adicionais'] = $request->boolean('permite_adicionais');
 
         if (Schema::hasColumn('produtos', 'acrescimo_escolhas_min')) {
-            $mn = $data['acrescimo_escolhas_min'] ?? null;
-            $mx = $data['acrescimo_escolhas_max'] ?? null;
-            $data['acrescimo_escolhas_min'] = ($mn === null || $mn === '') ? null : (int) $mn;
-            $data['acrescimo_escolhas_max'] = ($mx === null || $mx === '') ? null : (int) $mx;
-            if ($data['acrescimo_escolhas_min'] !== null && $data['acrescimo_escolhas_max'] !== null
-                && $data['acrescimo_escolhas_min'] > $data['acrescimo_escolhas_max']) {
+            $hadMin = array_key_exists('acrescimo_escolhas_min', $data);
+            $hadMax = array_key_exists('acrescimo_escolhas_max', $data);
+
+            if ($hadMin) {
+                $mn = $data['acrescimo_escolhas_min'];
+                $data['acrescimo_escolhas_min'] = ($mn === null || $mn === '') ? null : (int) $mn;
+            }
+            if ($hadMax) {
+                $mx = $data['acrescimo_escolhas_max'];
+                $data['acrescimo_escolhas_max'] = ($mx === null || $mx === '') ? null : (int) $mx;
+            }
+
+            $mnCompare = $hadMin ? $data['acrescimo_escolhas_min'] : $produto?->acrescimo_escolhas_min;
+            $mxCompare = $hadMax ? $data['acrescimo_escolhas_max'] : $produto?->acrescimo_escolhas_max;
+            if ($mnCompare !== null && $mxCompare !== null && $mnCompare > $mxCompare) {
                 throw ValidationException::withMessages([
                     'acrescimo_escolhas_max' => 'O máximo de escolhas deve ser maior ou igual ao mínimo.',
                 ]);
             }
+
             if (! $data['permite_adicionais']) {
                 $data['acrescimo_escolhas_min'] = null;
                 $data['acrescimo_escolhas_max'] = null;

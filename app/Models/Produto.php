@@ -37,9 +37,36 @@ class Produto extends Model
             'visivel_loja' => 'boolean',
             'ativo' => 'boolean',
             'permite_adicionais' => 'boolean',
-            'acrescimo_escolhas_min' => 'integer',
-            'acrescimo_escolhas_max' => 'integer',
         ];
+    }
+
+    /** Valor bruto do banco (nullable), sem cast para int que possa confundir null/0. */
+    public function getAcrescimoEscolhasMinAttribute(mixed $value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return (int) $value;
+    }
+
+    public function getAcrescimoEscolhasMaxAttribute(mixed $value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return (int) $value;
+    }
+
+    public function setAcrescimoEscolhasMinAttribute(mixed $value): void
+    {
+        $this->attributes['acrescimo_escolhas_min'] = ($value === '' || $value === null) ? null : (int) $value;
+    }
+
+    public function setAcrescimoEscolhasMaxAttribute(mixed $value): void
+    {
+        $this->attributes['acrescimo_escolhas_max'] = ($value === '' || $value === null) ? null : (int) $value;
     }
 
     public function empresa(): BelongsTo
