@@ -1,7 +1,7 @@
 {{--
   $adicionais: collection
   $produto: ?Produto — null no cadastro novo
-  $opcoesPagasAberto: bool — já revelado no servidor (edição / erro / old)
+  $opcoesPagasAberto: bool — só true quando há erro de validação nesses campos (painel aberto para corrigir)
 --}}
 @php
     $sel = old('adicional_ids', isset($produto)
@@ -21,19 +21,29 @@
 @endphp
 
 <div class="col-12 vf-opcoes-pagas-wrap">
-    @unless ($opcoesPagasAberto)
-        <p id="vf-adicionais-produto-dica" class="small text-muted mb-2">Adicionais são opcionais. Clique no botão para ver todas as opções cadastradas na sua empresa.</p>
+    {{-- Bloco inicial: um botão até você decidir abrir --}}
+    <div id="vf-adicionais-intro" class="{{ $opcoesPagasAberto ? 'd-none' : '' }}">
+        <p id="vf-adicionais-produto-dica" class="small text-muted mb-2">
+            As opções pagas ficam ocultas para deixar o formulário mais limpo. Clique para ver ou alterar adicionais deste produto.
+        </p>
         <button type="button"
             id="vf-btn-mostrar-adicionais-produto"
             class="btn btn-outline-secondary btn-sm mb-2"
-            aria-expanded="false"
+            aria-expanded="{{ $opcoesPagasAberto ? 'true' : 'false' }}"
             aria-controls="vf-opcoes-pagas-conteudo">
             <i class="bi bi-plus-circle me-1"></i>Ver adicionais disponíveis
         </button>
-    @endunless
+    </div>
 
     <div id="vf-opcoes-pagas-conteudo" class="{{ $opcoesPagasAberto ? '' : 'd-none' }}" role="region" aria-label="Adicionais do produto">
-        <p class="fw-semibold mb-2">Adicionais / opções pagas</p>
+        <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-2">
+            <p class="fw-semibold mb-0">Adicionais / opções pagas</p>
+            <button type="button"
+                id="vf-btn-recolher-adicionais-produto"
+                class="btn btn-link btn-sm text-secondary py-0 text-decoration-none">
+                <i class="bi bi-chevron-up me-1"></i>Recolher
+            </button>
+        </div>
 
         <fieldset id="vf-opcoes-pagas-fieldset" class="border-0 p-0 m-0" @disabled(!$opcoesPagasAberto)>
             <div class="form-check mb-2">
@@ -75,6 +85,9 @@
                     </div>
                 </div>
             @endif
+            <p class="small text-muted mt-2 mb-0">
+                <strong>Recolher</strong> só limpa a tela. Para <strong>salvar</strong> mudanças nos adicionais, envie o formulário com este bloco <strong>aberto</strong>.
+            </p>
         </fieldset>
     </div>
 </div>
@@ -83,19 +96,31 @@
     @push('scripts')
         <script>
             (function () {
-                var btn = document.getElementById('vf-btn-mostrar-adicionais-produto');
+                var wrap = document.querySelector('.vf-opcoes-pagas-wrap');
+                if (!wrap) return;
+                var intro = document.getElementById('vf-adicionais-intro');
+                var btnMostrar = document.getElementById('vf-btn-mostrar-adicionais-produto');
+                var btnRecolher = document.getElementById('vf-btn-recolher-adicionais-produto');
                 var conteudo = document.getElementById('vf-opcoes-pagas-conteudo');
                 var fs = document.getElementById('vf-opcoes-pagas-fieldset');
-                if (!btn || !conteudo || !fs) return;
+                if (!intro || !btnMostrar || !btnRecolher || !conteudo || !fs) return;
 
-                btn.addEventListener('click', function () {
+                function expandir() {
+                    intro.classList.add('d-none');
                     conteudo.classList.remove('d-none');
                     fs.disabled = false;
-                    btn.classList.add('d-none');
-                    var dica = document.getElementById('vf-adicionais-produto-dica');
-                    if (dica) dica.classList.add('d-none');
-                    btn.setAttribute('aria-expanded', 'true');
-                });
+                    btnMostrar.setAttribute('aria-expanded', 'true');
+                }
+
+                function recolher() {
+                    intro.classList.remove('d-none');
+                    conteudo.classList.add('d-none');
+                    fs.disabled = true;
+                    btnMostrar.setAttribute('aria-expanded', 'false');
+                }
+
+                btnMostrar.addEventListener('click', expandir);
+                btnRecolher.addEventListener('click', recolher);
             })();
         </script>
     @endpush

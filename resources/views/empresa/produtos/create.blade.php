@@ -100,10 +100,7 @@
                             $temErroOpcoesPagas = $errors->has('adicional_ids') || $errors->has('adicional_ids.*')
                                 || $errors->has('permite_adicionais')
                                 || $errors->has('acrescimo_escolhas_min') || $errors->has('acrescimo_escolhas_max');
-                            $oldAdIdsOpcoes = old('adicional_ids');
-                            $marcouAdicionalOpcoes = is_array($oldAdIdsOpcoes)
-                                && count(array_filter($oldAdIdsOpcoes, fn ($id) => (int) $id > 0)) > 0;
-                            $opcoesPagasAberto = $temErroOpcoesPagas || $marcouAdicionalOpcoes || (bool) old('permite_adicionais');
+                            $opcoesPagasAberto = $temErroOpcoesPagas;
                         @endphp
                         @include('partials.empresa.produto-opcoes-pagas-form', [
                             'adicionais' => $adicionais,
