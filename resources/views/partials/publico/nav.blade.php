@@ -8,12 +8,12 @@
     if (is_string($whatsDigits) && ($whatsDigits !== '') && (strlen($whatsDigits) === 10 || strlen($whatsDigits) === 11)) {
         $whatsDigits = '55'.$whatsDigits;
     }
-    // Não usar Schema::hasColumn aqui: em alguns hosts a checagem falha e some os ícones
-    // mesmo com as colunas e URLs corretas no banco. Ler direto do modelo.
     $igUrl = $empresa ? trim((string) ($empresa->instagram_url ?? '')) : '';
     $fbUrl = $empresa ? trim((string) ($empresa->facebook_url ?? '')) : '';
-    $temRedesTopo = ($igUrl !== '') || ($fbUrl !== '');
-    $temContatoTopo = ($enderecoLoja !== '') || ($whatsDigits !== '');
+    $temContatoTopo = ($enderecoLoja !== '')
+        || ($whatsDigits !== '')
+        || ($igUrl !== '')
+        || ($fbUrl !== '');
 @endphp
 <header class="vf-publico-header sticky-top shadow-sm">
     <div class="container py-2">
@@ -27,20 +27,6 @@
                 <span class="vf-store-name">{{ $nomeLoja }}</span>
             </a>
             <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                @if ($temRedesTopo)
-                    <span class="d-flex align-items-center gap-1 vf-publico-social" role="group" aria-label="Redes sociais">
-                        @if ($igUrl !== '')
-                            <a href="{{ $igUrl }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm vf-social-btn vf-social-btn--instagram" title="Instagram">
-                                <i class="bi bi-instagram"></i>
-                            </a>
-                        @endif
-                        @if ($fbUrl !== '')
-                            <a href="{{ $fbUrl }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm vf-social-btn vf-social-btn--facebook" title="Facebook">
-                                <i class="bi bi-facebook"></i>
-                            </a>
-                        @endif
-                    </span>
-                @endif
                 @if ($temContatoTopo)
                     <button class="btn btn-sm btn-outline-secondary" type="button"
                             data-bs-toggle="collapse" data-bs-target="#vf-store-info"
