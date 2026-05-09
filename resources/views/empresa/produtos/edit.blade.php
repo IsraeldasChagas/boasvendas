@@ -67,18 +67,8 @@
                             }
                         @endphp
                         @include('partials.empresa.produto-ingredientes-form', ['linhas' => $ingredientesLinhas])
-                        <div class="col-md-4">
-                            <label class="form-label" for="max_ingredientes_retirar">Máx. ingredientes para retirar</label>
-                            <input type="number" class="form-control @error('max_ingredientes_retirar') is-invalid @enderror" id="max_ingredientes_retirar" name="max_ingredientes_retirar" value="{{ old('max_ingredientes_retirar', $produto->max_ingredientes_retirar) }}" min="0" placeholder="Ex.: 2">
-                            @error('max_ingredientes_retirar')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            <div class="form-text">Obrigatório se houver ingredientes (0 = nenhuma retirada).</div>
-                        </div>
                         <div class="col-12">
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" name="permite_adicionais" id="permite_adicionais" value="1" {{ old('permite_adicionais', $produto->permite_adicionais) ? 'checked' : '' }}>
-                                <label class="form-check-label" for="permite_adicionais">Permitir acréscimos pagos na loja</label>
-                            </div>
-                            <p class="small text-muted mb-2">Acréscimos cadastrados em <a href="{{ route('empresa.adicionais.index') }}">Adicionais</a>. Ingredientes para retirar são os listados acima.</p>
+                            <p class="small text-muted mb-2">Opções com cobrança em <a href="{{ route('empresa.adicionais.index') }}">Adicionais</a>.</p>
                             <div class="border rounded p-3 bg-light mb-2" style="max-height: 12rem; overflow-y: auto;">
                                 @php $sel = old('adicional_ids', $produto->adicionais->where('tipo', \App\Models\Adicional::TIPO_ACRESCENTAR)->pluck('id')->all()); @endphp
                                 @forelse ($adicionais->where('tipo', \App\Models\Adicional::TIPO_ACRESCENTAR) as $ad)
@@ -94,7 +84,7 @@
                                     <span class="small text-muted">Nenhum adicional de acréscimo cadastrado.</span>
                                 @endforelse
                             </div>
-                    @error('adicional_ids')<div class="text-danger small">{{ $message }}</div>@enderror
+                            @error('adicional_ids')<div class="text-danger small">{{ $message }}</div>@enderror
                             @if (\Illuminate\Support\Facades\Schema::hasColumn('produtos', 'acrescimo_escolhas_min'))
                                 <div class="row g-2 mt-3">
                                     <div class="col-md-4">

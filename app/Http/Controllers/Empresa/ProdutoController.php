@@ -152,8 +152,14 @@ class ProdutoController extends Controller
 
         $data = $this->validated($request, $empresa, $produto);
         $nom = $this->listaIngredientesDoRequest($request);
-        $this->validarLimiteRetirarIngredientes($request, $nom);
-        $data['max_ingredientes_retirar'] = count($nom) > 0 ? (int) $request->input('max_ingredientes_retirar') : null;
+        $this->validarLimiteRetirarIngredientes($request, $nom, $produto);
+        if (count($nom) > 0) {
+            $data['max_ingredientes_retirar'] = $request->has('max_ingredientes_retirar')
+                ? (int) $request->input('max_ingredientes_retirar')
+                : (int) $produto->max_ingredientes_retirar;
+        } else {
+            $data['max_ingredientes_retirar'] = null;
+        }
 
         if ($request->hasFile('foto')) {
             $this->removerFotoDoDisco($produto);
@@ -223,7 +229,11 @@ class ProdutoController extends Controller
 
         $data['visivel_loja'] = $request->boolean('visivel_loja');
         $data['ativo'] = $request->boolean('ativo');
-        $data['permite_adicionais'] = $request->boolean('permite_adicionais');
+        if ($produto === null || $request->has('permite_adicionais')) {
+            $data['permite_adicionais'] = $request->boolean('permite_adicionais');
+        } else {
+            unset($data['permite_adicionais']);
+        }
 
         if (Schema::hasColumn('produtos', 'acrescimo_escolhas_min')) {
             $hadMin = array_key_exists('acrescimo_escolhas_min', $data);
@@ -246,7 +256,10 @@ class ProdutoController extends Controller
                 ]);
             }
 
-            if (! $data['permite_adicionais']) {
+            $permiteAdicionaisEfetivo = array_key_exists('permite_adicionais', $data)
+                ? (bool) $data['permite_adicionais']
+                : (bool) ($produto?->permite_adicionais ?? false);
+            if (! $permiteAdicionaisEfetivo) {
                 $data['acrescimo_escolhas_min'] = null;
                 $data['acrescimo_escolhas_max'] = null;
             }
@@ -276,13 +289,18 @@ class ProdutoController extends Controller
     /**
      * @param  list<string>  $ingredientes
      */
-    private function validarLimiteRetirarIngredientes(Request $request, array $ingredientes): void
+    private function validarLimiteRetirarIngredientes(Request $request, array $ingredientes, ?Produto $produto = null): void
     {
         if ($ingredientes === []) {
             return;
         }
 
-        Validator::make($request->all(), [
+        $payload = $request->all();
+        if ($produto !== null && ! array_key_exists('max_ingredientes_retirar', $payload)) {
+            $payload['max_ingredientes_retirar'] = $produto->max_ingredientes_retirar;
+        }
+
+        Validator::make($payload, [
             'max_ingredientes_retirar' => ['required', 'integer', 'min:0', 'max:'.count($ingredientes)],
         ], [
             'max_ingredientes_retirar.required' => 'Informe quantos ingredientes o cliente pode pedir para retirar (0 = nenhum).',
