@@ -34,17 +34,14 @@
                 @if ($produto->estoque === null || $produto->estoque > 0)
                     <div class="vf-produto-estrelas mb-3" id="vf-produto-estrelas-wrap">
                         <span class="small text-muted d-block mb-1">Sua nota <span class="fw-normal">(opcional)</span></span>
-                        <div class="d-flex flex-wrap align-items-center gap-2">
-                            <div class="d-inline-flex align-items-center vf-estrelas-grupo" role="group" aria-label="Dar de 1 a 5 estrelas ao produto">
-                                @for ($s = 1; $s <= 5; $s++)
-                                    <button type="button" class="btn btn-link p-1 lh-1 vf-estrela-produto-btn text-warning text-decoration-none border-0"
-                                        data-vf-estrela="{{ $s }}"
-                                        aria-label="{{ $s }} estrela{{ $s > 1 ? 's' : '' }}">
-                                        <i class="bi bi-star vf-estrela-produto-ico fs-5" aria-hidden="true"></i>
-                                    </button>
-                                @endfor
-                            </div>
-                            <button type="button" class="btn btn-link btn-sm text-muted p-0 align-baseline vf-estrela-limpar" id="vf_estrela_limpar">Limpar</button>
+                        <div class="d-inline-flex align-items-center vf-estrelas-grupo" role="group" aria-label="Dar de 1 a 5 estrelas ao produto — clique na mesma estrela para remover a nota">
+                            @for ($s = 1; $s <= 5; $s++)
+                                <button type="button" class="btn btn-link p-1 lh-1 vf-estrela-produto-btn text-warning text-decoration-none border-0"
+                                    data-vf-estrela="{{ $s }}"
+                                    aria-label="{{ $s }} estrela{{ $s > 1 ? 's' : '' }}">
+                                    <i class="bi bi-star vf-estrela-produto-ico fs-5" aria-hidden="true"></i>
+                                </button>
+                            @endfor
                         </div>
                         <input type="hidden" name="nota_produto" id="vf_nota_produto" form="vf-form-carrinho-produto" value="{{ old('nota_produto') }}">
                         @error('nota_produto')
@@ -256,7 +253,6 @@
 
                     var hid = document.getElementById('vf_nota_produto');
                     var btns = document.querySelectorAll('.vf-estrela-produto-btn');
-                    var limpar = document.getElementById('vf_estrela_limpar');
                     if (hid && btns.length) {
                         function paintEstrelas(valor) {
                             var n = parseInt(String(valor || ''), 10);
@@ -286,12 +282,6 @@
                                 paintEstrelas(hid.value);
                             });
                         });
-                        if (limpar) {
-                            limpar.addEventListener('click', function () {
-                                hid.value = '';
-                                paintEstrelas(0);
-                            });
-                        }
                         paintEstrelas(hid.value);
                     }
                 })();
