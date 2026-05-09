@@ -95,20 +95,9 @@
                                 $ingredientesLinhas = [];
                             }
                         @endphp
-                        @php
-                            $temNomeIngPratoCreate = false;
-                            foreach ($ingredientesLinhas as $linhaIngCreate) {
-                                $nomeIngC = is_array($linhaIngCreate) ? trim((string) ($linhaIngCreate['nome'] ?? '')) : '';
-                                if ($nomeIngC !== '') {
-                                    $temNomeIngPratoCreate = true;
-                                    break;
-                                }
-                            }
-                        @endphp
                         @if ($uiRetirarIng !== null)
                             @include('partials.empresa.produto-ingredientes-retirar-ui', [
                                 'valorUi' => $uiRetirarIng,
-                                'mostrarAvisoSemIngredientesRetirar' => ! $temNomeIngPratoCreate,
                             ])
                         @endif
                         @include('partials.empresa.produto-ingredientes-form', ['linhas' => $ingredientesLinhas])

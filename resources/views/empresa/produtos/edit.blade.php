@@ -69,7 +69,6 @@
                         @if ($uiRetirarIng !== null)
                             @include('partials.empresa.produto-ingredientes-retirar-ui', [
                                 'valorUi' => $uiRetirarIng,
-                                'mostrarAvisoSemIngredientesRetirar' => $produto->ingredientes->isEmpty(),
                             ])
                         @endif
                         @php
