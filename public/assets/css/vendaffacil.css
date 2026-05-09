@@ -372,6 +372,19 @@ body.vf-body {
   position: relative;
 }
 
+.vf-escolha-thumb-wrap {
+  flex-shrink: 0;
+  padding: 0.35rem 0 0.35rem 0.35rem;
+  display: flex;
+  align-items: center;
+}
+
+.vf-escolha-thumb-ing {
+  display: block;
+  object-fit: cover;
+  border-radius: 0.25rem;
+}
+
 .vf-escolha-bar {
   width: 4px;
   flex-shrink: 0;

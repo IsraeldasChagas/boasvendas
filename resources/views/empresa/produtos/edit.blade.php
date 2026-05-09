@@ -61,9 +61,43 @@
                             @error('descricao')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         @php
-                            $ingredientesLinhas = old('ingrediente_nomes', $produto->ingredientes->pluck('nome')->all());
-                            if (! is_array($ingredientesLinhas)) {
+                            if (old('ingrediente_nomes') !== null) {
+                                $oldNomes = old('ingrediente_nomes', []);
+                                $oldAtuais = old('ingrediente_foto_atual', []);
+                                $oldIds = old('ingrediente_ids', []);
+                                if (! is_array($oldNomes)) {
+                                    $oldNomes = [];
+                                }
+                                if (! is_array($oldAtuais)) {
+                                    $oldAtuais = [];
+                                }
+                                if (! is_array($oldIds)) {
+                                    $oldIds = [];
+                                }
                                 $ingredientesLinhas = [];
+                                foreach ($oldNomes as $idx => $nome) {
+                                    $fid = isset($oldIds[$idx]) ? (int) $oldIds[$idx] : 0;
+                                    $atual = $oldAtuais[$idx] ?? '';
+                                    $fotoUrl = null;
+                                    if ($fid > 0 && $atual !== '') {
+                                        $fotoUrl = route('publico.produto_ingrediente_foto', ['produtoIngrediente' => $fid], false).'?v='.time();
+                                    }
+                                    $ingredientesLinhas[] = [
+                                        'nome' => $nome,
+                                        'foto_atual' => $atual,
+                                        'foto_url' => $fotoUrl,
+                                        'id' => $fid > 0 ? $fid : null,
+                                    ];
+                                }
+                            } else {
+                                $ingredientesLinhas = $produto->ingredientes->map(function ($ing) {
+                                    return [
+                                        'nome' => $ing->nome,
+                                        'foto_atual' => $ing->foto ?? '',
+                                        'foto_url' => $ing->urlFoto(),
+                                        'id' => $ing->id,
+                                    ];
+                                })->all();
                             }
                         @endphp
                         @include('partials.empresa.produto-ingredientes-form', ['linhas' => $ingredientesLinhas])

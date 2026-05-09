@@ -11,11 +11,13 @@ use App\Models\EmpresaSlug;
 use App\Models\Pedido;
 use App\Models\PedidoItem;
 use App\Models\Produto;
+use App\Models\ProdutoIngrediente;
 use App\Support\Cep;
 use App\Support\GoogleMapsDistanceMatrix;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -1331,6 +1333,69 @@ class PublicoController extends Controller
     public function produtoFoto(Produto $produto): BinaryFileResponse
     {
         $full = $produto->resolveFotoAbsolutePath();
+        if ($full === null || ! is_file($full)) {
+            abort(404);
+        }
+
+        $ext = strtolower(pathinfo($full, PATHINFO_EXTENSION));
+        if (in_array($ext, ['webp', 'avif'], true)) {
+            try {
+                $img = null;
+                if ($ext === 'webp' && function_exists('imagecreatefromwebp')) {
+                    $img = @imagecreatefromwebp($full);
+                } elseif ($ext === 'avif' && function_exists('imagecreatefromavif')) {
+                    $img = @imagecreatefromavif($full);
+                } else {
+                    $raw = @file_get_contents($full);
+                    if (is_string($raw) && $raw !== '') {
+                        $img = @imagecreatefromstring($raw);
+                    }
+                }
+
+                if ($img !== null && $img !== false) {
+                    $w = imagesx($img);
+                    $h = imagesy($img);
+
+                    $max = 1400;
+                    $scale = ($w > 0 && $h > 0) ? min(1, $max / max($w, $h)) : 1;
+                    $nw = max(1, (int) round($w * $scale));
+                    $nh = max(1, (int) round($h * $scale));
+
+                    $dst = imagecreatetruecolor($nw, $nh);
+                    $white = imagecolorallocate($dst, 255, 255, 255);
+                    imagefilledrectangle($dst, 0, 0, $nw, $nh, $white);
+                    imagecopyresampled($dst, $img, 0, 0, 0, 0, $nw, $nh, $w, $h);
+
+                    ob_start();
+                    imagejpeg($dst, null, 85);
+                    $jpeg = ob_get_clean();
+
+                    imagedestroy($dst);
+                    imagedestroy($img);
+
+                    if (is_string($jpeg) && $jpeg !== '') {
+                        return response($jpeg, 200, [
+                            'Content-Type' => 'image/jpeg',
+                            'Cache-Control' => 'public, max-age=604800',
+                        ]);
+                    }
+                }
+            } catch (\Throwable $e) {
+                // fallback abaixo
+            }
+        }
+
+        return response()->file($full, [
+            'Cache-Control' => 'public, max-age=604800',
+        ]);
+    }
+
+    /**
+     * Serve foto opcional de ingrediente do prato (miniatura).
+     */
+    public function produtoIngredienteFoto(ProdutoIngrediente $produtoIngrediente): BinaryFileResponse|Response
+    {
+        $full = $produtoIngrediente->resolveFotoAbsolutePath();
         if ($full === null || ! is_file($full)) {
             abort(404);
         }

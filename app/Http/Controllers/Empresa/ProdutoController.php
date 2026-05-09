@@ -93,9 +93,9 @@ class ProdutoController extends Controller
         }
 
         $data = $this->validated($request, $empresa);
-        $nom = $this->listaIngredientesDoRequest($request);
-        $this->validarLimiteRetirarIngredientes($request, $nom);
-        $data['max_ingredientes_retirar'] = count($nom) > 0 ? (int) $request->input('max_ingredientes_retirar') : null;
+        $itensIng = $this->coletaIngredientesDoRequest($request, $empresa);
+        $this->validarLimiteRetirarIngredientes($request, $itensIng);
+        $data['max_ingredientes_retirar'] = count($itensIng) > 0 ? (int) $request->input('max_ingredientes_retirar') : null;
         $data['empresa_id'] = $empresa->id;
         $data['sku'] = $this->gerarCodigoInternoUnico($empresa);
 
@@ -104,7 +104,7 @@ class ProdutoController extends Controller
         }
 
         $produto = Produto::query()->create($data);
-        $this->syncIngredientesDoProduto($produto, $nom);
+        $this->syncIngredientesDoProduto($produto, $itensIng, $empresa);
         $this->syncAdicionaisDoProduto($produto, $empresa, $request);
 
         return redirect()
@@ -151,9 +151,9 @@ class ProdutoController extends Controller
         }
 
         $data = $this->validated($request, $empresa, $produto);
-        $nom = $this->listaIngredientesDoRequest($request);
-        $this->validarLimiteRetirarIngredientes($request, $nom, $produto);
-        if (count($nom) > 0) {
+        $itensIng = $this->coletaIngredientesDoRequest($request, $empresa);
+        $this->validarLimiteRetirarIngredientes($request, $itensIng, $produto);
+        if (count($itensIng) > 0) {
             $data['max_ingredientes_retirar'] = $request->has('max_ingredientes_retirar')
                 ? (int) $request->input('max_ingredientes_retirar')
                 : (int) $produto->max_ingredientes_retirar;
@@ -167,7 +167,7 @@ class ProdutoController extends Controller
         }
 
         $produto->update($data);
-        $this->syncIngredientesDoProduto($produto, $nom);
+        $this->syncIngredientesDoProduto($produto, $itensIng, $empresa);
         $this->syncAdicionaisDoProduto($produto, $empresa, $request);
         // Garante que o "Editar" reflita atualização mesmo quando só muda relacionamentos.
         $produto->touch();
@@ -185,6 +185,9 @@ class ProdutoController extends Controller
         }
 
         $this->removerFotoDoDisco($produto);
+        foreach ($produto->ingredientes()->whereNotNull('foto')->pluck('foto') as $pathIng) {
+            $this->removerFotoIngredienteDoDisco(ltrim(str_replace('\\', '/', (string) $pathIng), '/'));
+        }
         $produto->delete();
 
         return redirect()
@@ -218,6 +221,29 @@ class ProdutoController extends Controller
             ],
             'ingrediente_nomes' => ['nullable', 'array'],
             'ingrediente_nomes.*' => ['nullable', 'string', 'max:120'],
+            'ingrediente_foto_atual' => ['nullable', 'array'],
+            'ingrediente_foto_atual.*' => [
+                'nullable',
+                'string',
+                'max:500',
+                function (string $attribute, mixed $value, \Closure $fail) use ($empresa) {
+                    if ($value === null || $value === '') {
+                        return;
+                    }
+                    $v = ltrim(str_replace('\\', '/', (string) $value), '/');
+                    if (Str::contains($v, '..')) {
+                        $fail('Caminho de foto inválido.');
+
+                        return;
+                    }
+                    $prefix = 'produtos/'.$empresa->id.'/ingredientes/';
+                    if (! Str::startsWith($v, $prefix)) {
+                        $fail('Foto de ingrediente inválida.');
+                    }
+                },
+            ],
+            'ingrediente_fotos' => ['nullable', 'array'],
+            'ingrediente_fotos.*' => ['nullable', 'image', 'max:2048'],
         ];
 
         if (Schema::hasColumn('produtos', 'acrescimo_escolhas_min')) {
@@ -265,29 +291,73 @@ class ProdutoController extends Controller
             }
         }
 
-        unset($data['foto'], $data['ingrediente_nomes']);
+        unset($data['foto'], $data['ingrediente_nomes'], $data['ingrediente_foto_atual'], $data['ingrediente_fotos']);
 
         return $data;
     }
 
     /**
-     * @return list<string>
+     * @return list<array{nome: string, foto_atual: ?string, file: ?UploadedFile}>
      */
-    private function listaIngredientesDoRequest(Request $request): array
+    private function coletaIngredientesDoRequest(Request $request, Empresa $empresa): array
     {
-        return collect($request->input('ingrediente_nomes', []))
-            ->map(function ($n) {
-                $t = trim(strip_tags((string) $n));
+        $nomes = $request->input('ingrediente_nomes', []);
+        if (! is_array($nomes)) {
+            $nomes = [];
+        }
+        $atuais = $request->input('ingrediente_foto_atual', []);
+        if (! is_array($atuais)) {
+            $atuais = [];
+        }
+        $files = $request->file('ingrediente_fotos', []);
+        if (! is_array($files)) {
+            $files = [];
+        }
 
-                return $t !== '' ? Str::limit($t, 120, '') : '';
-            })
-            ->filter(fn (string $n) => $n !== '')
-            ->values()
-            ->all();
+        $out = [];
+        foreach ($nomes as $i => $n) {
+            $nome = trim(strip_tags((string) $n));
+            if ($nome === '') {
+                continue;
+            }
+
+            $fotoAtualRaw = isset($atuais[$i]) ? trim((string) $atuais[$i]) : '';
+            $fotoAtual = $this->fotoAtualIngredienteValidaParaEmpresa($fotoAtualRaw, $empresa);
+
+            $file = null;
+            if (isset($files[$i]) && $files[$i] instanceof UploadedFile && $files[$i]->isValid()) {
+                $file = $files[$i];
+            }
+
+            $out[] = [
+                'nome' => Str::limit($nome, 120, ''),
+                'foto_atual' => $fotoAtual,
+                'file' => $file,
+            ];
+        }
+
+        return $out;
+    }
+
+    private function fotoAtualIngredienteValidaParaEmpresa(string $path, Empresa $empresa): ?string
+    {
+        if ($path === '') {
+            return null;
+        }
+        $rel = ltrim(str_replace('\\', '/', $path), '/');
+        if ($rel === '' || Str::contains($rel, '..')) {
+            return null;
+        }
+        $prefix = 'produtos/'.$empresa->id.'/ingredientes/';
+        if (! Str::startsWith($rel, $prefix)) {
+            return null;
+        }
+
+        return $rel;
     }
 
     /**
-     * @param  list<string>  $ingredientes
+     * @param  list<array{nome: string, foto_atual: ?string, file: ?UploadedFile}>  $ingredientes
      */
     private function validarLimiteRetirarIngredientes(Request $request, array $ingredientes, ?Produto $produto = null): void
     {
@@ -308,17 +378,48 @@ class ProdutoController extends Controller
     }
 
     /**
-     * @param  list<string>  $nomes
+     * @param  list<array{nome: string, foto_atual: ?string, file: ?UploadedFile}>  $items
      */
-    private function syncIngredientesDoProduto(Produto $produto, array $nomes): void
+    private function syncIngredientesDoProduto(Produto $produto, array $items, Empresa $empresa): void
     {
+        $oldPaths = $produto->ingredientes()
+            ->whereNotNull('foto')
+            ->pluck('foto')
+            ->map(fn ($p) => ltrim(str_replace('\\', '/', (string) $p), '/'))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
         $produto->ingredientes()->delete();
-        foreach ($nomes as $i => $nome) {
+
+        $newPaths = [];
+        foreach ($items as $i => $item) {
+            $foto = null;
+            if ($item['file'] !== null) {
+                $foto = $this->armazenarFotoIngrediente($item['file'], $empresa);
+            } elseif ($item['foto_atual'] !== null) {
+                $foto = $item['foto_atual'];
+            }
+
+            if ($foto !== null) {
+                $newPaths[] = ltrim(str_replace('\\', '/', $foto), '/');
+            }
+
             ProdutoIngrediente::query()->create([
                 'produto_id' => $produto->id,
-                'nome' => $nome,
+                'nome' => $item['nome'],
+                'foto' => $foto,
                 'ordem' => $i,
             ]);
+        }
+
+        $newPaths = array_values(array_unique($newPaths));
+
+        foreach ($oldPaths as $old) {
+            if ($old !== '' && ! in_array($old, $newPaths, true)) {
+                $this->removerFotoIngredienteDoDisco($old);
+            }
         }
     }
 
@@ -420,6 +521,75 @@ class ProdutoController extends Controller
         $file->storeAs($dir, $fallbackNome, 'uploads');
 
         return $fallbackPath;
+    }
+
+    /**
+     * Miniatura opcional do ingrediente (JPEG redimensionado, pasta própria).
+     */
+    private function armazenarFotoIngrediente(UploadedFile $file, Empresa $empresa): string
+    {
+        $nome = Str::uuid()->toString().'.jpg';
+        $dir = 'produtos/'.$empresa->id.'/ingredientes';
+        $path = $dir.'/'.$nome;
+
+        try {
+            $img = @imagecreatefromstring($file->get());
+            if ($img !== false) {
+                $w = imagesx($img);
+                $h = imagesy($img);
+
+                $max = 512;
+                $scale = ($w > 0 && $h > 0) ? min(1, $max / max($w, $h)) : 1;
+                $nw = max(1, (int) round($w * $scale));
+                $nh = max(1, (int) round($h * $scale));
+
+                $dst = imagecreatetruecolor($nw, $nh);
+                $white = imagecolorallocate($dst, 255, 255, 255);
+                imagefilledrectangle($dst, 0, 0, $nw, $nh, $white);
+                imagecopyresampled($dst, $img, 0, 0, 0, 0, $nw, $nh, $w, $h);
+
+                ob_start();
+                imagejpeg($dst, null, 85);
+                $jpeg = ob_get_clean();
+
+                imagedestroy($dst);
+                imagedestroy($img);
+
+                if (is_string($jpeg) && $jpeg !== '') {
+                    $disk = Storage::disk('uploads');
+                    $disk->makeDirectory($dir);
+                    if ($disk->put($path, $jpeg)) {
+                        return $path;
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // Fallback abaixo
+        }
+
+        $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+        $ext = preg_match('/^[a-z0-9]{2,4}$/', $ext) ? $ext : 'jpg';
+        $fallbackNome = Str::uuid()->toString().'.'.$ext;
+        $fallbackPath = $dir.'/'.$fallbackNome;
+        $file->storeAs($dir, $fallbackNome, 'uploads');
+
+        return $fallbackPath;
+    }
+
+    private function removerFotoIngredienteDoDisco(string $pathRel): void
+    {
+        $path = ltrim(str_replace('\\', '/', $pathRel), '/');
+        if ($path === '') {
+            return;
+        }
+
+        if (Storage::disk('uploads')->exists($path)) {
+            Storage::disk('uploads')->delete($path);
+
+            return;
+        }
+
+        Storage::disk('public')->delete($pathRel);
     }
 
     private function removerFotoDoDisco(Produto $produto): void

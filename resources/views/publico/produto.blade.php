@@ -135,6 +135,11 @@
                                             <div class="vf-escolha-card vf-escolha-card--retirar" data-ing-id="{{ $ing->id }}">
                                                 <div class="vf-escolha-card-inner">
                                                     <span class="vf-escolha-bar" aria-hidden="true"></span>
+                                                    @if ($ing->urlFoto())
+                                                        <div class="vf-escolha-thumb-wrap flex-shrink-0" aria-hidden="true">
+                                                            <img src="{{ $ing->urlFoto() }}" alt="" class="vf-escolha-thumb-ing rounded border" width="40" height="40">
+                                                        </div>
+                                                    @endif
                                                     <div class="vf-escolha-textos">
                                                         <span class="vf-personalizar-nome">{{ $ing->nome }}</span>
                                                         <span class="vf-escolha-badge vf-escolha-badge--retirar"><i class="bi bi-check-lg me-1"></i>Selecionado</span>
