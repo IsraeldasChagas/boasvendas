@@ -359,7 +359,7 @@ class PublicoController extends Controller
                 ? $p->adicionais->where('tipo', Adicional::TIPO_ACRESCENTAR)->pluck('id')->map(fn ($id) => (int) $id)->all()
                 : [];
 
-            $temLimite = $this->produtoTemLimiteEscolhasAcrescimo($p);
+            $temLimite = $this->produtoTemLimiteEscolhasAcrescimo($p) && $idsPermAcre !== [];
 
             $mapFiltrado = [];
             foreach ($mapReq as $aid => $q) {
@@ -815,7 +815,7 @@ class PublicoController extends Controller
         }
         ksort($mapReq);
 
-        $temLimite = $this->produtoTemLimiteEscolhasAcrescimo($p);
+        $temLimite = $this->produtoTemLimiteEscolhasAcrescimo($p) && $idsPermAcre !== [];
 
         if (! $p->permite_adicionais && $mapReq !== []) {
             return back()->withInput()->with('warning', 'Este produto não permite acréscimos opcionais.');
