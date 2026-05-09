@@ -70,21 +70,30 @@
                         <input type="hidden" name="produto_id" value="{{ $produto->id }}">
 
                         @if ($temPersonalizar)
-                            <div class="vf-card p-3 mb-3">
-                                <h2 class="h6 fw-bold mb-3">Personalizar</h2>
+                            @php
+                                $limitesNoCard = [];
+                                if ($temLimiteAcrescimo && ($minEsc !== null || $maxEsc !== null)) {
+                                    $limitesNoCard[] = 'Opções — mín. '.($minEsc ?? '—').' · máx. '.($maxEsc ?? '—');
+                                }
+                                if ($temRetirarIng) {
+                                    $limitesNoCard[] = 'Ingredientes — mín. 0 · máx. '.$maxRet;
+                                }
+                            @endphp
+                            <div class="vf-card p-3 mb-3 vf-card-personalizar-produto">
+                                <div class="d-flex justify-content-between align-items-start gap-2 mb-3 flex-wrap">
+                                    <h2 class="h6 fw-bold mb-0">Personalizar</h2>
+                                    @if ($limitesNoCard !== [])
+                                        <div class="vf-personalizar-limites-no-card small text-muted ms-md-auto">
+                                            @foreach ($limitesNoCard as $txtLimite)
+                                                <span class="vf-personalizar-limite-chip d-inline-block">{{ $txtLimite }}</span>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
 
                                 @if ($produto->permite_adicionais && $acres->isNotEmpty())
-                                    @if ($temLimiteAcrescimo && ($minEsc !== null || $maxEsc !== null))
-                                        <div class="d-flex justify-content-between align-items-start gap-2 mb-2 flex-wrap">
-                                            <span class="fw-semibold">
-                                                @if ($minEsc !== null && $maxEsc !== null && (int) $minEsc === (int) $maxEsc)
-                                                    Escolha {{ $minEsc }} opções
-                                                @else
-                                                    Opções
-                                                @endif
-                                            </span>
-                                            <span class="small text-muted text-end">Mínimo: {{ $minEsc ?? '—' }} · Máximo: {{ $maxEsc ?? '—' }}</span>
-                                        </div>
+                                    @if ($temLimiteAcrescimo && $minEsc !== null && $maxEsc !== null && (int) $minEsc === (int) $maxEsc)
+                                        <p class="fw-semibold mb-2">Escolha {{ $minEsc }} opções</p>
                                     @else
                                         <p class="fw-semibold mb-2">Opções</p>
                                     @endif
@@ -127,7 +136,7 @@
                                                 <div class="vf-escolha-card-inner">
                                                     <span class="vf-escolha-bar" aria-hidden="true"></span>
                                                     <div class="vf-escolha-textos">
-                                                        <span class="vf-personalizar-nome">Sem {{ $ing->nome }}</span>
+                                                        <span class="vf-personalizar-nome">{{ $ing->nome }}</span>
                                                         <span class="vf-escolha-badge vf-escolha-badge--retirar"><i class="bi bi-check-lg me-1"></i>Selecionado</span>
                                                     </div>
                                                     <div class="vf-escolha-stepper" role="group" aria-label="Opção {{ $ing->nome }}">

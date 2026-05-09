@@ -6,7 +6,7 @@
         @foreach ($lista as $op)
             <li>
                 @if (($op['tipo'] ?? '') === \App\Models\Adicional::TIPO_RETIRAR || ($op['tipo'] ?? '') === 'retirar_ingrediente')
-                    <i class="bi bi-dash-circle me-1"></i>Sem {{ $op['nome'] ?? '' }}
+                    <i class="bi bi-dash-circle me-1"></i>{{ $op['nome'] ?? '' }}
                 @else
                     @php $qOp = (int) ($op['quantidade'] ?? 1); @endphp
                     <i class="bi bi-plus-circle me-1"></i>{{ $op['nome'] ?? '' }}@if ($qOp > 1)<span class="text-muted"> ×{{ $qOp }}</span>@endif
