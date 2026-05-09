@@ -77,7 +77,8 @@
                                 <input class="form-check-input" type="checkbox" name="permite_adicionais" id="permite_adicionais" value="1" {{ old('permite_adicionais') ? 'checked' : '' }}>
                                 <label class="form-check-label" for="permite_adicionais">Permitir acréscimos pagos na loja</label>
                             </div>
-                            <p class="small text-muted mb-2">Marque as opções de <strong>cobrança</strong> deste cardápio (cadastre em <a href="{{ route('empresa.adicionais.index') }}">Adicionais</a>). Ingredientes para retirar são os listados acima.</p>
+                            <input type="hidden" name="adicional_catalogo_enviado" value="1">
+                            <p class="small text-muted mb-2">Marque aqui <strong>só para este produto</strong> quais opções pagas (cadastradas em <a href="{{ route('empresa.adicionais.index') }}">Adicionais</a>) entram na vitrine. Em outro produto, marque de novo só o que quiser — cada cardápio é independente.</p>
                             <div class="border rounded p-3 bg-light mb-2" style="max-height: 12rem; overflow-y: auto;">
                                 @forelse ($adicionais->where('tipo', \App\Models\Adicional::TIPO_ACRESCENTAR) as $ad)
                                     <div class="form-check">

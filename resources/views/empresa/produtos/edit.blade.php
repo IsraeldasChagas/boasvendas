@@ -68,7 +68,8 @@
                         @endphp
                         @include('partials.empresa.produto-ingredientes-form', ['linhas' => $ingredientesLinhas])
                         <div class="col-12">
-                            <p class="small text-muted mb-2">Opções com cobrança em <a href="{{ route('empresa.adicionais.index') }}">Adicionais</a>.</p>
+                            <input type="hidden" name="adicional_catalogo_enviado" value="1">
+                            <p class="small text-muted mb-2">Opções pagas cadastradas em <a href="{{ route('empresa.adicionais.index') }}">Adicionais</a>. <strong>Só marque abaixo as que devem aparecer neste produto</strong> na loja (cada produto é independente).</p>
                             <div class="border rounded p-3 bg-light mb-2" style="max-height: 12rem; overflow-y: auto;">
                                 @php $sel = old('adicional_ids', $produto->adicionais->where('tipo', \App\Models\Adicional::TIPO_ACRESCENTAR)->pluck('id')->all()); @endphp
                                 @forelse ($adicionais->where('tipo', \App\Models\Adicional::TIPO_ACRESCENTAR) as $ad)

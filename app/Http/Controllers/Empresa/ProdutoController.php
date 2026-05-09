@@ -330,6 +330,11 @@ class ProdutoController extends Controller
             return;
         }
 
+        // Formulário completo envia o marcador; sem ele (submit parcial/raro), não sobrescreve vínculos.
+        if (! $request->has('adicional_catalogo_enviado')) {
+            return;
+        }
+
         $ids = collect($request->input('adicional_ids', []))
             ->map(fn ($id) => (int) $id)
             ->filter(fn ($id) => $id > 0)
