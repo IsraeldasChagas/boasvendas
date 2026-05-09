@@ -45,9 +45,6 @@
                     $temLimiteAcrescimo = $produto->permite_adicionais && $acres->isNotEmpty() && ($minEsc !== null || $maxEsc !== null);
                 @endphp
                 <p class="h4 text-success mb-1">R$ {{ number_format((float) $produto->preco, 2, ',', '.') }}</p>
-                @if ($temAcrescimo)
-                    <p class="small text-muted mb-2">Preço base; acréscimos opcionais aparecem no total ao escolher abaixo.</p>
-                @endif
                 @if ($produto->estoque !== null)
                     <p class="small text-muted mb-3">
                         @if ($produto->estoque <= 0)
@@ -77,20 +74,20 @@
                                 <h2 class="h6 fw-bold mb-3">Personalizar</h2>
 
                                 @if ($produto->permite_adicionais && $acres->isNotEmpty())
-                                    <div class="d-flex justify-content-between align-items-start gap-2 mb-2 flex-wrap">
-                                        <span class="fw-semibold">
-                                            @if ($temLimiteAcrescimo && $minEsc !== null && $maxEsc !== null && (int) $minEsc === (int) $maxEsc)
-                                                Escolha {{ $minEsc }} opções
-                                            @else
-                                                Acrescentar
-                                            @endif
-                                        </span>
-                                        @if ($temLimiteAcrescimo)
+                                    @if ($temLimiteAcrescimo && ($minEsc !== null || $maxEsc !== null))
+                                        <div class="d-flex justify-content-between align-items-start gap-2 mb-2 flex-wrap">
+                                            <span class="fw-semibold">
+                                                @if ($minEsc !== null && $maxEsc !== null && (int) $minEsc === (int) $maxEsc)
+                                                    Escolha {{ $minEsc }} opções
+                                                @else
+                                                    Opções
+                                                @endif
+                                            </span>
                                             <span class="small text-muted text-end">Mínimo: {{ $minEsc ?? '—' }} · Máximo: {{ $maxEsc ?? '—' }}</span>
-                                        @else
-                                            <span class="small text-muted text-end">Use − e + · até 1 de cada opção</span>
-                                        @endif
-                                    </div>
+                                        </div>
+                                    @else
+                                        <p class="fw-semibold mb-2">Opções</p>
+                                    @endif
                                     <div class="vf-personalizar-grid vf-acrescimo-stepper-grid mb-1"
                                         id="vf-acrescimos-stepper"
                                         data-usa-limite="{{ $temLimiteAcrescimo ? '1' : '0' }}"
@@ -122,12 +119,7 @@
                                 @endif
 
                                 @if ($temRetirarIng)
-                                    <p class="small text-muted mb-3 border-start border-3 border-secondary-subtle ps-2 {{ $produto->permite_adicionais && $acres->isNotEmpty() ? 'mt-3' : '' }}">Retirar ingredientes é opcional e <strong>não reduz</strong> o valor do produto.</p>
-                                    <div class="d-flex justify-content-between align-items-baseline gap-2 mb-2 flex-wrap">
-                                        <span class="fw-semibold">Retirar ingrediente</span>
-                                        <span class="small text-muted text-end">Mínimo: 0 · Máximo: {{ $maxRet }} <span class="d-none d-sm-inline">(em conjunto)</span></span>
-                                    </div>
-                                    <div class="vf-personalizar-grid vf-acrescimo-stepper-grid vf-retirar-stepper-grid mb-1"
+                                    <div class="vf-personalizar-grid vf-acrescimo-stepper-grid vf-retirar-stepper-grid mb-1 {{ $produto->permite_adicionais && $acres->isNotEmpty() ? 'mt-3' : '' }}"
                                         id="vf-retirar-stepper"
                                         data-max-total="{{ $maxRet }}">
                                         @foreach ($produto->ingredientes as $ing)
@@ -136,13 +128,13 @@
                                                     <span class="vf-escolha-bar" aria-hidden="true"></span>
                                                     <div class="vf-escolha-textos">
                                                         <span class="vf-personalizar-nome">Sem {{ $ing->nome }}</span>
-                                                        <span class="vf-escolha-badge vf-escolha-badge--retirar"><i class="bi bi-dash-lg me-1"></i>Retirar</span>
+                                                        <span class="vf-escolha-badge vf-escolha-badge--retirar"><i class="bi bi-check-lg me-1"></i>Selecionado</span>
                                                     </div>
-                                                    <div class="vf-escolha-stepper" role="group" aria-label="Retirar {{ $ing->nome }}">
-                                                        <button type="button" class="vf-escolha-btn vf-escolha-btn--menos" aria-label="Não retirar">−</button>
+                                                    <div class="vf-escolha-stepper" role="group" aria-label="Opção {{ $ing->nome }}">
+                                                        <button type="button" class="vf-escolha-btn vf-escolha-btn--menos" aria-label="Diminuir">−</button>
                                                         <span class="vf-escolha-qty-wrap"><span class="vf-escolha-qty-disp" aria-live="polite">0</span></span>
                                                         <input type="hidden" name="retirar_qtd[{{ $ing->id }}]" value="0" class="vf-retirar-qty-input" autocomplete="off">
-                                                        <button type="button" class="vf-escolha-btn vf-escolha-btn--mais" aria-label="Retirar este ingrediente">+</button>
+                                                        <button type="button" class="vf-escolha-btn vf-escolha-btn--mais" aria-label="Aumentar">+</button>
                                                     </div>
                                                 </div>
                                             </div>
