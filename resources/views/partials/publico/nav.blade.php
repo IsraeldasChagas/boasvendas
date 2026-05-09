@@ -19,13 +19,13 @@
     <div class="container py-2">
         <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
             <div class="d-flex align-items-center gap-2 min-width-0 flex-grow-1">
-                <a href="{{ route('publico.loja', ['slug' => $slugNav]) }}" class="text-decoration-none text-dark fw-bold d-flex align-items-start gap-2 min-width-0">
+                <a href="{{ route('publico.loja', ['slug' => $slugNav]) }}" class="vf-store-brand-link text-decoration-none text-dark fw-bold d-flex align-items-center gap-2 gap-md-3 min-width-0">
                     @if ($empresa && $empresa->urlLogo())
-                        <img src="{{ $empresa->urlLogo() }}" alt="" width="66" height="66" class="rounded bg-white border flex-shrink-0 align-self-start" style="object-fit: contain;">
+                        <img src="{{ $empresa->urlLogo() }}" alt="" width="66" height="66" class="vf-store-brand-logo rounded bg-white border flex-shrink-0" style="object-fit: contain;">
                     @else
-                        <i class="bi bi-shop text-primary flex-shrink-0 align-self-start mt-1"></i>
+                        <i class="bi bi-shop text-primary vf-store-brand-logo-placeholder flex-shrink-0"></i>
                     @endif
-                    <span class="d-flex flex-column align-items-start gap-1 min-width-0">
+                    <span class="vf-store-brand-text d-flex flex-column justify-content-center align-items-start gap-1 gap-md-2 min-width-0">
                         <span class="vf-store-name">{{ $nomeLoja }}</span>
                         @if ($empresa)
                             @if ($empresa->loja_aberta ?? true)

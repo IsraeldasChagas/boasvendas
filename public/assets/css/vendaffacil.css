@@ -330,6 +330,22 @@ body.vf-body {
   border-bottom: 1px solid var(--vf-border);
 }
 
+/* Nome + selo alinhados ao centro vertical da logo (evita “grudado” no topo) */
+.vf-store-brand-text {
+  min-height: 66px;
+  justify-content: center;
+}
+
+.vf-store-brand-logo-placeholder {
+  font-size: 2rem;
+  line-height: 1;
+  width: 66px;
+  height: 66px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Configurações da empresa: salvar fixo no celular (formulário longo) */
 .vf-config-save-mobile {
   z-index: 1020;
