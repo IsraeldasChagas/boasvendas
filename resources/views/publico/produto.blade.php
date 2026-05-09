@@ -193,11 +193,21 @@
                                 class="form-control @error('observacao') is-invalid @enderror"
                                 name="observacao"
                                 id="observacao_produto"
-                                rows="2"
+                                rows="5"
                                 maxlength="500"
+                                aria-describedby="observacao_limite_ajuda"
                                 placeholder="Ex.: ponto da carne, sem cebola, embalar separado…">{{ old('observacao') }}</textarea>
                             @error('observacao')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            <div class="form-text">Até 500 caracteres. Aparece no pedido para o restaurante.</div>
+                            <div id="observacao_limite_ajuda" class="form-text">
+                                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-1">
+                                    <span class="text-muted"><span id="observacao-count">0</span>/500 caracteres · aparece no pedido</span>
+                                    <span class="text-warning lh-1" id="observacao-estrelas" role="img" aria-label="Nível de uso do limite (5 estrelas = até 500 caracteres)">
+                                        @for ($i = 0; $i < 5; $i++)
+                                            <i class="bi bi-star obs-estrela-vf" aria-hidden="true"></i>
+                                        @endfor
+                                    </span>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="d-flex flex-wrap gap-2 align-items-end">
@@ -214,6 +224,34 @@
             </div>
         </div>
     </div>
+    @if ($produto->estoque === null || $produto->estoque > 0)
+        @push('scripts')
+            <script>
+                (function () {
+                    var ta = document.getElementById('observacao_produto');
+                    if (!ta) return;
+                    var countEl = document.getElementById('observacao-count');
+                    var wrap = document.getElementById('observacao-estrelas');
+                    var stars = wrap ? wrap.querySelectorAll('.obs-estrela-vf') : [];
+
+                    function syncObservacaoLimite() {
+                        var len = ta.value.length;
+                        if (countEl) {
+                            countEl.textContent = String(len);
+                        }
+                        var filled = len === 0 ? 0 : Math.min(5, Math.ceil(len / 100));
+                        for (var i = 0; i < stars.length; i++) {
+                            stars[i].classList.toggle('bi-star-fill', i < filled);
+                            stars[i].classList.toggle('bi-star', i >= filled);
+                        }
+                    }
+
+                    ta.addEventListener('input', syncObservacaoLimite);
+                    syncObservacaoLimite();
+                })();
+            </script>
+        @endpush
+    @endif
     @if (($temRetirarIng ?? false) || ($temAcrescimo ?? false))
         @push('scripts')
             <script>
