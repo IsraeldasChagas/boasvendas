@@ -326,6 +326,13 @@ body.vf-body {
   }
 }
 
+.vf-produto-wa-loja-btn {
+  min-height: 2.85rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  font-weight: 600;
+}
+
 /* Vitrine — produto: Personalizar (celular = 1 coluna; tablet+ = 2) */
 .vf-personalizar-grid {
   display: grid;
