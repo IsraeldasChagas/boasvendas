@@ -10,6 +10,12 @@ use Illuminate\Support\Str;
 
 class Produto extends Model
 {
+    /** Na vitrine: cliente usa −/+ por ingrediente (quantidades). */
+    public const ING_RETIRAR_UI_STEPPER = 'stepper';
+
+    /** Na vitrine: cliente marca checkboxes (1 por ingrediente, até o máximo). */
+    public const ING_RETIRAR_UI_CHECKBOX = 'checkbox';
+
     protected $table = 'produtos';
 
     protected $fillable = [
@@ -27,6 +33,7 @@ class Produto extends Model
         'acrescimo_escolhas_min',
         'acrescimo_escolhas_max',
         'max_ingredientes_retirar',
+        'ingredientes_retirar_ui',
     ];
 
     protected function casts(): array

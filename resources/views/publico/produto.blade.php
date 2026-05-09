@@ -43,6 +43,9 @@
                     $minEsc = $colEscolhas ? $produto->acrescimo_escolhas_min : null;
                     $maxEsc = $colEscolhas ? $produto->acrescimo_escolhas_max : null;
                     $temLimiteAcrescimo = $produto->permite_adicionais && $acres->isNotEmpty() && ($minEsc !== null || $maxEsc !== null);
+                    $uiRetirarIng = Schema::hasColumn('produtos', 'ingredientes_retirar_ui')
+                        ? ($produto->ingredientes_retirar_ui ?? \App\Models\Produto::ING_RETIRAR_UI_STEPPER)
+                        : \App\Models\Produto::ING_RETIRAR_UI_STEPPER;
                 @endphp
                 <p class="h4 text-success mb-1">R$ {{ number_format((float) $produto->preco, 2, ',', '.') }}</p>
                 @if ($produto->estoque !== null)
@@ -128,32 +131,58 @@
                                 @endif
 
                                 @if ($temRetirarIng)
-                                    <div class="vf-personalizar-grid vf-acrescimo-stepper-grid vf-retirar-stepper-grid mb-1 {{ $produto->permite_adicionais && $acres->isNotEmpty() ? 'mt-3' : '' }}"
-                                        id="vf-retirar-stepper"
-                                        data-max-total="{{ $maxRet }}">
-                                        @foreach ($produto->ingredientes as $ing)
-                                            <div class="vf-escolha-card vf-escolha-card--retirar" data-ing-id="{{ $ing->id }}">
-                                                <div class="vf-escolha-card-inner">
-                                                    <span class="vf-escolha-bar" aria-hidden="true"></span>
-                                                    @if ($ing->urlFoto())
-                                                        <div class="vf-escolha-thumb-wrap flex-shrink-0" aria-hidden="true">
-                                                            <img src="{{ $ing->urlFoto() }}" alt="" class="vf-escolha-thumb-ing rounded border" width="40" height="40">
+                                    @if ($uiRetirarIng === \App\Models\Produto::ING_RETIRAR_UI_CHECKBOX)
+                                        <p class="fw-semibold mb-2 {{ $produto->permite_adicionais && $acres->isNotEmpty() ? 'mt-3' : '' }}">Ingredientes para retirar</p>
+                                        <div class="vf-personalizar-grid vf-retirar-checkbox-grid mb-1 {{ $produto->permite_adicionais && $acres->isNotEmpty() ? 'mt-1' : '' }}"
+                                            id="vf-retirar-checkbox"
+                                            data-max-total="{{ $maxRet }}">
+                                            @foreach ($produto->ingredientes as $ing)
+                                                <div class="vf-escolha-card vf-escolha-card--retirar" data-ing-id="{{ $ing->id }}">
+                                                    <div class="vf-escolha-card-inner vf-escolha-card-inner--retirar-chk">
+                                                        <span class="vf-escolha-bar" aria-hidden="true"></span>
+                                                        @if ($ing->urlFoto())
+                                                            <div class="vf-escolha-thumb-wrap flex-shrink-0" aria-hidden="true">
+                                                                <img src="{{ $ing->urlFoto() }}" alt="" class="vf-escolha-thumb-ing rounded border" width="40" height="40">
+                                                            </div>
+                                                        @endif
+                                                        <div class="form-check m-0 flex-grow-1 min-w-0 d-flex align-items-start gap-2 py-2 px-2">
+                                                            <input class="form-check-input vf-retirar-chk mt-1 flex-shrink-0" type="checkbox" id="ret_ing_{{ $ing->id }}" autocomplete="off" aria-describedby="ret_ing_label_{{ $ing->id }}">
+                                                            <input type="hidden" name="retirar_qtd[{{ $ing->id }}]" value="0" class="vf-retirar-qty-input" autocomplete="off">
+                                                            <label class="form-check-label mb-0" for="ret_ing_{{ $ing->id }}" id="ret_ing_label_{{ $ing->id }}">{{ $ing->nome }}</label>
                                                         </div>
-                                                    @endif
-                                                    <div class="vf-escolha-textos">
-                                                        <span class="vf-personalizar-nome">{{ $ing->nome }}</span>
-                                                        <span class="vf-escolha-badge vf-escolha-badge--retirar"><i class="bi bi-check-lg me-1"></i>Selecionado</span>
-                                                    </div>
-                                                    <div class="vf-escolha-stepper" role="group" aria-label="Opção {{ $ing->nome }}">
-                                                        <button type="button" class="vf-escolha-btn vf-escolha-btn--menos" aria-label="Diminuir">−</button>
-                                                        <span class="vf-escolha-qty-wrap"><span class="vf-escolha-qty-disp" aria-live="polite">0</span></span>
-                                                        <input type="hidden" name="retirar_qtd[{{ $ing->id }}]" value="0" class="vf-retirar-qty-input" autocomplete="off">
-                                                        <button type="button" class="vf-escolha-btn vf-escolha-btn--mais" aria-label="Aumentar">+</button>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <p class="fw-semibold mb-2 {{ $produto->permite_adicionais && $acres->isNotEmpty() ? 'mt-3' : '' }}">Ingredientes para retirar</p>
+                                        <div class="vf-personalizar-grid vf-acrescimo-stepper-grid vf-retirar-stepper-grid mb-1 {{ $produto->permite_adicionais && $acres->isNotEmpty() ? 'mt-1' : '' }}"
+                                            id="vf-retirar-stepper"
+                                            data-max-total="{{ $maxRet }}">
+                                            @foreach ($produto->ingredientes as $ing)
+                                                <div class="vf-escolha-card vf-escolha-card--retirar" data-ing-id="{{ $ing->id }}">
+                                                    <div class="vf-escolha-card-inner">
+                                                        <span class="vf-escolha-bar" aria-hidden="true"></span>
+                                                        @if ($ing->urlFoto())
+                                                            <div class="vf-escolha-thumb-wrap flex-shrink-0" aria-hidden="true">
+                                                                <img src="{{ $ing->urlFoto() }}" alt="" class="vf-escolha-thumb-ing rounded border" width="40" height="40">
+                                                            </div>
+                                                        @endif
+                                                        <div class="vf-escolha-textos">
+                                                            <span class="vf-personalizar-nome">{{ $ing->nome }}</span>
+                                                            <span class="vf-escolha-badge vf-escolha-badge--retirar"><i class="bi bi-check-lg me-1"></i>Selecionado</span>
+                                                        </div>
+                                                        <div class="vf-escolha-stepper" role="group" aria-label="Opção {{ $ing->nome }}">
+                                                            <button type="button" class="vf-escolha-btn vf-escolha-btn--menos" aria-label="Diminuir">−</button>
+                                                            <span class="vf-escolha-qty-wrap"><span class="vf-escolha-qty-disp" aria-live="polite">0</span></span>
+                                                            <input type="hidden" name="retirar_qtd[{{ $ing->id }}]" value="0" class="vf-retirar-qty-input" autocomplete="off">
+                                                            <button type="button" class="vf-escolha-btn vf-escolha-btn--mais" aria-label="Aumentar">+</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
                                 @endif
                             </div>
                         @endif
@@ -316,6 +345,34 @@
                                 });
                             }
                             atualizarCardRet(card);
+                        });
+                    }
+
+                    var wrapChk = document.getElementById('vf-retirar-checkbox');
+                    if (wrapChk) {
+                        var maxChk = parseInt(wrapChk.getAttribute('data-max-total') || '0', 10);
+                        wrapChk.querySelectorAll('.vf-escolha-card--retirar').forEach(function (card) {
+                            var chk = card.querySelector('.vf-retirar-chk');
+                            var hid = card.querySelector('.vf-retirar-qty-input');
+                            if (!chk || !hid) return;
+                            function sync() {
+                                hid.value = chk.checked ? '1' : '0';
+                                card.classList.toggle('vf-escolha-card--ativo', chk.checked);
+                            }
+                            chk.addEventListener('change', function () {
+                                if (chk.checked) {
+                                    var outros = 0;
+                                    wrapChk.querySelectorAll('.vf-retirar-qty-input').forEach(function (h) {
+                                        if (h !== hid) outros += parseInt(h.value || '0', 10) || 0;
+                                    });
+                                    if (outros + 1 > maxChk) {
+                                        chk.checked = false;
+                                        alert('Você pode marcar no máximo ' + maxChk + ' ingrediente(s) para retirar.');
+                                    }
+                                }
+                                sync();
+                            });
+                            sync();
                         });
                     }
                 })();

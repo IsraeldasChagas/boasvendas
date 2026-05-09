@@ -96,6 +96,7 @@ class ProdutoController extends Controller
         $itensIng = $this->coletaIngredientesDoRequest($request, $empresa);
         $this->validarLimiteRetirarIngredientes($request, $itensIng);
         $data['max_ingredientes_retirar'] = count($itensIng) > 0 ? (int) $request->input('max_ingredientes_retirar') : null;
+        $this->aplicarIngredientesRetirarUi($request, $data, $itensIng);
         $data['empresa_id'] = $empresa->id;
         $data['sku'] = $this->gerarCodigoInternoUnico($empresa);
 
@@ -160,6 +161,7 @@ class ProdutoController extends Controller
         } else {
             $data['max_ingredientes_retirar'] = null;
         }
+        $this->aplicarIngredientesRetirarUi($request, $data, $itensIng);
 
         if ($request->hasFile('foto')) {
             $this->removerFotoDoDisco($produto);
@@ -251,6 +253,13 @@ class ProdutoController extends Controller
             $rules['acrescimo_escolhas_max'] = ['nullable', 'integer', 'min:0', 'max:999'];
         }
 
+        if (Schema::hasColumn('produtos', 'ingredientes_retirar_ui')) {
+            $rules['ingredientes_retirar_ui'] = ['nullable', 'string', Rule::in([
+                Produto::ING_RETIRAR_UI_STEPPER,
+                Produto::ING_RETIRAR_UI_CHECKBOX,
+            ])];
+        }
+
         $data = $request->validate($rules);
 
         $data['visivel_loja'] = $request->boolean('visivel_loja');
@@ -294,6 +303,28 @@ class ProdutoController extends Controller
         unset($data['foto'], $data['ingrediente_nomes'], $data['ingrediente_foto_atual'], $data['ingrediente_fotos']);
 
         return $data;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @param  list<array{nome: string, foto_atual: ?string, file: ?UploadedFile}>  $itensIng
+     */
+    private function aplicarIngredientesRetirarUi(Request $request, array &$data, array $itensIng): void
+    {
+        if (! Schema::hasColumn('produtos', 'ingredientes_retirar_ui')) {
+            return;
+        }
+
+        if ($itensIng === []) {
+            $data['ingredientes_retirar_ui'] = null;
+
+            return;
+        }
+
+        $v = $request->input('ingredientes_retirar_ui');
+        $data['ingredientes_retirar_ui'] = in_array($v, [Produto::ING_RETIRAR_UI_STEPPER, Produto::ING_RETIRAR_UI_CHECKBOX], true)
+            ? $v
+            : Produto::ING_RETIRAR_UI_STEPPER;
     }
 
     /**

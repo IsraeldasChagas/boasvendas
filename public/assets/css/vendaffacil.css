@@ -385,6 +385,15 @@ body.vf-body {
   border-radius: 0.25rem;
 }
 
+.vf-escolha-card-inner--retirar-chk {
+  flex-wrap: nowrap;
+}
+
+.vf-retirar-checkbox-grid .vf-escolha-card-inner--retirar-chk .form-check {
+  flex: 1;
+  min-width: 0;
+}
+
 .vf-escolha-bar {
   width: 4px;
   flex-shrink: 0;
