@@ -14,22 +14,28 @@
             </ol>
         </nav>
         <div class="row g-4">
-            <div class="col-md-6">
-                <div class="vf-card ratio ratio-1x1 bg-light overflow-hidden vf-produto-pagina-foto">
+            <div class="col-12 col-md-6">
+                <div class="vf-card ratio ratio-1x1 bg-light overflow-hidden vf-produto-pagina-foto w-100">
                     @if ($produto->urlFoto())
-                        <img src="{{ $produto->urlFoto() }}" alt="{{ $produto->nome }}" class="w-100 h-100 object-fit-cover"
-                             onerror="this.style.display='none'; this.parentElement.querySelector('[data-fallback]').classList.remove('d-none');">
+                        <img src="{{ $produto->urlFoto() }}" alt="{{ $produto->nome }}"
+                            class="position-absolute top-0 start-0 w-100 h-100 object-fit-cover"
+                            style="object-position: center;"
+                            loading="eager"
+                            decoding="async"
+                            onerror="this.style.display='none'; var _fb=this.parentElement.querySelector('[data-fallback]'); if(_fb){ _fb.classList.remove('d-none'); }">
                     @else
-                        <div class="d-flex align-items-center justify-content-center w-100 h-100">
+                        <div class="d-flex align-items-center justify-content-center w-100 h-100 position-absolute top-0 start-0">
                             <i class="bi bi-cup-hot display-3 text-primary opacity-25"></i>
                         </div>
                     @endif
-                    <div class="d-none d-flex align-items-center justify-content-center w-100 h-100" data-fallback>
-                        <i class="bi bi-cup-hot display-3 text-primary opacity-25"></i>
+                    <div class="d-none w-100 h-100 position-absolute top-0 start-0" data-fallback>
+                        <div class="d-flex align-items-center justify-content-center w-100 h-100">
+                            <i class="bi bi-cup-hot display-3 text-primary opacity-25"></i>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-12 col-md-6">
                 <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mt-2 mb-0">
                     <h1 class="h3 fw-bold mb-0">{{ $produto->nome }}</h1>
                     @php
