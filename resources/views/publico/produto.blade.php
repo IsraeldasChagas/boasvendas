@@ -71,68 +71,48 @@
                                 @endif
 
                                 @if ($produto->permite_adicionais && $acres->isNotEmpty())
-                                    @if ($temLimiteAcrescimo)
-                                        <div class="d-flex justify-content-between align-items-start gap-2 mb-2 flex-wrap">
-                                            <span class="fw-semibold">
-                                                @if ($minEsc !== null && $maxEsc !== null && (int) $minEsc === (int) $maxEsc)
-                                                    Escolha {{ $minEsc }} opções
-                                                @else
-                                                    Acrescentar
-                                                @endif
-                                            </span>
-                                            <span class="small text-muted text-end">Mínimo: {{ $minEsc ?? '—' }} e Máximo: {{ $maxEsc ?? '—' }}</span>
-                                        </div>
-                                        <div class="vf-personalizar-grid vf-acrescimo-limite-grid mb-1"
-                                            id="vf-acrescimos-limite"
-                                            data-min="{{ $minEsc !== null ? (int) $minEsc : 0 }}"
-                                            data-max="{{ $maxEsc !== null ? (int) $maxEsc : 99999 }}">
-                                            @foreach ($acres as $ad)
-                                                <div class="vf-escolha-card" data-ad-id="{{ $ad->id }}">
-                                                    <div class="vf-escolha-card-inner">
-                                                        <span class="vf-escolha-bar" aria-hidden="true"></span>
-                                                        <div class="vf-escolha-textos">
-                                                            <span class="vf-personalizar-nome">
-                                                                {{ $ad->nome }}
-                                                                @if ((float) $ad->preco > 0)
-                                                                    <span class="d-block small text-success fw-normal mt-1">+ R$ {{ number_format((float) $ad->preco, 2, ',', '.') }} <span class="text-muted">cada</span></span>
-                                                                @endif
-                                                            </span>
-                                                            <span class="vf-escolha-badge"><i class="bi bi-check-lg me-1"></i>Selecionado</span>
-                                                        </div>
-                                                        <div class="vf-escolha-stepper" hidden>
-                                                            <button type="button" class="vf-escolha-btn vf-escolha-btn--menos" aria-label="Diminuir">−</button>
-                                                            <span class="vf-escolha-qty-disp" aria-live="polite">0</span>
-                                                            <input type="hidden" name="adicional_qtd[{{ $ad->id }}]" value="0" class="vf-acrescimo-qty-input" autocomplete="off">
-                                                            <button type="button" class="vf-escolha-btn vf-escolha-btn--mais" aria-label="Aumentar">+</button>
-                                                        </div>
-                                                        <button type="button" class="vf-escolha-solo-mais" aria-label="Adicionar opção"><span class="vf-escolha-solo-mais-ico">+</span></button>
+                                    <div class="d-flex justify-content-between align-items-start gap-2 mb-2 flex-wrap">
+                                        <span class="fw-semibold">
+                                            @if ($temLimiteAcrescimo && $minEsc !== null && $maxEsc !== null && (int) $minEsc === (int) $maxEsc)
+                                                Escolha {{ $minEsc }} opções
+                                            @else
+                                                Acrescentar
+                                            @endif
+                                        </span>
+                                        @if ($temLimiteAcrescimo)
+                                            <span class="small text-muted text-end">Mínimo: {{ $minEsc ?? '—' }} · Máximo: {{ $maxEsc ?? '—' }}</span>
+                                        @else
+                                            <span class="small text-muted text-end">Use − e + · até 1 de cada opção</span>
+                                        @endif
+                                    </div>
+                                    <div class="vf-personalizar-grid vf-acrescimo-stepper-grid mb-1"
+                                        id="vf-acrescimos-stepper"
+                                        data-usa-limite="{{ $temLimiteAcrescimo ? '1' : '0' }}"
+                                        data-min="{{ $temLimiteAcrescimo && $minEsc !== null ? (int) $minEsc : 0 }}"
+                                        data-max="{{ $temLimiteAcrescimo && $maxEsc !== null ? (int) $maxEsc : 99999 }}">
+                                        @foreach ($acres as $ad)
+                                            <div class="vf-escolha-card" data-ad-id="{{ $ad->id }}">
+                                                <div class="vf-escolha-card-inner">
+                                                    <span class="vf-escolha-bar" aria-hidden="true"></span>
+                                                    <div class="vf-escolha-textos">
+                                                        <span class="vf-personalizar-nome">
+                                                            {{ $ad->nome }}
+                                                            @if ((float) $ad->preco > 0)
+                                                                <span class="d-block small text-success fw-normal mt-1">+ R$ {{ number_format((float) $ad->preco, 2, ',', '.') }} @if ($temLimiteAcrescimo)<span class="text-muted">cada</span>@endif</span>
+                                                            @endif
+                                                        </span>
+                                                        <span class="vf-escolha-badge"><i class="bi bi-check-lg me-1"></i>Selecionado</span>
+                                                    </div>
+                                                    <div class="vf-escolha-stepper" role="group" aria-label="Quantidade {{ $ad->nome }}">
+                                                        <button type="button" class="vf-escolha-btn vf-escolha-btn--menos" aria-label="Diminuir quantidade">−</button>
+                                                        <span class="vf-escolha-qty-wrap"><span class="vf-escolha-qty-disp" aria-live="polite">0</span></span>
+                                                        <input type="hidden" name="adicional_qtd[{{ $ad->id }}]" value="0" class="vf-acrescimo-qty-input" autocomplete="off">
+                                                        <button type="button" class="vf-escolha-btn vf-escolha-btn--mais" aria-label="Aumentar quantidade">+</button>
                                                     </div>
                                                 </div>
-                                            @endforeach
-                                        </div>
-                                    @else
-                                        <div class="d-flex justify-content-between align-items-baseline gap-2 mb-2">
-                                            <span class="fw-semibold">Acrescentar</span>
-                                            <span class="small text-muted">Opcional</span>
-                                        </div>
-                                        <div class="vf-personalizar-grid mb-1">
-                                            @foreach ($acres as $ad)
-                                                <label class="vf-personalizar-card vf-personalizar-card--adicional">
-                                                    <input class="vf-personalizar-input visually-hidden" type="checkbox" name="adicional_ids[]" id="adicional_{{ $ad->id }}" value="{{ $ad->id }}">
-                                                    <span class="vf-personalizar-nome">
-                                                        {{ $ad->nome }}
-                                                        @if ((float) $ad->preco > 0)
-                                                            <span class="d-block small text-success fw-normal mt-1">+ R$ {{ number_format((float) $ad->preco, 2, ',', '.') }}</span>
-                                                        @endif
-                                                    </span>
-                                                    <span class="vf-personalizar-btn vf-personalizar-btn--add" aria-hidden="true">
-                                                        <i class="bi bi-plus-lg vf-personalizar-ico-on"></i>
-                                                        <i class="bi bi-check-lg vf-personalizar-ico-off"></i>
-                                                    </span>
-                                                </label>
-                                            @endforeach
-                                        </div>
-                                    @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
                                 @endif
 
                                 @if ($temRetirarIng)
@@ -170,17 +150,19 @@
             </div>
         </div>
     </div>
-    @if (($temRetirarIng ?? false) || ($temLimiteAcrescimo ?? false))
+    @if (($temRetirarIng ?? false) || ($temAcrescimo ?? false))
         @push('scripts')
             <script>
                 (function () {
                     const form = document.querySelector('form[action*="carrinho.adicionar"]');
                     if (!form) return;
 
-                    const wrap = document.getElementById('vf-acrescimos-limite');
+                    const wrap = document.getElementById('vf-acrescimos-stepper');
                     if (wrap) {
+                        const usaLimite = wrap.dataset.usaLimite === '1';
                         const min = parseInt(wrap.dataset.min || '0', 10);
                         const max = parseInt(wrap.dataset.max || '99999', 10);
+                        const maxPorOpcao = usaLimite ? 999 : 1;
 
                         function soma() {
                             let t = 0;
@@ -193,58 +175,64 @@
                         function atualizarCard(card) {
                             const inp = card.querySelector('.vf-acrescimo-qty-input');
                             const q = parseInt(inp.value || '0', 10) || 0;
-                            const step = card.querySelector('.vf-escolha-stepper');
-                            const solo = card.querySelector('.vf-escolha-solo-mais');
                             const disp = card.querySelector('.vf-escolha-qty-disp');
+                            const btnMais = card.querySelector('.vf-escolha-btn--mais');
+                            const btnMenos = card.querySelector('.vf-escolha-btn--menos');
                             if (disp) disp.textContent = String(q);
                             card.classList.toggle('vf-escolha-card--ativo', q > 0);
-                            if (step) step.hidden = q < 1;
-                            if (solo) solo.hidden = q > 0;
-                        }
-
-                        function refreshAll() {
-                            wrap.querySelectorAll('.vf-escolha-card').forEach(atualizarCard);
+                            if (btnMenos) btnMenos.disabled = q < 1;
+                            const total = soma();
+                            let podeMais = q < maxPorOpcao;
+                            if (usaLimite && podeMais && total >= max) {
+                                podeMais = false;
+                            }
+                            if (!usaLimite && q >= 1) {
+                                podeMais = false;
+                            }
+                            if (btnMais) btnMais.disabled = !podeMais;
                         }
 
                         wrap.querySelectorAll('.vf-escolha-card').forEach(function (card) {
                             const inp = card.querySelector('.vf-acrescimo-qty-input');
                             const btnMais = card.querySelector('.vf-escolha-btn--mais');
                             const btnMenos = card.querySelector('.vf-escolha-btn--menos');
-                            const solo = card.querySelector('.vf-escolha-solo-mais');
 
                             function setQ(novo) {
-                                const q = Math.max(0, parseInt(novo, 10) || 0);
+                                let q = Math.max(0, parseInt(novo, 10) || 0);
+                                q = Math.min(q, maxPorOpcao);
                                 inp.value = String(q);
-                                atualizarCard(card);
+                                wrap.querySelectorAll('.vf-escolha-card').forEach(atualizarCard);
                             }
 
-                            if (solo) {
-                                solo.addEventListener('click', function () {
-                                    if (soma() >= max) {
-                                        alert('Você já atingiu o máximo de ' + max + ' opções.');
-                                        return;
-                                    }
-                                    setQ((parseInt(inp.value || '0', 10) || 0) + 1);
-                                });
+                            function tentarMais() {
+                                const q = parseInt(inp.value || '0', 10) || 0;
+                                if (!usaLimite) {
+                                    if (q >= 1) return;
+                                    setQ(1);
+                                    return;
+                                }
+                                if (q >= maxPorOpcao) return;
+                                if (soma() >= max) {
+                                    alert('Você já atingiu o máximo de ' + max + ' opções (somando as quantidades).');
+                                    return;
+                                }
+                                setQ(q + 1);
                             }
+
                             if (btnMais) {
-                                btnMais.addEventListener('click', function () {
-                                    if (soma() >= max) {
-                                        alert('Você já atingiu o máximo de ' + max + ' opções.');
-                                        return;
-                                    }
-                                    setQ((parseInt(inp.value || '0', 10) || 0) + 1);
-                                });
+                                btnMais.addEventListener('click', tentarMais);
                             }
                             if (btnMenos) {
                                 btnMenos.addEventListener('click', function () {
-                                    setQ((parseInt(inp.value || '0', 10) || 0) - 1);
+                                    const q = parseInt(inp.value || '0', 10) || 0;
+                                    setQ(q - 1);
                                 });
                             }
                             atualizarCard(card);
                         });
 
                         form.addEventListener('submit', function (e) {
+                            if (!usaLimite) return;
                             const s = soma();
                             if (s < min || s > max) {
                                 e.preventDefault();
