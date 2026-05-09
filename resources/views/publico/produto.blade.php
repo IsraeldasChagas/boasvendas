@@ -69,7 +69,7 @@
                 @if ($produto->estoque === null || $produto->estoque > 0)
                     <div class="vf-produto-estrelas mb-3" id="vf-produto-estrelas-wrap">
                         <span class="small text-muted d-block mb-1">Sua nota <span class="fw-normal">(opcional)</span></span>
-                        <div class="d-inline-flex align-items-center vf-estrelas-grupo" role="group" aria-label="Dar de 1 a 5 estrelas ao produto — clique na mesma estrela para remover a nota">
+                        <div class="d-inline-flex align-items-center vf-estrelas-grupo" role="group" aria-label="Dar de 1 a 5 estrelas — clique de novo na última estrela da nota para baixar um ponto; com 1 estrela, remove a nota">
                             @for ($s = 1; $s <= 5; $s++)
                                 <button type="button" class="btn btn-link p-1 lh-1 vf-estrela-produto-btn text-warning text-decoration-none border-0"
                                     data-vf-estrela="{{ $s }}"
@@ -354,7 +354,7 @@
                                 var val = parseInt(btn.getAttribute('data-vf-estrela'), 10);
                                 var cur = parseInt(String(hid.value || ''), 10);
                                 if (!isNaN(cur) && cur === val) {
-                                    hid.value = '';
+                                    hid.value = cur <= 1 ? '' : String(cur - 1);
                                 } else {
                                     hid.value = String(val);
                                 }
