@@ -13,6 +13,15 @@
                 <h2 class="h5 fw-bold mb-4">Dados do produto</h2>
                 <form action="{{ route('empresa.produtos.store') }}" method="post" enctype="multipart/form-data">
                     @csrf
+                    @php
+                        $uiRetirarIng = null;
+                        if (\Illuminate\Support\Facades\Schema::hasColumn('produtos', 'ingredientes_retirar_ui')) {
+                            $uiRetirarIng = old('ingredientes_retirar_ui', \App\Models\Produto::ING_RETIRAR_UI_STEPPER);
+                        }
+                    @endphp
+                    @if ($uiRetirarIng !== null)
+                        @include('partials.empresa.produto-ingredientes-retirar-ui', ['valorUi' => $uiRetirarIng, 'section' => 'hidden'])
+                    @endif
                     <div class="row g-3">
                         <div class="col-12">
                             <label class="form-label" for="foto">Foto do produto</label>
@@ -56,22 +65,8 @@
                             <textarea class="form-control @error('descricao') is-invalid @enderror" id="descricao" name="descricao" rows="3">{{ old('descricao') }}</textarea>
                             @error('descricao')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
-                        @if (\Illuminate\Support\Facades\Schema::hasColumn('produtos', 'ingredientes_retirar_ui'))
-                            @php
-                                $uiRetirarIng = old('ingredientes_retirar_ui', \App\Models\Produto::ING_RETIRAR_UI_STEPPER);
-                            @endphp
-                            <div class="col-12">
-                                <label class="form-label">Na loja: cliente marca retirada de ingredientes com</label>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="ingredientes_retirar_ui" id="ingredientes_ui_stepper" value="{{ \App\Models\Produto::ING_RETIRAR_UI_STEPPER }}" @checked($uiRetirarIng === \App\Models\Produto::ING_RETIRAR_UI_STEPPER)>
-                                    <label class="form-check-label" for="ingredientes_ui_stepper">Botões − e + (quantidade por ingrediente)</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="ingredientes_retirar_ui" id="ingredientes_ui_checkbox" value="{{ \App\Models\Produto::ING_RETIRAR_UI_CHECKBOX }}" @checked($uiRetirarIng === \App\Models\Produto::ING_RETIRAR_UI_CHECKBOX)>
-                                    <label class="form-check-label" for="ingredientes_ui_checkbox">Caixas de seleção (marcar o que retirar)</label>
-                                </div>
-                                <div class="form-text">Usado quando há ingredientes do prato e “máx. para retirar” maior que zero. Cada marcação em checkbox conta 1 no limite.</div>
-                            </div>
+                        @if ($uiRetirarIng !== null)
+                            @include('partials.empresa.produto-ingredientes-retirar-ui', ['valorUi' => $uiRetirarIng, 'section' => 'radios'])
                         @endif
                         @php
                             if (old('ingrediente_nomes') !== null) {
