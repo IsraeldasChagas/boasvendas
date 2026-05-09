@@ -30,7 +30,17 @@ class ConfiguracaoController extends Controller
 
         $empresa->load('plano');
 
-        return view('empresa.configuracoes.index', compact('empresa'));
+        $categoriasBanner = collect();
+        if (Empresa::schemaTemColunaLojaBannerCategoria()) {
+            $categoriasBanner = Categoria::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('ativo', true)
+                ->orderBy('ordem')
+                ->orderBy('nome')
+                ->get();
+        }
+
+        return view('empresa.configuracoes.index', compact('empresa', 'categoriasBanner'));
     }
 
     public function update(Request $request): RedirectResponse
@@ -106,7 +116,7 @@ class ConfiguracaoController extends Controller
             $rules['loja_aberta'] = ['required', 'in:0,1'];
         }
 
-        if (Schema::hasColumn('empresas', 'loja_banner_categoria_id')) {
+        if (Empresa::schemaTemColunaLojaBannerCategoria()) {
             $rules['loja_banner_categoria_id'] = [
                 'nullable',
                 'integer',
@@ -114,7 +124,7 @@ class ConfiguracaoController extends Controller
             ];
         }
 
-        if (Schema::hasColumn('empresas', 'loja_banner_categoria_id') && $request->has('loja_banner_categoria_id')) {
+        if (Empresa::schemaTemColunaLojaBannerCategoria() && $request->has('loja_banner_categoria_id')) {
             $rawBannerCat = $request->input('loja_banner_categoria_id');
             $request->merge([
                 'loja_banner_categoria_id' => ($rawBannerCat === '' || $rawBannerCat === null) ? null : (int) $rawBannerCat,
@@ -210,13 +220,17 @@ class ConfiguracaoController extends Controller
             $data['loja_frete_google_km_max'] = ($v === null || $v === '') ? null : round((float) $v, 2);
         }
 
-        if (Schema::hasColumn('empresas', 'loja_banner_categoria_id')) {
+        if (Empresa::schemaTemColunaLojaBannerCategoria()) {
             if (! $empresa->temTelaMenu('loja_online') || ! $request->has('loja_banner_categoria_id')) {
                 unset($data['loja_banner_categoria_id']);
             } else {
                 $raw = $data['loja_banner_categoria_id'] ?? null;
                 $data['loja_banner_categoria_id'] = ($raw === null || $raw === '') ? null : (int) $raw;
             }
+        }
+
+        if (! Empresa::schemaTemColunaLojaBannerCategoria()) {
+            unset($data['loja_banner_categoria_id']);
         }
 
         $slugAnterior = (string) ($empresa->slug ?? '');

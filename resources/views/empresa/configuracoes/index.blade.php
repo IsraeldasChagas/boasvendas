@@ -69,14 +69,14 @@
                         @error('loja_aberta')<div class="invalid-feedback d-block mt-2">{{ $message }}</div>@enderror
                     </div>
                 @endif
-                @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_banner_categoria_id') && $empresa->temTelaMenu('loja_online'))
+                @if (\App\Models\Empresa::schemaTemColunaLojaBannerCategoria() && $empresa->temTelaMenu('loja_online'))
                     <div class="vf-card p-4 mb-3">
                         <h2 class="h6 fw-bold mb-2">Banner no cardápio</h2>
                         <p class="small text-muted mb-3">Bloco em destaque no topo da loja pública, <strong>antes</strong> do filtro de categorias. Ao tocar, o cliente filtra pela categoria escolhida.</p>
                         <label class="form-label" for="loja_banner_categoria_id">Categoria em destaque</label>
                         <select class="form-select form-select-sm @error('loja_banner_categoria_id') is-invalid @enderror" id="loja_banner_categoria_id" name="loja_banner_categoria_id">
                             <option value="">— Sem banner —</option>
-                            @foreach ($categoriasBanner as $catBanner)
+                            @foreach (($categoriasBanner ?? collect()) as $catBanner)
                                 <option value="{{ $catBanner->id }}" @selected((string) old('loja_banner_categoria_id', $empresa->loja_banner_categoria_id) === (string) $catBanner->id)>{{ $catBanner->nome }}</option>
                             @endforeach
                         </select>

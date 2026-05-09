@@ -106,6 +106,18 @@ class Empresa extends Model
         return $this->hasMany(Categoria::class, 'empresa_id');
     }
 
+    /**
+     * Coluna da FK do banner no cardápio (só após migrate). Falhas ao consultar o schema não devem derrubar o site.
+     */
+    public static function schemaTemColunaLojaBannerCategoria(): bool
+    {
+        try {
+            return Schema::hasColumn('empresas', 'loja_banner_categoria_id');
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
     /** Categoria em destaque no topo do cardápio público (banner opcional). */
     public function lojaBannerCategoria(): BelongsTo
     {

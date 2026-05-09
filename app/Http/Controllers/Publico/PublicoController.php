@@ -705,7 +705,7 @@ class PublicoController extends Controller
 
         $bannerCategoria = null;
         $bannerCapaUrl = null;
-        if (Schema::hasColumn('empresas', 'loja_banner_categoria_id')) {
+        if (Empresa::schemaTemColunaLojaBannerCategoria()) {
             $empresa->loadMissing('lojaBannerCategoria');
             $bc = $empresa->lojaBannerCategoria;
             if ($bc !== null && (int) $bc->empresa_id === (int) $empresa->id && $bc->ativo) {
