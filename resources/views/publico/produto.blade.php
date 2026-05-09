@@ -310,7 +310,7 @@
                     </form>
                 @endif
 
-                <div class="small text-muted"><a href="{{ route('publico.loja', ['slug' => $slug]) }}"><i class="bi bi-arrow-left me-1"></i>Voltar ao cardápio</a></div>
+                <div class="small text-muted mb-4 pb-2"><a href="{{ route('publico.loja', ['slug' => $slug]) }}"><i class="bi bi-arrow-left me-1"></i>Voltar ao cardápio</a></div>
             </div>
         </div>
     </div>
