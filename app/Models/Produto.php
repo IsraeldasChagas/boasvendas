@@ -145,6 +145,6 @@ class Produto extends Model
 
         $v = $this->updated_at?->getTimestamp() ?? time();
 
-        return route('publico.produto_foto', ['produto' => $this->getKey()], absolute: false).'?v='.$v;
+        return route('publico.produto_foto', ['produto' => $this->getKey()], absolute: true).'?v='.$v;
     }
 }

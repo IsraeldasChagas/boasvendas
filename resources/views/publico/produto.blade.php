@@ -15,28 +15,27 @@
         </nav>
         <div class="row g-4">
             <div class="col-12 col-md-6">
-                <div class="vf-card ratio ratio-1x1 bg-light overflow-hidden vf-produto-pagina-foto w-100">
-                    @if ($produto->urlFoto())
-                        <img src="{{ $produto->urlFoto() }}" alt="{{ $produto->nome }}"
-                            class="position-absolute top-0 start-0 w-100 h-100 object-fit-cover"
-                            style="object-position: center;"
-                            loading="eager"
-                            decoding="async"
-                            onerror="this.style.display='none'; var _fb=this.parentElement.querySelector('[data-fallback]'); if(_fb){ _fb.classList.remove('d-none'); }">
-                    @else
-                        <div class="d-flex align-items-center justify-content-center w-100 h-100 position-absolute top-0 start-0">
-                            <i class="bi bi-cup-hot display-3 text-primary opacity-25"></i>
-                        </div>
-                    @endif
-                    <div class="d-none w-100 h-100 position-absolute top-0 start-0" data-fallback>
-                        <div class="d-flex align-items-center justify-content-center w-100 h-100">
-                            <i class="bi bi-cup-hot display-3 text-primary opacity-25"></i>
-                        </div>
+                <div class="vf-card overflow-hidden vf-produto-pagina-foto vf-produto-pagina-foto--hero w-100">
+                    <div class="vf-produto-pagina-foto__frame">
+                        @if ($produto->urlFoto())
+                            <img src="{{ $produto->urlFoto() }}" alt="{{ $produto->nome }}"
+                                class="vf-produto-pagina-foto__img"
+                                width="800" height="800"
+                                loading="eager" fetchpriority="high" decoding="async"
+                                onerror="this.classList.add('d-none'); var f=this.nextElementSibling; if(f) f.classList.remove('d-none');">
+                            <div class="vf-produto-pagina-foto__placeholder d-none" data-fallback aria-hidden="true">
+                                <i class="bi bi-cup-hot display-3 text-primary opacity-25" aria-hidden="true"></i>
+                            </div>
+                        @else
+                            <div class="vf-produto-pagina-foto__placeholder" aria-hidden="true">
+                                <i class="bi bi-cup-hot display-3 text-primary opacity-25" aria-hidden="true"></i>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
             <div class="col-12 col-md-6">
-                <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mt-2 mb-0">
+                <div class="d-flex flex-column flex-md-row flex-md-wrap align-items-start justify-content-between gap-3 mt-2 mb-0">
                     <h1 class="h3 fw-bold mb-0">{{ $produto->nome }}</h1>
                     @php
                         $vfShareProdutoUrl = route('publico.produto', ['slug' => $slug, 'produto_id' => $produto->id]);
@@ -44,26 +43,26 @@
                         $vfWaHref = 'https://wa.me/?text='.rawurlencode($vfWaTexto);
                         $vfFbHref = 'https://www.facebook.com/sharer/sharer.php?u='.rawurlencode($vfShareProdutoUrl);
                     @endphp
-                    <div class="btn-group btn-group-sm flex-shrink-0 align-self-start" role="group" aria-label="Compartilhar este produto">
+                    <div class="vf-produto-share d-flex flex-wrap align-items-center justify-content-between justify-content-md-end gap-2 gap-md-3 align-self-stretch w-100 w-md-auto pt-1 pt-md-0" role="group" aria-label="Compartilhar este produto">
                         <a href="{{ $vfWaHref }}" target="_blank" rel="noopener noreferrer"
-                           class="btn btn-success"
+                           class="btn btn-success vf-produto-share__btn rounded-3"
                            title="WhatsApp"
                            aria-label="Compartilhar no WhatsApp">
-                            <i class="bi bi-whatsapp" aria-hidden="true"></i><span class="d-none d-sm-inline ms-1">WhatsApp</span>
+                            <i class="bi bi-whatsapp vf-produto-share__ico" aria-hidden="true"></i><span class="vf-produto-share__label ms-1">WhatsApp</span>
                         </a>
                         <a href="{{ $vfFbHref }}" target="_blank" rel="noopener noreferrer"
-                           class="btn btn-primary"
+                           class="btn btn-primary vf-produto-share__btn rounded-3"
                            title="Facebook"
                            aria-label="Compartilhar no Facebook">
-                            <i class="bi bi-facebook" aria-hidden="true"></i><span class="d-none d-sm-inline ms-1">Facebook</span>
+                            <i class="bi bi-facebook vf-produto-share__ico" aria-hidden="true"></i><span class="vf-produto-share__label ms-1">Facebook</span>
                         </a>
                         <button type="button"
-                            class="btn text-white border-0 vf-share-instagram"
+                            class="btn text-white border-0 vf-produto-share__btn vf-share-instagram rounded-3"
                             style="background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);"
                             data-share-url="{{ $vfShareProdutoUrl }}"
                             title="Instagram — copia o link para você colar no app"
                             aria-label="Copiar link do produto para compartilhar no Instagram">
-                            <i class="bi bi-instagram" aria-hidden="true"></i><span class="d-none d-sm-inline ms-1 vf-share-instagram-label">Instagram</span>
+                            <i class="bi bi-instagram vf-produto-share__ico" aria-hidden="true"></i><span class="vf-produto-share__label ms-1 vf-share-instagram-label">Instagram</span>
                         </button>
                     </div>
                 </div>

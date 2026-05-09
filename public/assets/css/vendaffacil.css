@@ -222,15 +222,108 @@ body.vf-body {
   box-shadow: var(--vf-shadow);
 }
 
-/* Página do produto — foto principal (ratio + col-12 no mobile evita coluna com largura 0) */
-.vf-produto-pagina-foto {
+/* Página do produto — foto principal (aspect-ratio evita altura 0 no Safari / webviews) */
+.vf-produto-pagina-foto--hero {
   width: 100%;
   max-width: 100%;
+  padding: 0;
+  background: var(--vf-surface, #fff);
 }
 
-.vf-produto-pagina-foto img {
+.vf-produto-pagina-foto__frame {
+  position: relative;
+  width: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #e9ecef;
+  aspect-ratio: 1 / 1;
+}
+
+/* Fallback antigo sem aspect-ratio (Safari muito antigo) */
+@supports not (aspect-ratio: 1 / 1) {
+  .vf-produto-pagina-foto__frame {
+    height: 0;
+    padding-bottom: 100%;
+    aspect-ratio: auto;
+  }
+}
+
+.vf-produto-pagina-foto__img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
   object-fit: cover;
   object-position: center;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.vf-produto-pagina-foto__placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f3f5;
+}
+
+/* Página do produto — compartilhar (espaçamento e toque no celular) */
+.vf-produto-share {
+  row-gap: 0.6rem;
+  column-gap: 0.55rem;
+}
+
+@media (min-width: 768px) {
+  .vf-produto-share {
+    column-gap: 0.85rem;
+    row-gap: 0.65rem;
+  }
+}
+
+.vf-produto-share .vf-produto-share__btn {
+  min-height: 2.9rem;
+  padding: 0.55rem 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  line-height: 1.2;
+  flex: 1 1 auto;
+}
+
+@media (min-width: 576px) {
+  .vf-produto-share .vf-produto-share__btn {
+    flex: 0 1 auto;
+  }
+}
+
+@media (min-width: 768px) {
+  .vf-produto-share .vf-produto-share__btn {
+    min-height: 2.75rem;
+    padding: 0.5rem 1.15rem;
+    font-size: 0.875rem;
+  }
+}
+
+.vf-produto-share .vf-produto-share__ico {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+@media (min-width: 768px) {
+  .vf-produto-share .vf-produto-share__ico {
+    font-size: 1.3rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .vf-produto-share .vf-produto-share__label {
+    font-size: 0.82rem;
+  }
 }
 
 /* Vitrine — produto: Personalizar (celular = 1 coluna; tablet+ = 2) */
