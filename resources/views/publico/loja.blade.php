@@ -4,14 +4,13 @@
 
 @section('content')
     <div class="container">
-        <div class="mb-3 d-flex flex-wrap align-items-center gap-2">
-            <span class="vf-badge bg-secondary-subtle text-secondary">Cardápio online</span>
-            @if ($empresa->fidelidadePrograma && $empresa->fidelidadePrograma->ativo)
+        @if ($empresa->fidelidadePrograma && $empresa->fidelidadePrograma->ativo)
+            <div class="mb-3 d-flex flex-wrap align-items-center gap-2">
                 <a href="{{ route('publico.fidelidade', ['slug' => $slug]) }}" class="vf-badge bg-primary-subtle text-primary text-decoration-none">
                     <i class="bi bi-award me-1"></i>Cartão fidelidade
                 </a>
-            @endif
-        </div>
+            </div>
+        @endif
 
         <form action="{{ route('publico.loja', ['slug' => $slug]) }}" method="get" class="vf-filter-bar mb-3">
             <div class="row g-2 align-items-end">

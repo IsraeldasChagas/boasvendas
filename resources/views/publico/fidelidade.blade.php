@@ -11,6 +11,12 @@
             </ol>
         </nav>
 
+        <div class="mb-3 d-flex flex-wrap align-items-center gap-2">
+            <a href="{{ route('publico.loja', ['slug' => $slug]) }}" class="vf-badge bg-secondary-subtle text-secondary text-decoration-none">
+                Cardápio online
+            </a>
+        </div>
+
         <h1 class="h4 fw-bold mb-1">{{ $programa?->nome_exibicao ?? 'Cartão fidelidade' }}</h1>
         <p class="text-muted small mb-4">{{ $empresa->nome }}</p>
 
