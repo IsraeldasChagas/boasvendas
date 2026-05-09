@@ -96,7 +96,7 @@ class ProdutoController extends Controller
         $itensIng = $this->coletaIngredientesDoRequest($request, $empresa);
         $this->validarLimiteRetirarIngredientes($request, $itensIng);
         $data['max_ingredientes_retirar'] = count($itensIng) > 0 ? (int) $request->input('max_ingredientes_retirar') : null;
-        $this->aplicarIngredientesRetirarUi($request, $data, $itensIng);
+        $this->aplicarIngredientesRetirarUi($request, $data, $itensIng, null);
         $data['empresa_id'] = $empresa->id;
         $data['sku'] = $this->gerarCodigoInternoUnico($empresa);
 
@@ -161,7 +161,7 @@ class ProdutoController extends Controller
         } else {
             $data['max_ingredientes_retirar'] = null;
         }
-        $this->aplicarIngredientesRetirarUi($request, $data, $itensIng);
+        $this->aplicarIngredientesRetirarUi($request, $data, $itensIng, $produto);
 
         if ($request->hasFile('foto')) {
             $this->removerFotoDoDisco($produto);
@@ -309,7 +309,7 @@ class ProdutoController extends Controller
      * @param  array<string, mixed>  $data
      * @param  list<array{nome: string, foto_atual: ?string, file: ?UploadedFile}>  $itensIng
      */
-    private function aplicarIngredientesRetirarUi(Request $request, array &$data, array $itensIng): void
+    private function aplicarIngredientesRetirarUi(Request $request, array &$data, array $itensIng, ?Produto $produto): void
     {
         if (! Schema::hasColumn('produtos', 'ingredientes_retirar_ui')) {
             return;
@@ -322,9 +322,21 @@ class ProdutoController extends Controller
         }
 
         $v = $request->input('ingredientes_retirar_ui');
-        $data['ingredientes_retirar_ui'] = in_array($v, [Produto::ING_RETIRAR_UI_STEPPER, Produto::ING_RETIRAR_UI_CHECKBOX], true)
-            ? $v
-            : Produto::ING_RETIRAR_UI_STEPPER;
+        if (in_array($v, [Produto::ING_RETIRAR_UI_STEPPER, Produto::ING_RETIRAR_UI_CHECKBOX], true)) {
+            $data['ingredientes_retirar_ui'] = $v;
+
+            return;
+        }
+
+        // Campo ausente no POST (formulário grande, max_input_vars, etc.): ao editar, não forçar stepper.
+        $anterior = $produto?->ingredientes_retirar_ui;
+        if ($anterior !== null && in_array($anterior, [Produto::ING_RETIRAR_UI_STEPPER, Produto::ING_RETIRAR_UI_CHECKBOX], true)) {
+            $data['ingredientes_retirar_ui'] = $anterior;
+
+            return;
+        }
+
+        $data['ingredientes_retirar_ui'] = Produto::ING_RETIRAR_UI_STEPPER;
     }
 
     /**

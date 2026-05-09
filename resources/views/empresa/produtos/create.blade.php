@@ -56,6 +56,23 @@
                             <textarea class="form-control @error('descricao') is-invalid @enderror" id="descricao" name="descricao" rows="3">{{ old('descricao') }}</textarea>
                             @error('descricao')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
+                        @if (\Illuminate\Support\Facades\Schema::hasColumn('produtos', 'ingredientes_retirar_ui'))
+                            @php
+                                $uiRetirarIng = old('ingredientes_retirar_ui', \App\Models\Produto::ING_RETIRAR_UI_STEPPER);
+                            @endphp
+                            <div class="col-12">
+                                <label class="form-label">Na loja: cliente marca retirada de ingredientes com</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="ingredientes_retirar_ui" id="ingredientes_ui_stepper" value="{{ \App\Models\Produto::ING_RETIRAR_UI_STEPPER }}" @checked($uiRetirarIng === \App\Models\Produto::ING_RETIRAR_UI_STEPPER)>
+                                    <label class="form-check-label" for="ingredientes_ui_stepper">Botões − e + (quantidade por ingrediente)</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="ingredientes_retirar_ui" id="ingredientes_ui_checkbox" value="{{ \App\Models\Produto::ING_RETIRAR_UI_CHECKBOX }}" @checked($uiRetirarIng === \App\Models\Produto::ING_RETIRAR_UI_CHECKBOX)>
+                                    <label class="form-check-label" for="ingredientes_ui_checkbox">Caixas de seleção (marcar o que retirar)</label>
+                                </div>
+                                <div class="form-text">Usado quando há ingredientes do prato e “máx. para retirar” maior que zero. Cada marcação em checkbox conta 1 no limite.</div>
+                            </div>
+                        @endif
                         @php
                             if (old('ingrediente_nomes') !== null) {
                                 $oldNomes = old('ingrediente_nomes', []);
@@ -90,23 +107,6 @@
                             }
                         @endphp
                         @include('partials.empresa.produto-ingredientes-form', ['linhas' => $ingredientesLinhas])
-                        @if (\Illuminate\Support\Facades\Schema::hasColumn('produtos', 'ingredientes_retirar_ui'))
-                            @php
-                                $uiRetirarIng = old('ingredientes_retirar_ui', \App\Models\Produto::ING_RETIRAR_UI_STEPPER);
-                            @endphp
-                            <div class="col-12">
-                                <label class="form-label">Na loja: cliente marca retirada de ingredientes com</label>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="ingredientes_retirar_ui" id="ingredientes_ui_stepper" value="{{ \App\Models\Produto::ING_RETIRAR_UI_STEPPER }}" @checked($uiRetirarIng === \App\Models\Produto::ING_RETIRAR_UI_STEPPER)>
-                                    <label class="form-check-label" for="ingredientes_ui_stepper">Botões − e + (quantidade por ingrediente)</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="ingredientes_retirar_ui" id="ingredientes_ui_checkbox" value="{{ \App\Models\Produto::ING_RETIRAR_UI_CHECKBOX }}" @checked($uiRetirarIng === \App\Models\Produto::ING_RETIRAR_UI_CHECKBOX)>
-                                    <label class="form-check-label" for="ingredientes_ui_checkbox">Caixas de seleção (marcar o que retirar)</label>
-                                </div>
-                                <div class="form-text">Usado quando há ingredientes do prato e “máx. para retirar” maior que zero. Cada marcação em checkbox conta 1 no limite.</div>
-                            </div>
-                        @endif
                         <div class="col-md-4">
                             <label class="form-label" for="max_ingredientes_retirar">Máx. ingredientes para retirar</label>
                             <input type="number" class="form-control @error('max_ingredientes_retirar') is-invalid @enderror" id="max_ingredientes_retirar" name="max_ingredientes_retirar" value="{{ old('max_ingredientes_retirar') }}" min="0" placeholder="Ex.: 2">
