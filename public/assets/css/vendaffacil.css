@@ -1007,6 +1007,34 @@ body.vf-body {
   pointer-events: none;
 }
 
+.vf-loja-banner-scrim a {
+  pointer-events: auto;
+}
+
+.vf-loja-banner-carousel .carousel-inner {
+  height: 100%;
+}
+
+.vf-loja-banner-carousel .carousel-item {
+  height: 100%;
+}
+
+.vf-loja-banner-carousel .carousel-control-prev,
+.vf-loja-banner-carousel .carousel-control-next {
+  width: 2.75rem;
+  opacity: 1;
+  z-index: 5;
+}
+
+.vf-loja-banner-carousel .carousel-control-prev-icon,
+.vf-loja-banner-carousel .carousel-control-next-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.45);
+  background-size: 55% 55%;
+}
+
 .vf-loja-banner:focus-visible .vf-loja-banner-media {
   outline: 3px solid rgba(37, 99, 235, 0.45);
   outline-offset: 2px;

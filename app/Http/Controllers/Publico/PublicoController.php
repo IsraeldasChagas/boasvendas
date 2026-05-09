@@ -704,13 +704,14 @@ class PublicoController extends Controller
             ->get();
 
         $bannerCategoria = null;
-        $bannerCapaUrl = null;
+        /** @var \Illuminate\Support\Collection<int, array{url: string, nome: string, produto_id: int}> $bannerSlides */
+        $bannerSlides = collect();
         if (Empresa::schemaTemColunaLojaBannerCategoria()) {
             $empresa->loadMissing('lojaBannerCategoria');
             $bc = $empresa->lojaBannerCategoria;
             if ($bc !== null && (int) $bc->empresa_id === (int) $empresa->id && $bc->ativo) {
                 $bannerCategoria = $bc;
-                $capa = Produto::query()
+                $capas = Produto::query()
                     ->where('empresa_id', $empresa->id)
                     ->where('categoria_id', $bc->id)
                     ->where('ativo', true)
@@ -718,10 +719,17 @@ class PublicoController extends Controller
                     ->whereNotNull('foto')
                     ->where('foto', '!=', '')
                     ->orderBy('nome')
-                    ->first();
-                if ($capa !== null) {
-                    $u = $capa->urlFoto();
-                    $bannerCapaUrl = ($u !== null && $u !== '') ? $u : null;
+                    ->limit(24)
+                    ->get();
+                foreach ($capas as $prodBanner) {
+                    $u = $prodBanner->urlFoto();
+                    if ($u !== null && $u !== '') {
+                        $bannerSlides->push([
+                            'url' => $u,
+                            'nome' => $prodBanner->nome,
+                            'produto_id' => (int) $prodBanner->id,
+                        ]);
+                    }
                 }
             }
         }
@@ -732,7 +740,7 @@ class PublicoController extends Controller
             'produtos',
             'categorias',
             'bannerCategoria',
-            'bannerCapaUrl'
+            'bannerSlides'
         ));
     }
 
