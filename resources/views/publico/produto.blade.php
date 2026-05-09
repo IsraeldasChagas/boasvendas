@@ -15,7 +15,7 @@
         </nav>
         <div class="row g-4">
             <div class="col-md-6">
-                <div class="vf-card ratio ratio-1x1 bg-light overflow-hidden">
+                <div class="vf-card ratio ratio-1x1 bg-light overflow-hidden vf-produto-pagina-foto">
                     @if ($produto->urlFoto())
                         <img src="{{ $produto->urlFoto() }}" alt="{{ $produto->nome }}" class="w-100 h-100 object-fit-cover"
                              onerror="this.style.display='none'; this.parentElement.querySelector('[data-fallback]').classList.remove('d-none');">
@@ -130,7 +130,7 @@
                                     $limitesNoCard[] = 'Ingredientes — mín. 0 · máx. '.$maxRet;
                                 }
                             @endphp
-                            <div class="vf-card p-3 mb-3 vf-card-personalizar-produto">
+                            <div class="vf-card p-2 p-md-3 mb-3 vf-card-personalizar-produto">
                                 <div class="d-flex justify-content-between align-items-start gap-2 mb-3 flex-wrap">
                                     <h2 class="h6 fw-bold mb-0">Personalizar</h2>
                                     @if ($limitesNoCard !== [])
