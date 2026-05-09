@@ -174,7 +174,7 @@
                                                     <div class="vf-escolha-stepper" role="group" aria-label="Quantidade {{ $ad->nome }}">
                                                         <button type="button" class="vf-escolha-btn vf-escolha-btn--menos" aria-label="Diminuir quantidade">−</button>
                                                         <span class="vf-escolha-qty-wrap"><span class="vf-escolha-qty-disp" aria-live="polite">0</span></span>
-                                                        <input type="hidden" name="adicional_qtd[{{ $ad->id }}]" value="0" class="vf-acrescimo-qty-input" autocomplete="off">
+                                                        <input type="hidden" name="adicional_qtd[{{ $ad->id }}]" value="{{ (int) old('adicional_qtd.'.$ad->id, 0) }}" class="vf-acrescimo-qty-input" autocomplete="off">
                                                         <button type="button" class="vf-escolha-btn vf-escolha-btn--mais" aria-label="Aumentar quantidade">+</button>
                                                     </div>
                                                 </div>
@@ -199,9 +199,9 @@
                                                             </div>
                                                         @endif
                                                         <div class="vf-retirar-chk-wrap flex-grow-1 min-w-0 d-flex align-items-start gap-3 py-2 ps-2 pe-3">
-                                                            <input class="form-check-input vf-retirar-chk flex-shrink-0 mt-1" type="checkbox" id="ret_ing_{{ $ing->id }}" autocomplete="off" aria-describedby="ret_ing_label_{{ $ing->id }}">
+                                                            <input class="form-check-input vf-retirar-chk flex-shrink-0 mt-1" type="checkbox" id="ret_ing_{{ $ing->id }}" autocomplete="off" aria-describedby="ret_ing_label_{{ $ing->id }}" @checked(((int) old('retirar_qtd.'.$ing->id, 0)) > 0)>
                                                             <label class="form-check-label mb-0 flex-grow-1" for="ret_ing_{{ $ing->id }}" id="ret_ing_label_{{ $ing->id }}">{{ $ing->nome }}</label>
-                                                            <input type="hidden" name="retirar_qtd[{{ $ing->id }}]" value="0" class="vf-retirar-qty-input" autocomplete="off">
+                                                            <input type="hidden" name="retirar_qtd[{{ $ing->id }}]" value="{{ (int) old('retirar_qtd.'.$ing->id, 0) }}" class="vf-retirar-qty-input" autocomplete="off">
                                                         </div>
                                                     </div>
                                                 </div>
@@ -228,7 +228,7 @@
                                                         <div class="vf-escolha-stepper" role="group" aria-label="Opção {{ $ing->nome }}">
                                                             <button type="button" class="vf-escolha-btn vf-escolha-btn--menos" aria-label="Diminuir">−</button>
                                                             <span class="vf-escolha-qty-wrap"><span class="vf-escolha-qty-disp" aria-live="polite">0</span></span>
-                                                            <input type="hidden" name="retirar_qtd[{{ $ing->id }}]" value="0" class="vf-retirar-qty-input" autocomplete="off">
+                                                            <input type="hidden" name="retirar_qtd[{{ $ing->id }}]" value="{{ (int) old('retirar_qtd.'.$ing->id, 0) }}" class="vf-retirar-qty-input" autocomplete="off">
                                                             <button type="button" class="vf-escolha-btn vf-escolha-btn--mais" aria-label="Aumentar">+</button>
                                                         </div>
                                                     </div>
@@ -338,7 +338,7 @@
             </script>
         @endpush
     @endif
-    @if (($temRetirarIng ?? false) || ($temAcrescimo ?? false))
+    @if ($temPersonalizar ?? false)
         @push('scripts')
             <script>
                 (function () {
@@ -347,6 +347,28 @@
                         form = document.querySelector('form[action*="carrinho.adicionar"]');
                     }
                     if (!form) return;
+
+                    form.addEventListener('submit', function () {
+                        var wc = document.getElementById('vf-retirar-checkbox');
+                        if (wc) {
+                            wc.querySelectorAll('.vf-escolha-card--retirar').forEach(function (card) {
+                                var chk = card.querySelector('.vf-retirar-chk');
+                                var hid = card.querySelector('.vf-retirar-qty-input');
+                                if (chk && hid) {
+                                    hid.value = chk.checked ? '1' : '0';
+                                }
+                            });
+                        }
+                        form.querySelectorAll('.vf-acrescimo-qty-input, .vf-retirar-qty-input').forEach(function (inp) {
+                            var n = parseInt(inp.value || '0', 10);
+                            if (isNaN(n)) {
+                                n = 0;
+                            }
+                            n = Math.max(0, Math.min(999, n));
+                            inp.value = String(n);
+                            inp.disabled = false;
+                        });
+                    });
 
                     var wrap = document.getElementById('vf-acrescimos-stepper');
                     if (wrap) {

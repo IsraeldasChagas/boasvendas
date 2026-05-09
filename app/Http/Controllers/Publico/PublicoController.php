@@ -818,12 +818,12 @@ class PublicoController extends Controller
         $temLimite = $this->produtoTemLimiteEscolhasAcrescimo($p);
 
         if (! $p->permite_adicionais && $mapReq !== []) {
-            return back()->with('warning', 'Este produto não permite acréscimos opcionais.');
+            return back()->withInput()->with('warning', 'Este produto não permite acréscimos opcionais.');
         }
 
         foreach ($mapReq as $aid => $_) {
             if (! in_array((int) $aid, $idsPermAcre, true)) {
-                return back()->with('warning', 'Uma das opções escolhidas não é válida para este produto.');
+                return back()->withInput()->with('warning', 'Uma das opções escolhidas não é válida para este produto.');
             }
         }
 
@@ -845,7 +845,7 @@ class PublicoController extends Controller
             $minOk = $minE !== null ? (int) $minE : 0;
             $maxOk = $maxE !== null ? (int) $maxE : 99999;
             if ($sum < $minOk || $sum > $maxOk) {
-                return back()->with('warning', 'Para este produto, escolha entre '.$minOk.' e '.$maxOk.' opções de acréscimo (total somando as quantidades).');
+                return back()->withInput()->with('warning', 'Para este produto, escolha entre '.$minOk.' e '.$maxOk.' opções de acréscimo (total somando as quantidades).');
             }
         }
 
@@ -878,7 +878,7 @@ class PublicoController extends Controller
                 continue;
             }
             if (! in_array($id, $idsPermIng, true)) {
-                return back()->with('warning', 'Uma das opções de ingrediente não é válida para este produto.');
+                return back()->withInput()->with('warning', 'Uma das opções de ingrediente não é válida para este produto.');
             }
             $retOk[$id] = $q;
         }
@@ -890,12 +890,12 @@ class PublicoController extends Controller
         } else {
             $sumR = (int) array_sum($retOk);
             if ($sumR > $maxR) {
-                return back()->with('warning', 'Você pode escolher no máximo '.$maxR.' (somando as quantidades entre os ingredientes).');
+                return back()->withInput()->with('warning', 'Você pode escolher no máximo '.$maxR.' (somando as quantidades entre os ingredientes).');
             }
         }
 
         if ($p->estoque !== null && $p->estoque < $qty) {
-            return back()->with('warning', 'Quantidade indisponível em estoque para este produto.');
+            return back()->withInput()->with('warning', 'Quantidade indisponível em estoque para este produto.');
         }
 
         $lines = $this->getCarrinhoLines($slug);
@@ -931,7 +931,7 @@ class PublicoController extends Controller
 
         $totalMesmoProduto = collect($lines)->where('produto_id', (int) $p->id)->sum('quantidade');
         if ($p->estoque !== null && $totalMesmoProduto > $p->estoque) {
-            return back()->with('warning', 'Não há estoque suficiente para a quantidade desejada.');
+            return back()->withInput()->with('warning', 'Não há estoque suficiente para a quantidade desejada.');
         }
 
         $this->setCarrinhoLines($slug, array_values($lines));
