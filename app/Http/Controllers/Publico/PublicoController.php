@@ -56,7 +56,7 @@ class PublicoController extends Controller
     }
 
     /**
-     * @return list<array{produto_id: int, quantidade: int, adicional_ids: list<int>, retirar_ingrediente_ids: list<int>, observacao: string}>
+     * @return list<array{produto_id: int, quantidade: int, adicional_qtd: array<int, int>, retirar_ingrediente_ids: list<int>, observacao: string}>
      */
     private function getCarrinhoLines(string $slug): array
     {
@@ -74,7 +74,7 @@ class PublicoController extends Controller
                 $out[] = [
                     'produto_id' => (int) $line['produto_id'],
                     'quantidade' => max(0, (int) ($line['quantidade'] ?? 0)),
-                    'adicional_ids' => $this->normalizarIdsAdicionais($line['adicional_ids'] ?? []),
+                    'adicional_qtd' => $this->linhaParaMapaAdicionalQtd($line),
                     'retirar_ingrediente_ids' => $this->normalizarIdsAdicionais($line['retirar_ingrediente_ids'] ?? []),
                     'observacao' => $this->normalizarObservacao($line['observacao'] ?? null),
                 ];
@@ -95,13 +95,89 @@ class PublicoController extends Controller
             $lines[] = [
                 'produto_id' => (int) $pid,
                 'quantidade' => $q,
-                'adicional_ids' => [],
+                'adicional_qtd' => [],
                 'retirar_ingrediente_ids' => [],
                 'observacao' => '',
             ];
         }
 
         return $lines;
+    }
+
+    /**
+     * @param  array<string, mixed>  $line
+     * @return array<int, int>
+     */
+    private function linhaParaMapaAdicionalQtd(array $line): array
+    {
+        $raw = $line['adicional_qtd'] ?? null;
+        if (is_array($raw) && $raw !== []) {
+            $map = [];
+            foreach ($raw as $kid => $qv) {
+                $id = (int) $kid;
+                $q = max(0, (int) $qv);
+                if ($id > 0 && $q > 0) {
+                    $map[$id] = ($map[$id] ?? 0) + $q;
+                }
+            }
+            if ($map !== []) {
+                ksort($map);
+
+                return $map;
+            }
+        }
+
+        $ids = $this->normalizarIdsAdicionais($line['adicional_ids'] ?? []);
+        $map = [];
+        foreach ($ids as $id) {
+            $map[$id] = 1;
+        }
+        ksort($map);
+
+        return $map;
+    }
+
+    private function produtoTemLimiteEscolhasAcrescimo(Produto $p): bool
+    {
+        if (! $p->permite_adicionais) {
+            return false;
+        }
+        if (! Schema::hasColumn('produtos', 'acrescimo_escolhas_min')) {
+            return false;
+        }
+
+        return $p->acrescimo_escolhas_min !== null || $p->acrescimo_escolhas_max !== null;
+    }
+
+    /**
+     * @param  array<int, int>  $map
+     * @return array<int, int>
+     */
+    private function reduzirMapaAteSomaMax(array $map, int $maxSum): array
+    {
+        $sum = (int) array_sum($map);
+        if ($sum <= $maxSum) {
+            return array_filter($map, fn (int $q) => $q > 0);
+        }
+        krsort($map);
+        while ($sum > $maxSum) {
+            $reduced = false;
+            foreach ($map as $id => $q) {
+                if ($q > 0) {
+                    $map[$id] = $q - 1;
+                    $sum--;
+                    $reduced = true;
+                    if ($sum <= $maxSum) {
+                        break;
+                    }
+                }
+            }
+            if (! $reduced) {
+                break;
+            }
+        }
+
+        return array_filter($map, fn (int $q) => $q > 0);
     }
 
     /**
@@ -123,12 +199,22 @@ class PublicoController extends Controller
     }
 
     /**
-     * @param  list<int>  $adicionalIdsAcrescentarOrdenados
+     * @param  array<int, int>  $adicionalQtdMap
      * @param  list<int>  $retirarIngredienteIdsOrdenados
      */
-    private function fingerprintLinha(int $produtoId, array $adicionalIdsAcrescentarOrdenados, array $retirarIngredienteIdsOrdenados, string $observacaoNormalizada): string
+    private function fingerprintLinha(int $produtoId, array $adicionalQtdMap, array $retirarIngredienteIdsOrdenados, string $observacaoNormalizada): string
     {
-        return $produtoId.'|a:'.implode(',', $adicionalIdsAcrescentarOrdenados).'|r:'.implode(',', $retirarIngredienteIdsOrdenados).'|'.sha1($observacaoNormalizada);
+        ksort($adicionalQtdMap);
+        $parts = [];
+        foreach ($adicionalQtdMap as $id => $q) {
+            $id = (int) $id;
+            $q = (int) $q;
+            if ($id > 0 && $q > 0) {
+                $parts[] = $id.'x'.$q;
+            }
+        }
+
+        return $produtoId.'|a:'.implode(',', $parts).'|r:'.implode(',', $retirarIngredienteIdsOrdenados).'|'.sha1($observacaoNormalizada);
     }
 
     private function normalizarObservacao(?string $text): string
@@ -158,8 +244,8 @@ class PublicoController extends Controller
      *   line_index: int,
      *   produto: Produto,
      *   quantidade: int,
-     *   adicional_ids: list<int>,
-     *   opcoes: list<array{id:int,nome:string,tipo:string,preco:float}>,
+     *   adicional_qtd: array<int, int>,
+     *   opcoes: list<array{id:int,nome:string,tipo:string,preco:float,quantidade?:int}>,
      *   preco_unitario: float,
      *   subtotal: float,
      *   observacao: string
@@ -194,7 +280,7 @@ class PublicoController extends Controller
         foreach ($linesRaw as $line) {
             $pid = (int) $line['produto_id'];
             $qty = max(0, (int) $line['quantidade']);
-            $idsReq = $this->normalizarIdsAdicionais($line['adicional_ids'] ?? []);
+            $mapReq = $this->linhaParaMapaAdicionalQtd($line);
             $retReq = $this->normalizarIdsAdicionais($line['retirar_ingrediente_ids'] ?? []);
             if ($qty < 1) {
                 continue;
@@ -209,7 +295,32 @@ class PublicoController extends Controller
                 ? $p->adicionais->where('tipo', Adicional::TIPO_ACRESCENTAR)->pluck('id')->map(fn ($id) => (int) $id)->all()
                 : [];
 
-            $idsOkAcre = array_values(array_intersect($idsPermAcre, $idsReq));
+            $temLimite = $this->produtoTemLimiteEscolhasAcrescimo($p);
+
+            $mapFiltrado = [];
+            foreach ($mapReq as $aid => $q) {
+                $aid = (int) $aid;
+                $q = max(0, min(999, (int) $q));
+                if ($aid > 0 && $q > 0 && in_array($aid, $idsPermAcre, true)) {
+                    $mapFiltrado[$aid] = ($mapFiltrado[$aid] ?? 0) + $q;
+                }
+            }
+            ksort($mapFiltrado);
+
+            if (! $temLimite) {
+                $mapOk = [];
+                foreach ($mapFiltrado as $aid => $q) {
+                    if ($q > 0) {
+                        $mapOk[$aid] = 1;
+                    }
+                }
+            } else {
+                $mapOk = $mapFiltrado;
+                $maxEsc = Schema::hasColumn('produtos', 'acrescimo_escolhas_min') ? $p->acrescimo_escolhas_max : null;
+                if ($maxEsc !== null) {
+                    $mapOk = $this->reduzirMapaAteSomaMax($mapOk, (int) $maxEsc);
+                }
+            }
 
             $idsPermIng = $p->ingredientes->pluck('id')->map(fn ($id) => (int) $id)->all();
             $retOk = array_values(array_intersect($retReq, $idsPermIng));
@@ -225,19 +336,27 @@ class PublicoController extends Controller
 
             $opcoes = [];
             $extraUnit = 0.0;
-            foreach ($idsOkAcre as $aid) {
+            foreach ($mapOk as $aid => $qtdAd) {
                 $ad = $p->adicionais->firstWhere('id', $aid);
                 if (! $ad || $ad->tipo !== Adicional::TIPO_ACRESCENTAR) {
                     continue;
                 }
+                $qtdAd = (int) $qtdAd;
+                if ($qtdAd < 1) {
+                    continue;
+                }
                 $precoAd = (float) $ad->preco;
-                $extraUnit += $precoAd;
-                $opcoes[] = [
+                $extraUnit += $precoAd * $qtdAd;
+                $op = [
                     'id' => (int) $ad->id,
                     'nome' => $ad->nome,
                     'tipo' => $ad->tipo,
                     'preco' => round($precoAd, 2),
                 ];
+                if ($qtdAd > 1) {
+                    $op['quantidade'] = $qtdAd;
+                }
+                $opcoes[] = $op;
             }
             foreach ($retOk as $iid) {
                 $ing = $p->ingredientes->firstWhere('id', $iid);
@@ -259,7 +378,7 @@ class PublicoController extends Controller
             $novasLinhasSessao[] = [
                 'produto_id' => $pid,
                 'quantidade' => $qty,
-                'adicional_ids' => $idsOkAcre,
+                'adicional_qtd' => $mapOk,
                 'retirar_ingrediente_ids' => $retOk,
                 'observacao' => $obsLinha,
             ];
@@ -268,7 +387,7 @@ class PublicoController extends Controller
                 'line_index' => $idx,
                 'produto' => $p,
                 'quantidade' => $qty,
-                'adicional_ids' => $idsOkAcre,
+                'adicional_qtd' => $mapOk,
                 'opcoes' => $opcoes,
                 'preco_unitario' => $precoUnit,
                 'subtotal' => $subtotal,
@@ -541,6 +660,8 @@ class PublicoController extends Controller
             'quantidade' => ['nullable', 'integer', 'min:1', 'max:99'],
             'adicional_ids' => ['nullable', 'array'],
             'adicional_ids.*' => ['integer'],
+            'adicional_qtd' => ['nullable', 'array'],
+            'adicional_qtd.*' => ['integer', 'min:0', 'max:999'],
             'retirar_ingrediente_ids' => ['nullable', 'array'],
             'retirar_ingrediente_ids.*' => ['integer'],
             'observacao' => ['nullable', 'string', 'max:500'],
@@ -564,19 +685,66 @@ class PublicoController extends Controller
             abort(404, 'Produto não encontrado ou indisponível na loja.');
         }
 
-        $idsReq = $this->normalizarIdsAdicionais($data['adicional_ids'] ?? []);
-        if (! $p->permite_adicionais && $idsReq !== []) {
-            return back()->with('warning', 'Este produto não permite acréscimos opcionais.');
-        }
-
         $idsPermAcre = $p->permite_adicionais
             ? $p->adicionais->where('tipo', Adicional::TIPO_ACRESCENTAR)->pluck('id')->map(fn ($id) => (int) $id)->all()
             : [];
 
-        $idsOkAcre = $this->normalizarIdsAdicionais(array_values(array_intersect($idsPermAcre, $idsReq)));
+        $mapReq = [];
+        $rawQtd = $data['adicional_qtd'] ?? [];
+        if (is_array($rawQtd)) {
+            foreach ($rawQtd as $kid => $qv) {
+                $id = (int) $kid;
+                $q = max(0, (int) $qv);
+                if ($id > 0 && $q > 0) {
+                    $mapReq[$id] = ($mapReq[$id] ?? 0) + $q;
+                }
+            }
+        }
+        if ($mapReq === []) {
+            foreach ($this->normalizarIdsAdicionais($data['adicional_ids'] ?? []) as $id) {
+                $mapReq[$id] = ($mapReq[$id] ?? 0) + 1;
+            }
+        }
+        ksort($mapReq);
 
-        if (count($idsOkAcre) !== count($idsReq)) {
-            return back()->with('warning', 'Uma das opções escolhidas não é válida para este produto.');
+        $temLimite = $this->produtoTemLimiteEscolhasAcrescimo($p);
+
+        if (! $p->permite_adicionais && $mapReq !== []) {
+            return back()->with('warning', 'Este produto não permite acréscimos opcionais.');
+        }
+
+        foreach ($mapReq as $aid => $_) {
+            if (! in_array((int) $aid, $idsPermAcre, true)) {
+                return back()->with('warning', 'Uma das opções escolhidas não é válida para este produto.');
+            }
+        }
+
+        $mapFiltrado = [];
+        foreach ($mapReq as $aid => $q) {
+            $aid = (int) $aid;
+            if (in_array($aid, $idsPermAcre, true)) {
+                $mapFiltrado[$aid] = max(0, min(999, (int) $q));
+            }
+        }
+        ksort($mapFiltrado);
+
+        if (! $temLimite) {
+            $mapOk = [];
+            foreach ($mapFiltrado as $aid => $q) {
+                if ($q > 0) {
+                    $mapOk[$aid] = 1;
+                }
+            }
+        } else {
+            $mapOk = array_filter($mapFiltrado, fn (int $q) => $q > 0);
+            $sum = (int) array_sum($mapOk);
+            $minE = Schema::hasColumn('produtos', 'acrescimo_escolhas_min') ? $p->acrescimo_escolhas_min : null;
+            $maxE = Schema::hasColumn('produtos', 'acrescimo_escolhas_min') ? $p->acrescimo_escolhas_max : null;
+            $minOk = $minE !== null ? (int) $minE : 0;
+            $maxOk = $maxE !== null ? (int) $maxE : 99999;
+            if ($sum < $minOk || $sum > $maxOk) {
+                return back()->with('warning', 'Para este produto, escolha entre '.$minOk.' e '.$maxOk.' opções de acréscimo (total somando as quantidades).');
+            }
         }
 
         $retReq = $this->normalizarIdsAdicionais($data['retirar_ingrediente_ids'] ?? []);
@@ -599,13 +767,13 @@ class PublicoController extends Controller
         }
 
         $lines = $this->getCarrinhoLines($slug);
-        $fp = $this->fingerprintLinha((int) $p->id, $idsOkAcre, $retOk, $obsNorm);
+        $fp = $this->fingerprintLinha((int) $p->id, $mapOk, $retOk, $obsNorm);
         $found = false;
         foreach ($lines as $i => $line) {
             $lineObs = $this->normalizarObservacao($line['observacao'] ?? null);
             $lineFp = $this->fingerprintLinha(
                 (int) $line['produto_id'],
-                $this->normalizarIdsAdicionais($line['adicional_ids'] ?? []),
+                $this->linhaParaMapaAdicionalQtd($line),
                 $this->normalizarIdsAdicionais($line['retirar_ingrediente_ids'] ?? []),
                 $lineObs
             );
@@ -620,7 +788,7 @@ class PublicoController extends Controller
             $lines[] = [
                 'produto_id' => (int) $p->id,
                 'quantidade' => $qty,
-                'adicional_ids' => $idsOkAcre,
+                'adicional_qtd' => $mapOk,
                 'retirar_ingrediente_ids' => $retOk,
                 'observacao' => $obsNorm,
             ];

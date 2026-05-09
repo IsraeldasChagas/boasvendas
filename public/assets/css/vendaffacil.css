@@ -325,6 +325,134 @@ body.vf-body {
   display: inline-block;
 }
 
+/* Vitrine — acréscimos com limite (min/máx): cartões estilo “pedido” */
+.vf-acrescimo-limite-grid .vf-escolha-card {
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+}
+
+.vf-escolha-card-inner {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  min-height: 3rem;
+  background: #f2f3f5;
+  border: 1px solid transparent;
+  border-radius: 0.4rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.vf-escolha-bar {
+  width: 4px;
+  flex-shrink: 0;
+  background: transparent;
+  align-self: stretch;
+}
+
+.vf-escolha-textos {
+  flex: 1;
+  min-width: 0;
+  padding: 0.65rem 0.5rem 0.65rem 0.35rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.vf-escolha-badge {
+  display: none;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #c2410c;
+  background: rgba(251, 146, 60, 0.35);
+  border-radius: 0.25rem;
+  padding: 0.15rem 0.45rem;
+  width: fit-content;
+  line-height: 1.2;
+}
+
+.vf-escolha-card--ativo .vf-escolha-card-inner {
+  background: #fff9e6;
+  border-color: rgba(234, 179, 8, 0.45);
+}
+
+.vf-escolha-card--ativo .vf-escolha-bar {
+  background: #dc2626;
+}
+
+.vf-escolha-card--ativo .vf-escolha-badge {
+  display: inline-flex;
+  align-items: center;
+}
+
+.vf-escolha-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.5rem;
+  flex-shrink: 0;
+}
+
+.vf-escolha-qty-disp {
+  min-width: 1.5rem;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.vf-escolha-btn {
+  width: 2.15rem;
+  height: 2.15rem;
+  border: none;
+  border-radius: 0.35rem;
+  background: var(--vf-success);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vf-escolha-btn:hover {
+  filter: brightness(0.92);
+}
+
+.vf-escolha-solo-mais {
+  width: 2.35rem;
+  height: 2.35rem;
+  flex-shrink: 0;
+  align-self: center;
+  margin-right: 0.45rem;
+  border: none;
+  border-radius: 0.35rem;
+  background: var(--vf-success);
+  color: #fff;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vf-escolha-solo-mais:hover {
+  filter: brightness(0.92);
+}
+
+.vf-escolha-solo-mais[hidden] {
+  display: none !important;
+}
+
+.vf-escolha-solo-mais-ico {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
 .vf-card-stat {
   padding: 1.15rem 1.25rem;
   display: flex;

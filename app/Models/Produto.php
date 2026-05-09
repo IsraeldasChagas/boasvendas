@@ -24,6 +24,8 @@ class Produto extends Model
         'visivel_loja',
         'ativo',
         'permite_adicionais',
+        'acrescimo_escolhas_min',
+        'acrescimo_escolhas_max',
         'max_ingredientes_retirar',
     ];
 
@@ -35,6 +37,8 @@ class Produto extends Model
             'visivel_loja' => 'boolean',
             'ativo' => 'boolean',
             'permite_adicionais' => 'boolean',
+            'acrescimo_escolhas_min' => 'integer',
+            'acrescimo_escolhas_max' => 'integer',
         ];
     }
 

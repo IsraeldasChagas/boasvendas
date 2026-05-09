@@ -8,9 +8,10 @@
                 @if (($op['tipo'] ?? '') === \App\Models\Adicional::TIPO_RETIRAR || ($op['tipo'] ?? '') === 'retirar_ingrediente')
                     <i class="bi bi-dash-circle me-1"></i>Sem {{ $op['nome'] ?? '' }}
                 @else
-                    <i class="bi bi-plus-circle me-1"></i>{{ $op['nome'] ?? '' }}
+                    @php $qOp = (int) ($op['quantidade'] ?? 1); @endphp
+                    <i class="bi bi-plus-circle me-1"></i>{{ $op['nome'] ?? '' }}@if ($qOp > 1)<span class="text-muted"> ×{{ $qOp }}</span>@endif
                     @if ((float) ($op['preco'] ?? 0) > 0)
-                        <span class="text-success">(+ R$ {{ number_format((float) $op['preco'], 2, ',', '.') }})</span>
+                        <span class="text-success">(+ R$ {{ number_format((float) $op['preco'] * max(1, $qOp), 2, ',', '.') }})</span>
                     @endif
                 @endif
             </li>

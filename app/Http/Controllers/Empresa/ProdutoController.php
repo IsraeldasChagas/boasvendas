@@ -11,10 +11,12 @@ use App\Models\ProdutoIngrediente;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class ProdutoController extends Controller
@@ -189,7 +191,7 @@ class ProdutoController extends Controller
      */
     private function validated(Request $request, Empresa $empresa, ?Produto $produto = null): array
     {
-        $data = $request->validate([
+        $rules = [
             'nome' => ['required', 'string', 'max:255'],
             'categoria_id' => [
                 'nullable',
@@ -210,11 +212,35 @@ class ProdutoController extends Controller
             ],
             'ingrediente_nomes' => ['nullable', 'array'],
             'ingrediente_nomes.*' => ['nullable', 'string', 'max:120'],
-        ]);
+        ];
+
+        if (Schema::hasColumn('produtos', 'acrescimo_escolhas_min')) {
+            $rules['acrescimo_escolhas_min'] = ['nullable', 'integer', 'min:0', 'max:999'];
+            $rules['acrescimo_escolhas_max'] = ['nullable', 'integer', 'min:0', 'max:999'];
+        }
+
+        $data = $request->validate($rules);
 
         $data['visivel_loja'] = $request->boolean('visivel_loja');
         $data['ativo'] = $request->boolean('ativo');
         $data['permite_adicionais'] = $request->boolean('permite_adicionais');
+
+        if (Schema::hasColumn('produtos', 'acrescimo_escolhas_min')) {
+            $mn = $data['acrescimo_escolhas_min'] ?? null;
+            $mx = $data['acrescimo_escolhas_max'] ?? null;
+            $data['acrescimo_escolhas_min'] = ($mn === null || $mn === '') ? null : (int) $mn;
+            $data['acrescimo_escolhas_max'] = ($mx === null || $mx === '') ? null : (int) $mx;
+            if ($data['acrescimo_escolhas_min'] !== null && $data['acrescimo_escolhas_max'] !== null
+                && $data['acrescimo_escolhas_min'] > $data['acrescimo_escolhas_max']) {
+                throw ValidationException::withMessages([
+                    'acrescimo_escolhas_max' => 'O máximo de escolhas deve ser maior ou igual ao mínimo.',
+                ]);
+            }
+            if (! $data['permite_adicionais']) {
+                $data['acrescimo_escolhas_min'] = null;
+                $data['acrescimo_escolhas_max'] = null;
+            }
+        }
 
         unset($data['foto'], $data['ingrediente_nomes']);
 
