@@ -56,7 +56,7 @@ class PublicoController extends Controller
     }
 
     /**
-     * @return list<array{produto_id: int, quantidade: int, adicional_qtd: array<int, int>, retirar_ingrediente_ids: list<int>, observacao: string}>
+     * @return list<array{produto_id: int, quantidade: int, adicional_qtd: array<int, int>, retirar_qtd: array<int, int>, observacao: string}>
      */
     private function getCarrinhoLines(string $slug): array
     {
@@ -75,7 +75,7 @@ class PublicoController extends Controller
                     'produto_id' => (int) $line['produto_id'],
                     'quantidade' => max(0, (int) ($line['quantidade'] ?? 0)),
                     'adicional_qtd' => $this->linhaParaMapaAdicionalQtd($line),
-                    'retirar_ingrediente_ids' => $this->normalizarIdsAdicionais($line['retirar_ingrediente_ids'] ?? []),
+                    'retirar_qtd' => $this->linhaParaMapaRetirarQtd($line),
                     'observacao' => $this->normalizarObservacao($line['observacao'] ?? null),
                 ];
             }
@@ -96,7 +96,7 @@ class PublicoController extends Controller
                 'produto_id' => (int) $pid,
                 'quantidade' => $q,
                 'adicional_qtd' => [],
-                'retirar_ingrediente_ids' => [],
+                'retirar_qtd' => [],
                 'observacao' => '',
             ];
         }
@@ -131,6 +131,41 @@ class PublicoController extends Controller
         $map = [];
         foreach ($ids as $id) {
             $map[$id] = 1;
+        }
+        ksort($map);
+
+        return $map;
+    }
+
+    /**
+     * Quantidades por ingrediente (escolha / retirada na vitrine).
+     *
+     * @param  array<string, mixed>  $line
+     * @return array<int, int>
+     */
+    private function linhaParaMapaRetirarQtd(array $line): array
+    {
+        $raw = $line['retirar_qtd'] ?? null;
+        if (is_array($raw) && $raw !== []) {
+            $map = [];
+            foreach ($raw as $kid => $qv) {
+                $id = (int) $kid;
+                $q = max(0, (int) $qv);
+                if ($id > 0 && $q > 0) {
+                    $map[$id] = ($map[$id] ?? 0) + $q;
+                }
+            }
+            if ($map !== []) {
+                ksort($map);
+
+                return $map;
+            }
+        }
+
+        $ids = $this->normalizarIdsAdicionais($line['retirar_ingrediente_ids'] ?? []);
+        $map = [];
+        foreach ($ids as $id) {
+            $map[$id] = ($map[$id] ?? 0) + 1;
         }
         ksort($map);
 
@@ -200,21 +235,30 @@ class PublicoController extends Controller
 
     /**
      * @param  array<int, int>  $adicionalQtdMap
-     * @param  list<int>  $retirarIngredienteIdsOrdenados
+     * @param  array<int, int>  $retirarQtdMap
      */
-    private function fingerprintLinha(int $produtoId, array $adicionalQtdMap, array $retirarIngredienteIdsOrdenados, string $observacaoNormalizada): string
+    private function fingerprintLinha(int $produtoId, array $adicionalQtdMap, array $retirarQtdMap, string $observacaoNormalizada): string
     {
         ksort($adicionalQtdMap);
-        $parts = [];
+        ksort($retirarQtdMap);
+        $partsA = [];
         foreach ($adicionalQtdMap as $id => $q) {
             $id = (int) $id;
             $q = (int) $q;
             if ($id > 0 && $q > 0) {
-                $parts[] = $id.'x'.$q;
+                $partsA[] = $id.'x'.$q;
+            }
+        }
+        $partsR = [];
+        foreach ($retirarQtdMap as $id => $q) {
+            $id = (int) $id;
+            $q = (int) $q;
+            if ($id > 0 && $q > 0) {
+                $partsR[] = $id.'x'.$q;
             }
         }
 
-        return $produtoId.'|a:'.implode(',', $parts).'|r:'.implode(',', $retirarIngredienteIdsOrdenados).'|'.sha1($observacaoNormalizada);
+        return $produtoId.'|a:'.implode(',', $partsA).'|r:'.implode(',', $partsR).'|'.sha1($observacaoNormalizada);
     }
 
     private function normalizarObservacao(?string $text): string
@@ -281,7 +325,7 @@ class PublicoController extends Controller
             $pid = (int) $line['produto_id'];
             $qty = max(0, (int) $line['quantidade']);
             $mapReq = $this->linhaParaMapaAdicionalQtd($line);
-            $retReq = $this->normalizarIdsAdicionais($line['retirar_ingrediente_ids'] ?? []);
+            $retReqMap = $this->linhaParaMapaRetirarQtd($line);
             if ($qty < 1) {
                 continue;
             }
@@ -316,13 +360,28 @@ class PublicoController extends Controller
             }
 
             $idsPermIng = $p->ingredientes->pluck('id')->map(fn ($id) => (int) $id)->all();
-            $retOk = array_values(array_intersect($retReq, $idsPermIng));
-            sort($retOk);
+            $retFiltrado = [];
+            foreach ($retReqMap as $rid => $rq) {
+                $rid = (int) $rid;
+                $rq = max(0, min(999, (int) $rq));
+                if ($rid < 1 || $rq < 1) {
+                    continue;
+                }
+                if (! in_array($rid, $idsPermIng, true)) {
+                    continue;
+                }
+                $retFiltrado[$rid] = ($retFiltrado[$rid] ?? 0) + $rq;
+            }
+            ksort($retFiltrado);
             $maxR = (int) ($p->max_ingredientes_retirar ?? 0);
             if ($p->ingredientes->isEmpty() || $maxR === 0) {
                 $retOk = [];
-            } elseif (count($retOk) > $maxR) {
-                $retOk = array_slice($retOk, 0, $maxR);
+            } else {
+                $sumR = (int) array_sum($retFiltrado);
+                if ($sumR > $maxR) {
+                    $retFiltrado = $this->reduzirMapaAteSomaMax($retFiltrado, $maxR);
+                }
+                $retOk = array_filter($retFiltrado, fn (int $q) => $q > 0);
             }
 
             $obsLinha = $this->normalizarObservacao($line['observacao'] ?? null);
@@ -351,17 +410,26 @@ class PublicoController extends Controller
                 }
                 $opcoes[] = $op;
             }
-            foreach ($retOk as $iid) {
+            foreach ($retOk as $iid => $qtdIng) {
+                $iid = (int) $iid;
+                $qtdIng = (int) $qtdIng;
+                if ($qtdIng < 1) {
+                    continue;
+                }
                 $ing = $p->ingredientes->firstWhere('id', $iid);
                 if (! $ing) {
                     continue;
                 }
-                $opcoes[] = [
-                    'id' => (int) $ing->id,
+                $op = [
+                    'id' => $iid,
                     'nome' => $ing->nome,
                     'tipo' => 'retirar_ingrediente',
                     'preco' => 0.0,
                 ];
+                if ($qtdIng > 1) {
+                    $op['quantidade'] = $qtdIng;
+                }
+                $opcoes[] = $op;
             }
 
             $base = (float) $p->preco;
@@ -372,7 +440,7 @@ class PublicoController extends Controller
                 'produto_id' => $pid,
                 'quantidade' => $qty,
                 'adicional_qtd' => $mapOk,
-                'retirar_ingrediente_ids' => $retOk,
+                'retirar_qtd' => $retOk,
                 'observacao' => $obsLinha,
             ];
 
@@ -678,7 +746,7 @@ class PublicoController extends Controller
             'retirar_ingrediente_ids' => ['nullable', 'array'],
             'retirar_ingrediente_ids.*' => ['integer'],
             'retirar_qtd' => ['nullable', 'array'],
-            'retirar_qtd.*' => ['nullable', 'integer', 'min:0', 'max:1'],
+            'retirar_qtd.*' => ['nullable', 'integer', 'min:0', 'max:999'],
             'observacao' => ['nullable', 'string', 'max:500'],
         ]);
 
@@ -756,31 +824,49 @@ class PublicoController extends Controller
             }
         }
 
-        $retReq = [];
+        $idsPermIng = $p->ingredientes->pluck('id')->map(fn ($id) => (int) $id)->all();
+
+        $retMapSolicitado = [];
         if (isset($data['retirar_qtd']) && is_array($data['retirar_qtd'])) {
             foreach ($data['retirar_qtd'] as $kid => $qv) {
                 $id = (int) $kid;
-                $q = max(0, min(1, (int) $qv));
+                $q = max(0, min(999, (int) $qv));
                 if ($id > 0 && $q > 0) {
-                    $retReq[] = $id;
+                    $retMapSolicitado[$id] = ($retMapSolicitado[$id] ?? 0) + $q;
                 }
             }
-            $retReq = $this->normalizarIdsAdicionais($retReq);
+            ksort($retMapSolicitado);
         } else {
-            $retReq = $this->normalizarIdsAdicionais($data['retirar_ingrediente_ids'] ?? []);
+            foreach ($this->normalizarIdsAdicionais($data['retirar_ingrediente_ids'] ?? []) as $rid) {
+                $rid = (int) $rid;
+                if ($rid > 0) {
+                    $retMapSolicitado[$rid] = ($retMapSolicitado[$rid] ?? 0) + 1;
+                }
+            }
         }
-        $idsPermIng = $p->ingredientes->pluck('id')->map(fn ($id) => (int) $id)->all();
-        $retOk = $this->normalizarIdsAdicionais(array_values(array_intersect($idsPermIng, $retReq)));
 
-        if (count($retOk) !== count($retReq)) {
-            return back()->with('warning', 'Uma das opções de retirada não é válida para este produto.');
+        $retOk = [];
+        foreach ($retMapSolicitado as $id => $q) {
+            $id = (int) $id;
+            $q = (int) $q;
+            if ($id < 1 || $q < 1) {
+                continue;
+            }
+            if (! in_array($id, $idsPermIng, true)) {
+                return back()->with('warning', 'Uma das opções de ingrediente não é válida para este produto.');
+            }
+            $retOk[$id] = $q;
         }
+        ksort($retOk);
 
         $maxR = (int) ($p->max_ingredientes_retirar ?? 0);
         if ($p->ingredientes->isEmpty() || $maxR === 0) {
             $retOk = [];
-        } elseif (count($retOk) > $maxR) {
-            return back()->with('warning', 'Você pode pedir para retirar no máximo '.$maxR.' ingrediente(s) deste item.');
+        } else {
+            $sumR = (int) array_sum($retOk);
+            if ($sumR > $maxR) {
+                return back()->with('warning', 'Você pode escolher no máximo '.$maxR.' (somando as quantidades entre os ingredientes).');
+            }
         }
 
         if ($p->estoque !== null && $p->estoque < $qty) {
@@ -795,7 +881,7 @@ class PublicoController extends Controller
             $lineFp = $this->fingerprintLinha(
                 (int) $line['produto_id'],
                 $this->linhaParaMapaAdicionalQtd($line),
-                $this->normalizarIdsAdicionais($line['retirar_ingrediente_ids'] ?? []),
+                $this->linhaParaMapaRetirarQtd($line),
                 $lineObs
             );
             if ($lineFp === $fp) {
@@ -810,7 +896,7 @@ class PublicoController extends Controller
                 'produto_id' => (int) $p->id,
                 'quantidade' => $qty,
                 'adicional_qtd' => $mapOk,
-                'retirar_ingrediente_ids' => $retOk,
+                'retirar_qtd' => $retOk,
                 'observacao' => $obsNorm,
             ];
         }

@@ -257,7 +257,7 @@
                     var wrapRet = document.getElementById('vf-retirar-stepper');
                     if (wrapRet) {
                         var maxTotalRet = parseInt(wrapRet.getAttribute('data-max-total') || '0', 10);
-                        var maxPorIng = 1;
+                        var maxPorLinha = 999;
 
                         function somaRet() {
                             var t = 0;
@@ -277,7 +277,7 @@
                             card.classList.toggle('vf-escolha-card--ativo', q > 0);
                             if (btnMenos) btnMenos.disabled = q < 1;
                             var total = somaRet();
-                            var podeMais = q < maxPorIng && total < maxTotalRet;
+                            var podeMais = q < maxPorLinha && total < maxTotalRet;
                             if (btnMais) btnMais.disabled = !podeMais;
                         }
 
@@ -288,16 +288,16 @@
 
                             function setQ(novo) {
                                 var q = Math.max(0, parseInt(novo, 10) || 0);
-                                q = Math.min(q, maxPorIng);
+                                q = Math.min(q, maxPorLinha);
                                 inp.value = String(q);
                                 wrapRet.querySelectorAll('.vf-escolha-card--retirar').forEach(atualizarCardRet);
                             }
 
                             function tentarMaisRet() {
                                 var q = parseInt(inp.value || '0', 10) || 0;
-                                if (q >= maxPorIng) return;
+                                if (q >= maxPorLinha) return;
                                 if (somaRet() >= maxTotalRet) {
-                                    alert('Você pode pedir para retirar no máximo ' + maxTotalRet + ' ingrediente(s) deste item.');
+                                    alert('Você pode escolher no máximo ' + maxTotalRet + ' (somando as quantidades).');
                                     return;
                                 }
                                 setQ(q + 1);
