@@ -188,6 +188,11 @@
                         @endif
 
                         <div class="mb-3 {{ ($temPersonalizar ?? false) ? 'mt-1' : 'mt-2' }}">
+                            <div class="text-warning lh-1 mb-2" id="observacao-estrelas" role="img" aria-label="Nível de uso do limite (5 estrelas = até 500 caracteres)">
+                                @for ($i = 0; $i < 5; $i++)
+                                    <i class="bi bi-star obs-estrela-vf" aria-hidden="true"></i>
+                                @endfor
+                            </div>
                             <label class="form-label small text-muted mb-1" for="observacao_produto">Observação <span class="fw-normal">(opcional)</span></label>
                             <textarea
                                 class="form-control @error('observacao') is-invalid @enderror"
@@ -195,18 +200,11 @@
                                 id="observacao_produto"
                                 rows="5"
                                 maxlength="500"
-                                aria-describedby="observacao_limite_ajuda"
+                                aria-describedby="observacao-estrelas observacao_limite_ajuda"
                                 placeholder="Ex.: ponto da carne, sem cebola, embalar separado…">{{ old('observacao') }}</textarea>
                             @error('observacao')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                            <div id="observacao_limite_ajuda" class="form-text">
-                                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-1">
-                                    <span class="text-muted"><span id="observacao-count">0</span>/500 caracteres · aparece no pedido</span>
-                                    <span class="text-warning lh-1" id="observacao-estrelas" role="img" aria-label="Nível de uso do limite (5 estrelas = até 500 caracteres)">
-                                        @for ($i = 0; $i < 5; $i++)
-                                            <i class="bi bi-star obs-estrela-vf" aria-hidden="true"></i>
-                                        @endfor
-                                    </span>
-                                </div>
+                            <div id="observacao_limite_ajuda" class="form-text mt-1">
+                                <span class="text-muted"><span id="observacao-count">0</span>/500 caracteres · aparece no pedido</span>
                             </div>
                         </div>
 
