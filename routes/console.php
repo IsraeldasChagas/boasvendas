@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -218,3 +219,36 @@ Artisan::command('vendaffacil:converter-fotos-produto-para-jpg {--dry-run : Não
 
     return $falhas > 0 ? 1 : 0;
 })->purpose('Converte fotos antigas (WebP/AVIF) para JPG em public/uploads e atualiza a coluna foto');
+
+Artisan::command('vendaffacil:redes-teste {slug?}', function (): int {
+    if (! Schema::hasColumn('empresas', 'instagram_url')) {
+        $this->error('As colunas instagram_url/facebook_url ainda não existem. Rode: php artisan migrate');
+
+        return 1;
+    }
+
+    $slug = (string) ($this->argument('slug') ?: 'demo');
+
+    $empresa = \App\Models\Empresa::query()->where('slug', $slug)->first();
+
+    if (! $empresa) {
+        $this->error('Nenhuma empresa encontrada com slug "'.$slug.'".');
+
+        return 1;
+    }
+
+    $instagram = 'https://www.instagram.com/meta/';
+    $facebook = 'https://www.facebook.com/meta';
+
+    $empresa->update([
+        'instagram_url' => $instagram,
+        'facebook_url' => $facebook,
+    ]);
+
+    $this->info('OK: '.$empresa->nome.' (slug '.$slug.') — links de teste gravados no banco.');
+    $this->line('  Instagram: '.$instagram);
+    $this->line('  Facebook:  '.$facebook);
+    $this->info('Vitrine: '.url('/loja/'.$slug));
+
+    return 0;
+})->purpose('Grava Instagram/Facebook de exemplo (contas Meta) para testar ícones na vitrine — uso: php artisan vendaffacil:redes-teste [slug]');
