@@ -307,15 +307,8 @@ class PublicoController extends Controller
             }
             ksort($mapFiltrado);
 
-            if (! $temLimite) {
-                $mapOk = [];
-                foreach ($mapFiltrado as $aid => $q) {
-                    if ($q > 0) {
-                        $mapOk[$aid] = 1;
-                    }
-                }
-            } else {
-                $mapOk = $mapFiltrado;
+            $mapOk = $mapFiltrado;
+            if ($temLimite) {
                 $maxEsc = Schema::hasColumn('produtos', 'acrescimo_escolhas_min') ? $p->acrescimo_escolhas_max : null;
                 if ($maxEsc !== null) {
                     $mapOk = $this->reduzirMapaAteSomaMax($mapOk, (int) $maxEsc);
@@ -750,15 +743,9 @@ class PublicoController extends Controller
         }
         ksort($mapFiltrado);
 
-        if (! $temLimite) {
-            $mapOk = [];
-            foreach ($mapFiltrado as $aid => $q) {
-                if ($q > 0) {
-                    $mapOk[$aid] = 1;
-                }
-            }
-        } else {
-            $mapOk = array_filter($mapFiltrado, fn (int $q) => $q > 0);
+        $mapOk = array_filter($mapFiltrado, fn (int $q) => $q > 0);
+
+        if ($temLimite) {
             $sum = (int) array_sum($mapOk);
             $minE = Schema::hasColumn('produtos', 'acrescimo_escolhas_min') ? $p->acrescimo_escolhas_min : null;
             $maxE = Schema::hasColumn('produtos', 'acrescimo_escolhas_min') ? $p->acrescimo_escolhas_max : null;
