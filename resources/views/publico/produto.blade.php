@@ -60,32 +60,52 @@
 
                         @if ($temPersonalizar)
                             <div class="vf-card p-3 mb-3">
-                                <h2 class="h6 fw-bold mb-2">Personalizar</h2>
+                                <h2 class="h6 fw-bold mb-3">Personalizar</h2>
                                 @if ($temRetirarIng)
                                     <p class="small text-muted mb-3 border-start border-3 border-secondary-subtle ps-2">Retirar ingredientes é opcional e <strong>não reduz</strong> o valor do produto.</p>
                                 @endif
+
                                 @if ($produto->permite_adicionais && $acres->isNotEmpty())
-                                    <p class="small text-muted mb-2">Acrescentar</p>
-                                    @foreach ($acres as $ad)
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="adicional_ids[]" id="adicional_{{ $ad->id }}" value="{{ $ad->id }}">
-                                            <label class="form-check-label" for="adicional_{{ $ad->id }}">
-                                                {{ $ad->nome }}
-                                                @if ((float) $ad->preco > 0)
-                                                    <span class="text-success">(+ R$ {{ number_format((float) $ad->preco, 2, ',', '.') }})</span>
-                                                @endif
+                                    <div class="d-flex justify-content-between align-items-baseline gap-2 mb-2">
+                                        <span class="fw-semibold">Acrescentar</span>
+                                        <span class="small text-muted">Opcional</span>
+                                    </div>
+                                    <div class="vf-personalizar-grid mb-1">
+                                        @foreach ($acres as $ad)
+                                            <label class="vf-personalizar-card vf-personalizar-card--adicional">
+                                                <input class="vf-personalizar-input visually-hidden" type="checkbox" name="adicional_ids[]" id="adicional_{{ $ad->id }}" value="{{ $ad->id }}">
+                                                <span class="vf-personalizar-nome">
+                                                    {{ $ad->nome }}
+                                                    @if ((float) $ad->preco > 0)
+                                                        <span class="d-block small text-success fw-normal mt-1">+ R$ {{ number_format((float) $ad->preco, 2, ',', '.') }}</span>
+                                                    @endif
+                                                </span>
+                                                <span class="vf-personalizar-btn vf-personalizar-btn--add" aria-hidden="true">
+                                                    <i class="bi bi-plus-lg vf-personalizar-ico-on"></i>
+                                                    <i class="bi bi-check-lg vf-personalizar-ico-off"></i>
+                                                </span>
                                             </label>
-                                        </div>
-                                    @endforeach
+                                        @endforeach
+                                    </div>
                                 @endif
+
                                 @if ($temRetirarIng)
-                                    <p class="small text-muted mb-2 mt-3">Retirar ingrediente <span class="text-muted">(até {{ $maxRet }})</span></p>
-                                    @foreach ($produto->ingredientes as $ing)
-                                        <div class="form-check">
-                                            <input class="form-check-input vf-retirar-ing" type="checkbox" name="retirar_ingrediente_ids[]" id="ing_{{ $ing->id }}" value="{{ $ing->id }}" data-max="{{ $maxRet }}">
-                                            <label class="form-check-label" for="ing_{{ $ing->id }}">Sem {{ $ing->nome }}</label>
-                                        </div>
-                                    @endforeach
+                                    <div class="d-flex justify-content-between align-items-baseline gap-2 mb-2 mt-3">
+                                        <span class="fw-semibold">Retirar ingrediente</span>
+                                        <span class="small text-muted text-end">Mínimo: 0 · Máximo: {{ $maxRet }}</span>
+                                    </div>
+                                    <div class="vf-personalizar-grid">
+                                        @foreach ($produto->ingredientes as $ing)
+                                            <label class="vf-personalizar-card vf-personalizar-card--retirar">
+                                                <input class="vf-personalizar-input visually-hidden vf-retirar-ing" type="checkbox" name="retirar_ingrediente_ids[]" id="ing_{{ $ing->id }}" value="{{ $ing->id }}" data-max="{{ $maxRet }}">
+                                                <span class="vf-personalizar-nome">Sem {{ $ing->nome }}</span>
+                                                <span class="vf-personalizar-btn vf-personalizar-btn--retirar" aria-hidden="true">
+                                                    <i class="bi bi-dash-lg vf-personalizar-ico-on"></i>
+                                                    <i class="bi bi-check-lg vf-personalizar-ico-off"></i>
+                                                </span>
+                                            </label>
+                                        @endforeach
+                                    </div>
                                 @endif
                             </div>
                         @endif

@@ -222,6 +222,109 @@ body.vf-body {
   box-shadow: var(--vf-shadow);
 }
 
+/* Vitrine — produto: Personalizar (grid estilo cardápio por opções) */
+.vf-personalizar-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+@media (max-width: 380px) {
+  .vf-personalizar-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.vf-personalizar-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.65rem 0.75rem;
+  margin: 0;
+  background: #f2f3f5;
+  border: 1px solid transparent;
+  border-radius: 0.4rem;
+  cursor: pointer;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
+  min-height: 3rem;
+}
+
+.vf-personalizar-card:hover {
+  background: #ebecef;
+}
+
+.vf-personalizar-card:focus-within {
+  outline: 2px solid rgba(37, 99, 235, 0.45);
+  outline-offset: 2px;
+}
+
+.vf-personalizar-card:has(.vf-personalizar-input:checked) {
+  border-color: var(--bs-success);
+  background: rgba(25, 135, 84, 0.09);
+}
+
+.vf-personalizar-card--retirar:has(.vf-personalizar-input:checked) {
+  border-color: var(--bs-warning);
+  background: rgba(255, 193, 7, 0.12);
+}
+
+.vf-personalizar-nome {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--vf-text);
+  min-width: 0;
+  flex: 1;
+  word-break: break-word;
+}
+
+.vf-personalizar-btn {
+  width: 2.35rem;
+  height: 2.35rem;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.35rem;
+  border: none;
+  padding: 0;
+  pointer-events: none;
+}
+
+.vf-personalizar-btn--add {
+  background: var(--vf-success);
+  color: #fff;
+}
+
+.vf-personalizar-card:has(.vf-personalizar-input:checked) .vf-personalizar-btn--add {
+  background: #157347;
+}
+
+.vf-personalizar-btn--retirar {
+  background: #fff;
+  color: var(--vf-warning);
+  border: 2px solid var(--vf-warning);
+}
+
+.vf-personalizar-card--retirar:has(.vf-personalizar-input:checked) .vf-personalizar-btn--retirar {
+  background: var(--vf-warning);
+  color: #fff;
+  border-color: var(--vf-warning);
+}
+
+.vf-personalizar-ico-off {
+  display: none;
+}
+
+.vf-personalizar-card:has(.vf-personalizar-input:checked) .vf-personalizar-ico-on {
+  display: none;
+}
+
+.vf-personalizar-card:has(.vf-personalizar-input:checked) .vf-personalizar-ico-off {
+  display: inline-block;
+}
+
 .vf-card-stat {
   padding: 1.15rem 1.25rem;
   display: flex;
