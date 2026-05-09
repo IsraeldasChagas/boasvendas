@@ -807,6 +807,27 @@ body.vf-body {
   border-bottom: 1px solid var(--vf-border);
 }
 
+/* Rodapé da loja pública: fixo na base do ecrã (conteúdo com margem inferior para não ficar por baixo) */
+footer.vf-publico-footer--fixed {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1030;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.07);
+}
+
+body.vf-body--public-footer-fixed main {
+  padding-bottom: calc(6.25rem + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 768px) {
+  body.vf-body--public-footer-fixed main {
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 /* Nome + selo alinhados ao centro vertical da logo (evita “grudado” no topo) */
 .vf-store-brand-text {
   min-height: 66px;

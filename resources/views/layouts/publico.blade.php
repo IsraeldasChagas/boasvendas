@@ -12,7 +12,7 @@
     <link href="{{ asset('assets/css/vendaffacil.css') }}?v={{ @filemtime(public_path('assets/css/vendaffacil.css')) ?: time() }}" rel="stylesheet">
     @stack('styles')
 </head>
-<body class="vf-body d-flex flex-column min-vh-100 bg-light">
+<body class="vf-body vf-body--public-footer-fixed d-flex flex-column min-vh-100 bg-light">
     @include('partials.publico.nav', ['slug' => $slug ?? 'demo', 'empresa' => $empresa ?? null])
     <main class="flex-grow-1 py-3">
         @if (session('status'))
