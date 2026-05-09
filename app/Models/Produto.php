@@ -98,8 +98,8 @@ class Produto extends Model
 
     /**
      * Total permitido para retirada na loja (soma das quantidades nos ingredientes).
-     * Se max_ingredientes_retirar é null mas há ingredientes cadastrados, usa quantidade de ingredientes (padrão),
-     * para não tratar “não configurado” como zero na vitrine.
+     * null ou 0 com ingredientes cadastrados: trata como “não configurado” e usa quantidade de ingredientes (até 99).
+     * Muitos cadastros gravaram 0 por campo vazio / cast — não pode bloquear a vitrine nesses casos.
      */
     public function limiteRetiradaIngredientesNaLoja(): int
     {
@@ -113,13 +113,13 @@ class Produto extends Model
 
         $m = $this->max_ingredientes_retirar;
 
-        if ($m === null) {
+        if ($m === null || (int) $m === 0) {
             return min(99, $n);
         }
 
-        $mi = max(0, (int) $m);
+        $mi = max(1, min((int) $m, 255));
 
-        return min($mi, $n, 255);
+        return min($mi, $n);
     }
 
     /**

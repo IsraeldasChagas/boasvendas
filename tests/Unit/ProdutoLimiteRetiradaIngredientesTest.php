@@ -42,7 +42,7 @@ class ProdutoLimiteRetiradaIngredientesTest extends TestCase
         $this->assertSame(2, $p->limiteRetiradaIngredientesNaLoja());
     }
 
-    public function test_zero_explicito_permite_zero(): void
+    public function test_zero_no_banco_com_ingredientes_usa_padrao_como_null(): void
     {
         $p = Produto::query()->create([
             'empresa_id' => Empresa::query()->create([
@@ -64,6 +64,6 @@ class ProdutoLimiteRetiradaIngredientesTest extends TestCase
 
         $p->load('ingredientes');
 
-        $this->assertSame(0, $p->limiteRetiradaIngredientesNaLoja());
+        $this->assertSame(1, $p->limiteRetiradaIngredientesNaLoja());
     }
 }

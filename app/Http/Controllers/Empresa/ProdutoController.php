@@ -95,7 +95,7 @@ class ProdutoController extends Controller
         $data = $this->validated($request, $empresa);
         $itensIng = $this->coletaIngredientesDoRequest($request, $empresa);
         $this->validarLimiteRetirarIngredientes($request, $itensIng);
-        $data['max_ingredientes_retirar'] = count($itensIng) > 0 ? (int) $request->input('max_ingredientes_retirar') : null;
+        $data['max_ingredientes_retirar'] = $this->parseMaxIngredientesRetirarParaPersistencia($request, null, $itensIng);
         $this->aplicarIngredientesRetirarUi($request, $data, $itensIng, null);
         $data['empresa_id'] = $empresa->id;
         $data['sku'] = $this->gerarCodigoInternoUnico($empresa);
@@ -154,13 +154,7 @@ class ProdutoController extends Controller
         $data = $this->validated($request, $empresa, $produto);
         $itensIng = $this->coletaIngredientesDoRequest($request, $empresa);
         $this->validarLimiteRetirarIngredientes($request, $itensIng, $produto);
-        if (count($itensIng) > 0) {
-            $data['max_ingredientes_retirar'] = array_key_exists('max_ingredientes_retirar', $request->all())
-                ? max(0, min(255, (int) $request->input('max_ingredientes_retirar')))
-                : $produto->max_ingredientes_retirar;
-        } else {
-            $data['max_ingredientes_retirar'] = null;
-        }
+        $data['max_ingredientes_retirar'] = $this->parseMaxIngredientesRetirarParaPersistencia($request, $produto, $itensIng);
         $this->aplicarIngredientesRetirarUi($request, $data, $itensIng, $produto);
 
         if ($request->hasFile('foto')) {
@@ -397,6 +391,27 @@ class ProdutoController extends Controller
         }
 
         return $rel;
+    }
+
+    /**
+     * Grava max_ingredientes_retirar: vazio no formulário => null (vitrine usa padrão), nunca força 0 por input ausente.
+     *
+     * @param  list<array{nome: string, foto_atual: ?string, file: ?UploadedFile}>  $itensIng
+     */
+    private function parseMaxIngredientesRetirarParaPersistencia(Request $request, ?Produto $produto, array $itensIng): ?int
+    {
+        if ($itensIng === []) {
+            return null;
+        }
+        if (! array_key_exists('max_ingredientes_retirar', $request->all())) {
+            return $produto?->max_ingredientes_retirar;
+        }
+        $raw = $request->input('max_ingredientes_retirar');
+        if ($raw === '' || $raw === null) {
+            return null;
+        }
+
+        return max(0, min(255, (int) $raw));
     }
 
     /**
