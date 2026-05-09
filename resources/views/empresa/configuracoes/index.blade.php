@@ -14,6 +14,11 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
         </div>
     @endif
+    @if (! \Illuminate\Support\Facades\Schema::hasColumn('empresas', 'instagram_url'))
+        <div class="alert alert-warning small mb-3" role="alert">
+            <strong>Instagram e Facebook:</strong> rode <code class="user-select-all">php artisan migrate</code> no servidor para criar as colunas no banco; até lá os links podem não ser gravados.
+        </div>
+    @endif
 
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <h1 class="h5 fw-bold mb-0">Configurações</h1>
@@ -104,6 +109,18 @@
                             <input type="text" class="form-control form-control-sm @error('whatsapp') is-invalid @enderror" id="whatsapp" name="whatsapp" value="{{ old('whatsapp', $empresa->whatsapp) }}" maxlength="32" placeholder="Ex.: (91) 99999-9999">
                             @error('whatsapp')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             <p class="small text-muted mb-0 mt-1">Esse número aparece na vitrine com link direto pro WhatsApp.</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="instagram_url"><i class="bi bi-instagram text-danger me-1"></i>Instagram</label>
+                            <input type="text" class="form-control form-control-sm @error('instagram_url') is-invalid @enderror" id="instagram_url" name="instagram_url" value="{{ old('instagram_url', $empresa->instagram_url) }}" maxlength="500" placeholder="https://instagram.com/sua_loja ou instagram.com/sua_loja">
+                            @error('instagram_url')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <p class="small text-muted mb-0 mt-1">Link do perfil — ícones no topo da vitrine.</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="facebook_url"><i class="bi bi-facebook text-primary me-1"></i>Facebook</label>
+                            <input type="text" class="form-control form-control-sm @error('facebook_url') is-invalid @enderror" id="facebook_url" name="facebook_url" value="{{ old('facebook_url', $empresa->facebook_url) }}" maxlength="500" placeholder="https://facebook.com/sua_pagina ou facebook.com/sua_pagina">
+                            @error('facebook_url')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <p class="small text-muted mb-0 mt-1">Link da página — ícones no topo da vitrine.</p>
                         </div>
                     </div>
                 </div>

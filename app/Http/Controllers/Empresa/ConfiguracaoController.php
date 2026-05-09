@@ -66,6 +66,9 @@ class ConfiguracaoController extends Controller
             $rules['cep'] = ['nullable', 'string', 'max:16'];
         }
 
+        $rules['instagram_url'] = ['nullable', 'string', 'max:500'];
+        $rules['facebook_url'] = ['nullable', 'string', 'max:500'];
+
         $rules = array_merge($rules, [
             'loja_pix_instrucoes' => ['nullable', 'string', 'max:4000'],
             'loja_pix_chave_tipo' => ['nullable', 'string', Rule::in(array_keys(Empresa::pixChaveTiposRotulos()))],
@@ -99,6 +102,13 @@ class ConfiguracaoController extends Controller
         }
 
         $data = $request->validate($rules);
+
+        if (Schema::hasColumn('empresas', 'instagram_url')) {
+            $data['instagram_url'] = $this->normalizarUrlOpcional($request->input('instagram_url'), 'instagram_url');
+            $data['facebook_url'] = $this->normalizarUrlOpcional($request->input('facebook_url'), 'facebook_url');
+        } else {
+            unset($data['instagram_url'], $data['facebook_url']);
+        }
 
         if (Schema::hasColumn('empresas', 'cep')) {
             // Só altera o CEP no banco se o campo veio no POST (evita apagar ao salvar
@@ -197,6 +207,24 @@ class ConfiguracaoController extends Controller
         return redirect()
             ->route('empresa.configuracoes.index')
             ->with('status', 'Configurações salvas.');
+    }
+
+    private function normalizarUrlOpcional(?string $valor, string $campo): ?string
+    {
+        $v = $valor !== null ? trim($valor) : '';
+        if ($v === '') {
+            return null;
+        }
+        if (! preg_match('#^https?://#i', $v)) {
+            $v = 'https://'.ltrim($v, '/');
+        }
+        if (! filter_var($v, FILTER_VALIDATE_URL)) {
+            throw ValidationException::withMessages([
+                $campo => 'Informe uma URL válida (ex.: https://instagram.com/sua_loja).',
+            ]);
+        }
+
+        return $v;
     }
 
     private function armazenarLogo(UploadedFile $file, Empresa $empresa): string

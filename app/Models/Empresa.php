@@ -32,6 +32,8 @@ class Empresa extends Model
         'endereco',
         'cep',
         'whatsapp',
+        'instagram_url',
+        'facebook_url',
         'loja_taxa_entrega_padrao',
         'loja_permite_retirada_balcao',
         'loja_frete_modo',
