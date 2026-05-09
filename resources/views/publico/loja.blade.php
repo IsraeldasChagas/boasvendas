@@ -3,6 +3,9 @@
 @section('title', $empresa->nome)
 
 @section('content')
+    @php
+        $lojaColAcrescMinMax = \Illuminate\Support\Facades\Schema::hasColumn('produtos', 'acrescimo_escolhas_min');
+    @endphp
     <div class="container">
         @if ($empresa->fidelidadePrograma && $empresa->fidelidadePrograma->ativo)
             <div class="mb-3 d-flex flex-wrap align-items-center gap-2">
@@ -56,6 +59,17 @@
                                 @endif
                                 @if (($pr->permite_adicionais && ($pr->adicionais_acrescimo_count ?? 0) > 0) || (($pr->ingredientes_count ?? 0) > 0))
                                     <div class="small mt-1"><span class="vf-badge bg-info-subtle text-info">Personalizável</span></div>
+                                @endif
+                                @if ($lojaColAcrescMinMax && $pr->permite_adicionais && ($pr->adicionais_acrescimo_count ?? 0) > 0)
+                                    @php
+                                        $lojaMinA = $pr->acrescimo_escolhas_min;
+                                        $lojaMaxA = $pr->acrescimo_escolhas_max;
+                                    @endphp
+                                    @if ($lojaMinA !== null || $lojaMaxA !== null)
+                                        <div class="small text-muted mt-1 lh-sm">
+                                            <span class="vf-personalizar-limite-chip d-inline-block">Opções — mín. {{ $lojaMinA ?? '—' }} · máx. {{ $lojaMaxA ?? '—' }}</span>
+                                        </div>
+                                    @endif
                                 @endif
                                 <div class="text-success fw-bold mt-1">R$ {{ number_format((float) $pr->preco, 2, ',', '.') }}</div>
                             </div>
