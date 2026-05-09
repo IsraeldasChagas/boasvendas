@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Empresa;
 
 use App\Http\Controllers\Controller;
+use App\Models\Categoria;
 use App\Models\Empresa;
 use App\Models\EmpresaSlug;
 use Illuminate\Database\QueryException;
@@ -105,6 +106,21 @@ class ConfiguracaoController extends Controller
             $rules['loja_aberta'] = ['required', 'in:0,1'];
         }
 
+        if (Schema::hasColumn('empresas', 'loja_banner_categoria_id')) {
+            $rules['loja_banner_categoria_id'] = [
+                'nullable',
+                'integer',
+                Rule::exists('categorias', 'id')->where(fn ($q) => $q->where('empresa_id', $empresa->id)),
+            ];
+        }
+
+        if (Schema::hasColumn('empresas', 'loja_banner_categoria_id') && $request->has('loja_banner_categoria_id')) {
+            $rawBannerCat = $request->input('loja_banner_categoria_id');
+            $request->merge([
+                'loja_banner_categoria_id' => ($rawBannerCat === '' || $rawBannerCat === null) ? null : (int) $rawBannerCat,
+            ]);
+        }
+
         $data = $request->validate($rules);
 
         // Sempre gravar aqui: em vários hosts Schema::hasColumn('empresas', instagram_url)
@@ -194,6 +210,15 @@ class ConfiguracaoController extends Controller
             $data['loja_frete_google_km_max'] = ($v === null || $v === '') ? null : round((float) $v, 2);
         }
 
+        if (Schema::hasColumn('empresas', 'loja_banner_categoria_id')) {
+            if (! $empresa->temTelaMenu('loja_online') || ! $request->has('loja_banner_categoria_id')) {
+                unset($data['loja_banner_categoria_id']);
+            } else {
+                $raw = $data['loja_banner_categoria_id'] ?? null;
+                $data['loja_banner_categoria_id'] = ($raw === null || $raw === '') ? null : (int) $raw;
+            }
+        }
+
         $slugAnterior = (string) ($empresa->slug ?? '');
         $slugNovo = (string) ($data['slug'] ?? $empresa->slug ?? '');
         $mudouSlug = $slugAnterior !== '' && $slugNovo !== '' && $slugAnterior !== $slugNovo;
@@ -226,16 +251,17 @@ class ConfiguracaoController extends Controller
                     str_contains($msg, 'instagram_url')
                     || str_contains($msg, 'facebook_url')
                     || str_contains($msg, 'loja_aberta')
+                    || str_contains($msg, 'loja_banner_categoria_id')
                 )
             ) {
-                unset($data['instagram_url'], $data['facebook_url'], $data['loja_aberta']);
+                unset($data['instagram_url'], $data['facebook_url'], $data['loja_aberta'], $data['loja_banner_categoria_id']);
                 $empresa->update($data);
 
                 return redirect()
                     ->route('empresa.configuracoes.index')
                     ->with(
                         'warning',
-                        'Os demais dados foram salvos. Rode php artisan migrate no servidor para criar colunas novas (Instagram/Facebook/status da loja) e salve de novo.'
+                        'Os demais dados foram salvos. Rode php artisan migrate no servidor para criar colunas novas (Instagram/Facebook/status da loja/banner) e salve de novo.'
                     );
             }
 

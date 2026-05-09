@@ -703,7 +703,37 @@ class PublicoController extends Controller
             ->orderBy('nome')
             ->get();
 
-        return view('publico.loja', compact('slug', 'empresa', 'produtos', 'categorias'));
+        $bannerCategoria = null;
+        $bannerCapaUrl = null;
+        if (Schema::hasColumn('empresas', 'loja_banner_categoria_id')) {
+            $empresa->loadMissing('lojaBannerCategoria');
+            $bc = $empresa->lojaBannerCategoria;
+            if ($bc !== null && (int) $bc->empresa_id === (int) $empresa->id && $bc->ativo) {
+                $bannerCategoria = $bc;
+                $capa = Produto::query()
+                    ->where('empresa_id', $empresa->id)
+                    ->where('categoria_id', $bc->id)
+                    ->where('ativo', true)
+                    ->where('visivel_loja', true)
+                    ->whereNotNull('foto')
+                    ->where('foto', '!=', '')
+                    ->orderBy('nome')
+                    ->first();
+                if ($capa !== null) {
+                    $u = $capa->urlFoto();
+                    $bannerCapaUrl = ($u !== null && $u !== '') ? $u : null;
+                }
+            }
+        }
+
+        return view('publico.loja', compact(
+            'slug',
+            'empresa',
+            'produtos',
+            'categorias',
+            'bannerCategoria',
+            'bannerCapaUrl'
+        ));
     }
 
     public function produto(string $slug, string $produto_id): Response

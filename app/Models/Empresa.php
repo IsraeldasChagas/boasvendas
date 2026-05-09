@@ -29,6 +29,7 @@ class Empresa extends Model
         'nome',
         'loja_aberta',
         'slug',
+        'loja_banner_categoria_id',
         'logo',
         'endereco',
         'cep',
@@ -103,6 +104,12 @@ class Empresa extends Model
     public function categorias(): HasMany
     {
         return $this->hasMany(Categoria::class, 'empresa_id');
+    }
+
+    /** Categoria em destaque no topo do cardápio público (banner opcional). */
+    public function lojaBannerCategoria(): BelongsTo
+    {
+        return $this->belongsTo(Categoria::class, 'loja_banner_categoria_id');
     }
 
     public function clientes(): HasMany

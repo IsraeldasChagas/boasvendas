@@ -15,6 +15,25 @@
             </div>
         @endif
 
+        @if ($bannerCategoria ?? null)
+            <a href="{{ route('publico.loja', ['slug' => $slug, 'categoria_id' => $bannerCategoria->id]) }}" class="vf-loja-banner d-block text-decoration-none mb-3">
+                @if (! empty($bannerCapaUrl))
+                    <div class="ratio ratio-21x9 rounded-3 overflow-hidden position-relative shadow-sm border border-primary-subtle">
+                        <img src="{{ $bannerCapaUrl }}" alt="" class="position-absolute top-0 start-0 w-100 h-100 object-fit-cover" width="1200" height="514" loading="eager" decoding="async">
+                        <div class="position-absolute bottom-0 start-0 end-0 vf-loja-banner-scrim px-3 py-3 text-white">
+                            <span class="h5 fw-bold mb-0">{{ $bannerCategoria->nome }}</span>
+                            <span class="small d-block opacity-90">Ver produtos desta categoria</span>
+                        </div>
+                    </div>
+                @else
+                    <div class="vf-card rounded-3 overflow-hidden border-0 shadow-sm vf-loja-banner-fallback p-4 text-center bg-primary text-white">
+                        <span class="h5 fw-bold mb-1 d-block">{{ $bannerCategoria->nome }}</span>
+                        <span class="small opacity-90">Ver produtos desta categoria →</span>
+                    </div>
+                @endif
+            </a>
+        @endif
+
         <form action="{{ route('publico.loja', ['slug' => $slug]) }}" method="get" class="vf-filter-bar mb-3">
             <div class="row g-2 align-items-end">
                 <div class="col-md-6 col-lg-4">
