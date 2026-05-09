@@ -33,15 +33,33 @@
                 <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mt-2 mb-0">
                     <h1 class="h3 fw-bold mb-0">{{ $produto->nome }}</h1>
                     @php
-                        $vfWaProdutoLink = route('publico.produto', ['slug' => $slug, 'produto_id' => $produto->id]);
-                        $vfWaTexto = $produto->nome.' — '.$empresa->nome."\n".$vfWaProdutoLink;
+                        $vfShareProdutoUrl = route('publico.produto', ['slug' => $slug, 'produto_id' => $produto->id]);
+                        $vfWaTexto = $produto->nome.' — '.$empresa->nome."\n".$vfShareProdutoUrl;
                         $vfWaHref = 'https://wa.me/?text='.rawurlencode($vfWaTexto);
+                        $vfFbHref = 'https://www.facebook.com/sharer/sharer.php?u='.rawurlencode($vfShareProdutoUrl);
                     @endphp
-                    <a href="{{ $vfWaHref }}" target="_blank" rel="noopener noreferrer"
-                       class="btn btn-success btn-sm flex-shrink-0 align-self-start"
-                       aria-label="Compartilhar este produto no WhatsApp">
-                        <i class="bi bi-whatsapp me-1" aria-hidden="true"></i>Compartilhar
-                    </a>
+                    <div class="btn-group btn-group-sm flex-shrink-0 align-self-start" role="group" aria-label="Compartilhar este produto">
+                        <a href="{{ $vfWaHref }}" target="_blank" rel="noopener noreferrer"
+                           class="btn btn-success"
+                           title="WhatsApp"
+                           aria-label="Compartilhar no WhatsApp">
+                            <i class="bi bi-whatsapp" aria-hidden="true"></i><span class="d-none d-sm-inline ms-1">WhatsApp</span>
+                        </a>
+                        <a href="{{ $vfFbHref }}" target="_blank" rel="noopener noreferrer"
+                           class="btn btn-primary"
+                           title="Facebook"
+                           aria-label="Compartilhar no Facebook">
+                            <i class="bi bi-facebook" aria-hidden="true"></i><span class="d-none d-sm-inline ms-1">Facebook</span>
+                        </a>
+                        <button type="button"
+                            class="btn text-white border-0 vf-share-instagram"
+                            style="background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);"
+                            data-share-url="{{ $vfShareProdutoUrl }}"
+                            title="Instagram — copia o link para você colar no app"
+                            aria-label="Copiar link do produto para compartilhar no Instagram">
+                            <i class="bi bi-instagram" aria-hidden="true"></i><span class="d-none d-sm-inline ms-1 vf-share-instagram-label">Instagram</span>
+                        </button>
+                    </div>
                 </div>
                 @if ($produto->estoque === null || $produto->estoque > 0)
                     <div class="vf-produto-estrelas mb-3" id="vf-produto-estrelas-wrap">
@@ -478,4 +496,38 @@
             </script>
         @endpush
     @endif
+    @push('scripts')
+        <script>
+            (function () {
+                var btn = document.querySelector('.vf-share-instagram');
+                if (!btn) return;
+                btn.addEventListener('click', function () {
+                    var u = btn.getAttribute('data-share-url');
+                    if (!u) return;
+                    function feedback() {
+                        var prevTitle = btn.getAttribute('title') || '';
+                        btn.setAttribute('title', 'Link copiado! Cole no Instagram.');
+                        setTimeout(function () {
+                            btn.setAttribute('title', prevTitle);
+                        }, 2500);
+                        var sp = btn.querySelector('.vf-share-instagram-label');
+                        if (sp) {
+                            var t = sp.textContent;
+                            sp.textContent = 'Copiado!';
+                            setTimeout(function () {
+                                sp.textContent = t;
+                            }, 2000);
+                        }
+                    }
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(u).then(feedback).catch(function () {
+                            window.prompt('Copie o link do produto:', u);
+                        });
+                    } else {
+                        window.prompt('Copie o link do produto:', u);
+                    }
+                });
+            })();
+        </script>
+    @endpush
 @endsection
