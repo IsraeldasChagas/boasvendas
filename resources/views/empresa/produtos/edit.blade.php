@@ -101,42 +101,22 @@
                             }
                         @endphp
                         @include('partials.empresa.produto-ingredientes-form', ['linhas' => $ingredientesLinhas])
-                        <div class="col-12">
-                            <input type="hidden" name="adicional_catalogo_enviado" value="1">
-                            <p class="small text-muted mb-2">Opções pagas cadastradas em <a href="{{ route('empresa.adicionais.index') }}">Adicionais</a>. <strong>Só marque abaixo as que devem aparecer neste produto</strong> na loja (cada produto é independente).</p>
-                            <div class="border rounded p-3 bg-light mb-2" style="max-height: 12rem; overflow-y: auto;">
-                                @php $sel = old('adicional_ids', $produto->adicionais->where('tipo', \App\Models\Adicional::TIPO_ACRESCENTAR)->pluck('id')->all()); @endphp
-                                @forelse ($adicionais->where('tipo', \App\Models\Adicional::TIPO_ACRESCENTAR) as $ad)
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="adicional_ids[]" id="ad_{{ $ad->id }}" value="{{ $ad->id }}"
-                                            @checked(in_array($ad->id, $sel, true))>
-                                        <label class="form-check-label" for="ad_{{ $ad->id }}">
-                                            {{ $ad->nome }}
-                                            <span class="text-muted small">(+ R$ {{ number_format((float) $ad->preco, 2, ',', '.') }})</span>
-                                        </label>
-                                    </div>
-                                @empty
-                                    <span class="small text-muted">Nenhum adicional de acréscimo cadastrado.</span>
-                                @endforelse
-                            </div>
-                            @error('adicional_ids')<div class="text-danger small">{{ $message }}</div>@enderror
-                            @if (\Illuminate\Support\Facades\Schema::hasColumn('produtos', 'acrescimo_escolhas_min'))
-                                <div class="row g-2 mt-3">
-                                    <div class="col-md-4">
-                                        <label class="form-label" for="acrescimo_escolhas_min">Mínimo neste produto</label>
-                                        <input type="number" class="form-control @error('acrescimo_escolhas_min') is-invalid @enderror" id="acrescimo_escolhas_min" name="acrescimo_escolhas_min" value="{{ old('acrescimo_escolhas_min', $produto->acrescimo_escolhas_min) }}" min="0" max="999">
-                                        @error('acrescimo_escolhas_min')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                        <div class="form-text">Total de acréscimos (soma das quantidades). Em branco = sem mínimo na vitrine.</div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label" for="acrescimo_escolhas_max">Máximo neste produto</label>
-                                        <input type="number" class="form-control @error('acrescimo_escolhas_max') is-invalid @enderror" id="acrescimo_escolhas_max" name="acrescimo_escolhas_max" value="{{ old('acrescimo_escolhas_max', $produto->acrescimo_escolhas_max) }}" min="0" max="999">
-                                        @error('acrescimo_escolhas_max')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                        <div class="form-text">Total de acréscimos (soma das quantidades). Em branco = sem máximo na vitrine.</div>
-                                    </div>
-                                </div>
-                            @endif
-                </div>
+                        @php
+                            $temErroOpcoesPagas = $errors->has('adicional_ids') || $errors->has('adicional_ids.*')
+                                || $errors->has('permite_adicionais')
+                                || $errors->has('acrescimo_escolhas_min') || $errors->has('acrescimo_escolhas_max');
+                            $oldAdIdsOpcoes = old('adicional_ids');
+                            $marcouAdicionalOpcoes = is_array($oldAdIdsOpcoes)
+                                && count(array_filter($oldAdIdsOpcoes, fn ($id) => (int) $id > 0)) > 0;
+                            $opcoesPagasAberto = $temErroOpcoesPagas || $marcouAdicionalOpcoes || (bool) old('permite_adicionais')
+                                || $produto->permite_adicionais
+                                || $produto->adicionais->where('tipo', \App\Models\Adicional::TIPO_ACRESCENTAR)->isNotEmpty();
+                        @endphp
+                        @include('partials.empresa.produto-opcoes-pagas-form', [
+                            'adicionais' => $adicionais,
+                            'produto' => $produto,
+                            'opcoesPagasAberto' => $opcoesPagasAberto,
+                        ])
                 <div class="col-12">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="visivel_loja" id="visivel_loja" value="1" {{ old('visivel_loja', $produto->visivel_loja) ? 'checked' : '' }}>
