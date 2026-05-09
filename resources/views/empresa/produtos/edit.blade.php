@@ -67,7 +67,10 @@
                             @error('descricao')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         @if ($uiRetirarIng !== null)
-                            @include('partials.empresa.produto-ingredientes-retirar-ui', ['valorUi' => $uiRetirarIng])
+                            @include('partials.empresa.produto-ingredientes-retirar-ui', [
+                                'valorUi' => $uiRetirarIng,
+                                'mostrarAvisoSemIngredientesRetirar' => $produto->ingredientes->isEmpty(),
+                            ])
                         @endif
                         @php
                             if (old('ingrediente_nomes') !== null) {

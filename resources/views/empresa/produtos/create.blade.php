@@ -62,9 +62,6 @@
                             <textarea class="form-control @error('descricao') is-invalid @enderror" id="descricao" name="descricao" rows="3">{{ old('descricao') }}</textarea>
                             @error('descricao')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
-                        @if ($uiRetirarIng !== null)
-                            @include('partials.empresa.produto-ingredientes-retirar-ui', ['valorUi' => $uiRetirarIng])
-                        @endif
                         @php
                             if (old('ingrediente_nomes') !== null) {
                                 $oldNomes = old('ingrediente_nomes', []);
@@ -98,6 +95,22 @@
                                 $ingredientesLinhas = [];
                             }
                         @endphp
+                        @php
+                            $temNomeIngPratoCreate = false;
+                            foreach ($ingredientesLinhas as $linhaIngCreate) {
+                                $nomeIngC = is_array($linhaIngCreate) ? trim((string) ($linhaIngCreate['nome'] ?? '')) : '';
+                                if ($nomeIngC !== '') {
+                                    $temNomeIngPratoCreate = true;
+                                    break;
+                                }
+                            }
+                        @endphp
+                        @if ($uiRetirarIng !== null)
+                            @include('partials.empresa.produto-ingredientes-retirar-ui', [
+                                'valorUi' => $uiRetirarIng,
+                                'mostrarAvisoSemIngredientesRetirar' => ! $temNomeIngPratoCreate,
+                            ])
+                        @endif
                         @include('partials.empresa.produto-ingredientes-form', ['linhas' => $ingredientesLinhas])
                         <div class="col-md-4">
                             <label class="form-label" for="max_ingredientes_retirar">Máx. ingredientes para retirar</label>
