@@ -8,9 +8,10 @@
     if (is_string($whatsDigits) && ($whatsDigits !== '') && (strlen($whatsDigits) === 10 || strlen($whatsDigits) === 11)) {
         $whatsDigits = '55'.$whatsDigits;
     }
-    $colsRedes = \Illuminate\Support\Facades\Schema::hasColumn('empresas', 'instagram_url');
-    $igUrl = ($colsRedes && $empresa) ? trim((string) ($empresa->instagram_url ?? '')) : '';
-    $fbUrl = ($colsRedes && $empresa) ? trim((string) ($empresa->facebook_url ?? '')) : '';
+    // Não usar Schema::hasColumn aqui: em alguns hosts a checagem falha e some os ícones
+    // mesmo com as colunas e URLs corretas no banco. Ler direto do modelo.
+    $igUrl = $empresa ? trim((string) ($empresa->instagram_url ?? '')) : '';
+    $fbUrl = $empresa ? trim((string) ($empresa->facebook_url ?? '')) : '';
     $temRedesTopo = ($igUrl !== '') || ($fbUrl !== '');
     $temContatoTopo = ($enderecoLoja !== '') || ($whatsDigits !== '');
 @endphp
@@ -79,6 +80,18 @@
                             <a class="text-decoration-none" href="{{ 'https://wa.me/'.$whatsDigits }}" target="_blank" rel="noopener">
                                 {{ $whatsRaw }}
                             </a>
+                        </div>
+                    @endif
+                    @if ($igUrl !== '')
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-instagram text-danger"></i>
+                            <a class="text-decoration-none" href="{{ $igUrl }}" target="_blank" rel="noopener noreferrer">Instagram</a>
+                        </div>
+                    @endif
+                    @if ($fbUrl !== '')
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-facebook text-primary"></i>
+                            <a class="text-decoration-none" href="{{ $fbUrl }}" target="_blank" rel="noopener noreferrer">Facebook</a>
                         </div>
                     @endif
                 </div>
