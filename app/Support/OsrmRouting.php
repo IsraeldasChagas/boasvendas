@@ -21,7 +21,7 @@ final class OsrmRouting
             return null;
         }
 
-        $cacheKey = 'nominatim_geo_v2:'.md5($query);
+        $cacheKey = 'nominatim_geo_v3:'.md5($query);
         if (Cache::has($cacheKey)) {
             return Cache::get($cacheKey);
         }
@@ -44,13 +44,9 @@ final class OsrmRouting
         ]);
 
         if ($first === null) {
-            $digits = preg_replace('/\D+/', '', $query);
-            if (strlen($digits) >= 8) {
-                $cep8 = substr($digits, 0, 8);
-                $cepNorm = Cep::normalizar8($cep8);
-                if ($cepNorm !== null) {
-                    $first = self::geocodeCepBrasilFallback($base, $headers, $cepNorm);
-                }
+            $cep8Extraido = self::extrairCepBrasil8DaString($query);
+            if ($cep8Extraido !== null) {
+                $first = self::geocodeCepBrasilFallback($base, $headers, $cep8Extraido);
             }
         }
 
@@ -94,6 +90,20 @@ final class OsrmRouting
         return is_array($first) ? $first : null;
     }
 
+    /**
+     * Evita usar os 8 primeiros dígitos de textos longos (ex.: número + CEP misturados).
+     */
+    private static function extrairCepBrasil8DaString(string $query): ?string
+    {
+        if (preg_match('/\b(\d{5})-?(\d{3})\b/', $query, $m)) {
+            return Cep::normalizar8($m[1].$m[2]);
+        }
+
+        $digits = preg_replace('/\D+/', '', $query);
+
+        return strlen($digits) === 8 ? Cep::normalizar8($digits) : null;
+    }
+
     /** Texto livre no Nominatim costuma falhar só com "xxxx-xxxx, Brasil"; tenta CEP estruturado e ViaCEP. */
     private static function geocodeCepBrasilFallback(string $base, array $headers, string $cep8): ?array
     {
@@ -119,13 +129,23 @@ final class OsrmRouting
             return $try;
         }
 
-        $response = Http::timeout(10)->get('https://viacep.com.br/ws/'.$cep8.'/json/');
+        $response = Http::timeout(10)
+            ->withHeaders([
+                'User-Agent' => $headers['User-Agent'] ?? 'VendAffacil',
+                'Accept' => 'application/json',
+            ])
+            ->get('https://viacep.com.br/ws/'.$cep8.'/json/');
         if (! $response->successful()) {
             return null;
         }
 
         $data = $response->json();
-        if (! is_array($data) || (isset($data['erro']) && $data['erro'])) {
+        if (! is_array($data)) {
+            return null;
+        }
+
+        $erroVia = $data['erro'] ?? false;
+        if ($erroVia === true || $erroVia === 'true') {
             return null;
         }
 
@@ -165,7 +185,7 @@ final class OsrmRouting
             return null;
         }
 
-        $cacheKey = 'osrm_route_v1:'.md5($origem.'|'.$destino);
+        $cacheKey = 'osrm_route_v2:'.md5($origem.'|'.$destino);
         if (Cache::has($cacheKey)) {
             return Cache::get($cacheKey);
         }
