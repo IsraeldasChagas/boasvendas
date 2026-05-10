@@ -128,10 +128,15 @@
                             @php
                                 $limitesNoCard = [];
                                 if ($temLimiteAcrescimo && ($minEsc !== null || $maxEsc !== null)) {
-                                    $limitesNoCard[] = 'Opções — mín. '.($minEsc ?? '—').' · máx. '.($maxEsc ?? '—');
+                                    if ($minEsc !== null && $maxEsc !== null && (int) $minEsc === (int) $maxEsc) {
+                                        $limitesNoCard[] = 'Escolha '.(int) $minEsc.' opções';
+                                        $limitesNoCard[] = 'Mínimo: '.(int) $minEsc.' · Máximo: '.(int) $maxEsc;
+                                    } else {
+                                        $limitesNoCard[] = 'Opções — Mínimo: '.($minEsc ?? '—').' · Máximo: '.($maxEsc ?? '—');
+                                    }
                                 }
                                 if ($temRetirarIng) {
-                                    $limitesNoCard[] = 'Ingredientes — mín. 0 · máx. '.$maxRet;
+                                    $limitesNoCard[] = 'Ingredientes — Mínimo: 0 · Máximo: '.$maxRet;
                                 }
                             @endphp
                             <div class="vf-card p-2 p-md-3 mb-3 vf-card-personalizar-produto">
@@ -148,7 +153,8 @@
 
                                 @if ($produto->permite_adicionais && $acres->isNotEmpty())
                                     @if ($temLimiteAcrescimo && $minEsc !== null && $maxEsc !== null && (int) $minEsc === (int) $maxEsc)
-                                        <p class="fw-semibold mb-2">Escolha {{ $minEsc }} opções</p>
+                                        <p class="fw-semibold mb-1">Escolha {{ (int) $minEsc }} opções</p>
+                                        <div class="small text-muted mb-2">Mínimo: {{ (int) $minEsc }} · Máximo: {{ (int) $maxEsc }}</div>
                                     @else
                                         <p class="fw-semibold mb-2">Opções</p>
                                     @endif
