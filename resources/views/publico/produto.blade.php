@@ -125,31 +125,9 @@
                         <input type="hidden" name="produto_id" value="{{ $produto->id }}">
 
                         @if ($temPersonalizar)
-                            @php
-                                $limitesNoCard = [];
-                                if ($temLimiteAcrescimo && ($minEsc !== null || $maxEsc !== null)) {
-                                    if ($minEsc !== null && $maxEsc !== null && (int) $minEsc === (int) $maxEsc) {
-                                        $limitesNoCard[] = 'Escolha '.(int) $minEsc.' opções';
-                                        $limitesNoCard[] = 'Mínimo: '.(int) $minEsc.' · Máximo: '.(int) $maxEsc;
-                                    } else {
-                                        $limitesNoCard[] = 'Opções — Mínimo: '.($minEsc ?? '—').' · Máximo: '.($maxEsc ?? '—');
-                                    }
-                                }
-                                if ($temRetirarIng) {
-                                    $limitesNoCard[] = 'Escolha '.$maxRet.' opções';
-                                    $limitesNoCard[] = 'Mínimo: '.$maxRet.' · Máximo: '.$maxRet;
-                                }
-                            @endphp
                             <div class="vf-card p-2 p-md-3 mb-3 vf-card-personalizar-produto">
                                 <div class="d-flex justify-content-between align-items-start gap-2 mb-3 flex-wrap">
                                     <h2 class="h6 fw-bold mb-0">Personalizar</h2>
-                                    @if ($limitesNoCard !== [])
-                                        <div class="vf-personalizar-limites-no-card small text-muted ms-md-auto">
-                                            @foreach ($limitesNoCard as $txtLimite)
-                                                <span class="vf-personalizar-limite-chip d-inline-block">{{ $txtLimite }}</span>
-                                            @endforeach
-                                        </div>
-                                    @endif
                                 </div>
 
                                 @if ($produto->permite_adicionais && $acres->isNotEmpty())
