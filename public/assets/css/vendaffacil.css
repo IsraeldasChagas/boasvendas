@@ -823,14 +823,22 @@ footer.vf-publico-footer--fixed {
   box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.07);
 }
 
-/* Rodapé fixo: reserva generosa no main para o último bloco nunca ficar por baixo do rodapé (ícone + texto + py-4 + safe area) */
 body.vf-body--public-footer-fixed main {
-  padding-bottom: calc(13rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(17rem + env(safe-area-inset-bottom, 0px));
 }
 
 @media (min-width: 768px) {
   body.vf-body--public-footer-fixed main {
-    padding-bottom: calc(12rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(15rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (min-width: 992px) {
+  /* Carrinho: coluna do resumo acompanha o scroll */
+  .vf-carrinho-sidebar-sticky {
+    position: sticky;
+    top: 0.75rem;
+    z-index: 1;
   }
 }
 

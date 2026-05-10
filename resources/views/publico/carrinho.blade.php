@@ -91,7 +91,8 @@
                         <a href="{{ route('publico.loja', ['slug' => $slug]) }}" class="btn btn-link ps-0 mt-2 d-block"><i class="bi bi-arrow-left me-1"></i>Continuar comprando</a>
                     </div>
                     <div class="col-lg-4">
-                        <div class="vf-card p-3 mb-3">
+                        <div class="vf-carrinho-sidebar-sticky">
+                            <div class="vf-card p-3 mb-3">
                             <h2 class="h6 fw-bold">Como receber</h2>
                             <form action="{{ route('publico.carrinho.entrega-prefs', ['slug' => $slug]) }}" method="post" class="mb-3">
                                 @csrf
@@ -126,8 +127,9 @@
                             @if (($prefs['modo'] === \App\Models\Pedido::TIPO_ENTREGA_ENTREGA) && ($freteEntregaBloqueada ?? false))
                                 <span class="btn btn-secondary w-100 disabled" tabindex="-1" aria-disabled="true">Fora da área — ajuste o CEP</span>
                             @else
-                                <a href="{{ route('publico.checkout', ['slug' => $slug]) }}" class="btn btn-success w-100">Ir para checkout</a>
+                                <a href="{{ route('publico.checkout', ['slug' => $slug]) }}" class="btn btn-success w-100 mb-1">Ir para checkout</a>
                             @endif
+                        </div>
                         </div>
                     </div>
                 </div>
