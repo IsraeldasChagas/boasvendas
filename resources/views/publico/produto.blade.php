@@ -136,7 +136,8 @@
                                     }
                                 }
                                 if ($temRetirarIng) {
-                                    $limitesNoCard[] = 'Ingredientes — Mínimo: 0 · Máximo: '.$maxRet;
+                                    $limitesNoCard[] = 'Escolha '.$maxRet.' opções';
+                                    $limitesNoCard[] = 'Mínimo: '.$maxRet.' · Máximo: '.$maxRet;
                                 }
                             @endphp
                             <div class="vf-card p-2 p-md-3 mb-3 vf-card-personalizar-produto">
@@ -216,9 +217,11 @@
 
                                 @if ($temRetirarIng)
                                     @if ($uiRetirarIng === \App\Models\Produto::ING_RETIRAR_UI_CHECKBOX)
-                                        <p class="fw-semibold mb-2 {{ $produto->permite_adicionais && $acres->isNotEmpty() ? 'mt-3' : '' }}">Ingredientes para retirar</p>
+                                        <p class="fw-semibold mb-1 {{ $produto->permite_adicionais && $acres->isNotEmpty() ? 'mt-3' : '' }}">Escolha {{ $maxRet }} {{ (int) $maxRet === 1 ? 'opção' : 'opções' }}</p>
+                                        <div class="small text-muted mb-2">Mínimo: {{ $maxRet }} · Máximo: {{ $maxRet }}</div>
                                         <div class="vf-personalizar-grid vf-retirar-checkbox-grid mb-1 {{ $produto->permite_adicionais && $acres->isNotEmpty() ? 'mt-1' : '' }}"
                                             id="vf-retirar-checkbox"
+                                            data-min-total="{{ $maxRet }}"
                                             data-max-total="{{ $maxRet }}">
                                             @foreach ($produto->ingredientes as $ing)
                                                 <div class="vf-escolha-card vf-escolha-card--retirar" data-ing-id="{{ $ing->id }}">
@@ -239,9 +242,11 @@
                                             @endforeach
                                         </div>
                                     @else
-                                        <p class="fw-semibold mb-2 {{ $produto->permite_adicionais && $acres->isNotEmpty() ? 'mt-3' : '' }}">Ingredientes para retirar</p>
+                                        <p class="fw-semibold mb-1 {{ $produto->permite_adicionais && $acres->isNotEmpty() ? 'mt-3' : '' }}">Escolha {{ $maxRet }} {{ (int) $maxRet === 1 ? 'opção' : 'opções' }}</p>
+                                        <div class="small text-muted mb-2">Mínimo: {{ $maxRet }} · Máximo: {{ $maxRet }}</div>
                                         <div class="vf-personalizar-grid vf-acrescimo-stepper-grid vf-retirar-stepper-grid mb-1 {{ $produto->permite_adicionais && $acres->isNotEmpty() ? 'mt-1' : '' }}"
                                             id="vf-retirar-stepper"
+                                            data-min-total="{{ $maxRet }}"
                                             data-max-total="{{ $maxRet }}">
                                             @foreach ($produto->ingredientes as $ing)
                                                 <div class="vf-escolha-card vf-escolha-card--retirar" data-ing-id="{{ $ing->id }}">
@@ -548,6 +553,7 @@
 
                     var wrapRet = document.getElementById('vf-retirar-stepper');
                     if (wrapRet) {
+                        var minTotalRet = parseInt(wrapRet.getAttribute('data-min-total') || '0', 10);
                         var maxTotalRet = parseInt(wrapRet.getAttribute('data-max-total') || '0', 10);
                         var maxPorLinha = 999;
 
@@ -604,11 +610,28 @@
                             }
                             atualizarCardRet(card);
                         });
+
+                        form.addEventListener('submit', function (e) {
+                            var s = somaRet();
+                            if (s < minTotalRet || s > maxTotalRet) {
+                                e.preventDefault();
+                                alert('Escolha entre ' + minTotalRet + ' e ' + maxTotalRet + ' ingrediente(s) para retirar (somando as quantidades).');
+                                return false;
+                            }
+                        });
                     }
 
                     var wrapChk = document.getElementById('vf-retirar-checkbox');
                     if (wrapChk) {
+                        var minChk = parseInt(wrapChk.getAttribute('data-min-total') || '0', 10);
                         var maxChk = parseInt(wrapChk.getAttribute('data-max-total') || '0', 10);
+                        function somaChk() {
+                            var t = 0;
+                            wrapChk.querySelectorAll('.vf-retirar-qty-input').forEach(function (inp) {
+                                t += parseInt(inp.value || '0', 10) || 0;
+                            });
+                            return t;
+                        }
                         wrapChk.querySelectorAll('.vf-escolha-card--retirar').forEach(function (card) {
                             var chk = card.querySelector('.vf-retirar-chk');
                             var hid = card.querySelector('.vf-retirar-qty-input');
@@ -631,6 +654,15 @@
                                 sync();
                             });
                             sync();
+                        });
+
+                        form.addEventListener('submit', function (e) {
+                            var s = somaChk();
+                            if (s < minChk || s > maxChk) {
+                                e.preventDefault();
+                                alert('Escolha entre ' + minChk + ' e ' + maxChk + ' ingrediente(s) para retirar.');
+                                return false;
+                            }
                         });
                     }
                 })();
