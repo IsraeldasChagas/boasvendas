@@ -699,7 +699,15 @@ class PublicoController extends Controller
             ];
         }
 
-        $km = OsrmRouting::distanciaKmRodoviaria($origem, $destino);
+        $origemOsrmFallback = null;
+        if (Schema::hasColumn('empresas', 'cep')) {
+            $cepFmtLoja = $empresa->cepFormatadoParaMaps();
+            if ($cepFmtLoja !== null) {
+                $origemOsrmFallback = $cepFmtLoja.', Brasil';
+            }
+        }
+
+        $km = OsrmRouting::distanciaKmRodoviaria($origem, $destino, $origemOsrmFallback);
         if ($km === null) {
             return [
                 'taxa' => $padrao,

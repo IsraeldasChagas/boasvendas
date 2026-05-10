@@ -4,6 +4,7 @@ namespace App\Support;
 
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Geocodificação via Nominatim (OpenStreetMap) e rota rodoviária via OSRM.
@@ -176,8 +177,10 @@ final class OsrmRouting
         ]);
     }
 
-    /** Distância em km pela rota (modo driving OSRM), ou null se indisponível. */
-    public static function distanciaKmRodoviaria(string $origem, string $destino): ?float
+    /**
+     * @param  ?string  $origemFallback  Ex.: "76800-000, Brasil" quando o endereço completo da loja não geocodifica.
+     */
+    public static function distanciaKmRodoviaria(string $origem, string $destino, ?string $origemFallback = null): ?float
     {
         $origem = trim($origem);
         $destino = trim($destino);
@@ -185,14 +188,26 @@ final class OsrmRouting
             return null;
         }
 
-        $cacheKey = 'osrm_route_v2:'.md5($origem.'|'.$destino);
+        $fb = $origemFallback !== null ? trim($origemFallback) : '';
+        $cacheKey = 'osrm_route_v3:'.md5($origem.'|'.$destino.'|'.$fb);
         if (Cache::has($cacheKey)) {
             return Cache::get($cacheKey);
         }
 
         $o = self::geocodeEndereco($origem);
+        if ($o === null && $fb !== '') {
+            $o = self::geocodeEndereco($fb);
+        }
         $d = self::geocodeEndereco($destino);
         if ($o === null || $d === null) {
+            Log::debug('osrm.geocode_falhou', [
+                'origem_coords_ok' => $o !== null,
+                'destino_coords_ok' => $d !== null,
+                'origem_preview' => substr($origem, 0, 120),
+                'destino_preview' => substr($destino, 0, 120),
+                'fallback_cep_loja_disponivel' => $fb !== '',
+            ]);
+
             return null;
         }
 
@@ -215,11 +230,15 @@ final class OsrmRouting
             ]);
 
         if (! $response->successful()) {
+            Log::debug('osrm.http_erro', ['status' => $response->status()]);
+
             return null;
         }
 
         $json = $response->json();
         if (! is_array($json) || ($json['code'] ?? '') !== 'Ok') {
+            Log::debug('osrm.resposta_nao_ok', ['code' => $json['code'] ?? null]);
+
             return null;
         }
 
@@ -240,3 +259,4 @@ final class OsrmRouting
         return $km;
     }
 }
+
