@@ -46,7 +46,7 @@
     @error('ingrediente_nomes.*')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
     @error('ingrediente_fotos.*')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
     @error('ingrediente_foto_atual.*')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
-    <div class="form-text">Use os botões para incluir ou excluir linhas. Você pode enviar uma foto pequena por ingrediente (opcional). Na loja o cliente poderá pedir para retirar até o máximo indicado abaixo.</div>
+    <div class="form-text">Use os botões para incluir ou excluir linhas. Fotos por ingrediente são opcionais.</div>
 </div>
 
 <template id="vf-tpl-ingrediente">

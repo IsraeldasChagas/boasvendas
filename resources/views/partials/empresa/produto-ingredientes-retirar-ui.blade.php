@@ -15,8 +15,7 @@
             <label class="form-check-label" for="ingredientes_ui_checkbox">Caixas de seleção (marcar o que retirar)</label>
         </div>
         <div class="form-text">
-            Vale só para o bloco <strong>Ingredientes para retirar</strong> na loja (itens que você cadastra em <strong>Ingredientes do prato</strong>, abaixo, com máximo para retirar &gt; 0).
-            Os <strong>adicionais pagos</strong> (ex.: creme de leite em “Ver adicionais disponíveis”) continuam sempre com botões − e + para quantidade — esta opção <strong>não</strong> os altera.
+            Afeta só a lista de ingredientes do prato na vitrine. Não altera os <strong>adicionais pagos</strong> (em “Ver adicionais disponíveis”).
         </div>
     </div>
 @endif

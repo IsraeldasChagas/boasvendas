@@ -4,6 +4,9 @@
   $produto: ?Produto
 --}}
 @if (\Illuminate\Support\Facades\Schema::hasColumn('produtos', 'acrescimo_escolhas_min'))
+    <div class="col-12">
+        <p class="small text-muted mb-2 mb-md-0">Limites para <strong>acrescentar</strong> (adicionais pagos; não é retirada)</p>
+    </div>
     <div class="col-md-4">
         <label class="form-label" for="acrescimo_escolhas_min">Min. de ingrediente</label>
         <input type="number" class="form-control @error('acrescimo_escolhas_min') is-invalid @enderror" id="acrescimo_escolhas_min" name="acrescimo_escolhas_min" value="{{ old('acrescimo_escolhas_min', isset($produto) ? $produto->acrescimo_escolhas_min : null) }}" min="0" max="999">
