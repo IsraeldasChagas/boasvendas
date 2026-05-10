@@ -147,7 +147,7 @@ class Pedido extends Model
 
         $pagaCom = $this->pagamento_troco_para;
         if ($pagaCom === null) {
-            return $rotulo.' — valor exato ou troco não informado';
+            return $rotulo.' — valor exato (sem troco)';
         }
 
         $paga = (float) $pagaCom;

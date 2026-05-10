@@ -123,14 +123,34 @@
                             </div>
                         @endif
 
+                        @php
+                            $dinModoOld = old('pagamento_dinheiro_modo');
+                            if ($dinModoOld === null && old('pagamento_troco_para') !== null && old('pagamento_troco_para') !== '') {
+                                $dinModoOld = 'com_troco';
+                            }
+                            $dinModoOld = $dinModoOld ?? 'exato';
+                        @endphp
                         <div id="vf-pay-dinheiro-extra" class="mt-3 p-3 rounded border bg-light {{ old('forma_pagamento', $primeiraForma) === \App\Models\Pedido::PAGAMENTO_DINHEIRO ? '' : 'd-none' }}">
-                            <label class="form-label small mb-1" for="pagamento_troco_para">Vai pagar com quanto em dinheiro? <span class="text-muted">(opcional)</span></label>
-                            <div class="input-group input-group-sm" style="max-width: 14rem;">
-                                <span class="input-group-text">R$</span>
-                                <input type="number" class="form-control @error('pagamento_troco_para') is-invalid @enderror" name="pagamento_troco_para" id="pagamento_troco_para" value="{{ old('pagamento_troco_para') }}" min="0" step="0.01" placeholder="Ex.: 100,00">
+                            <h3 class="h6 fw-bold mb-2">Pagamento em dinheiro</h3>
+                            <span class="form-label small d-block mb-2">Vai precisar de troco?</span>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input vf-dinheiro-modo" type="radio" name="pagamento_dinheiro_modo" id="din-mod-exato" value="exato" @checked($dinModoOld === 'exato')>
+                                <label class="form-check-label small" for="din-mod-exato">Não — tenho o valor exato (sem troco)</label>
                             </div>
-                            @error('pagamento_troco_para')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                            <p class="small text-muted mb-0 mt-2">Informe o valor da cédula ou do montante (deve ser ≥ total <span id="vf-dinheiro-min-total">R$ {{ number_format($total, 2, ',', '.') }}</span>) para o entregador levar o troco. Deixe em branco se for pagar o valor exato.</p>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input vf-dinheiro-modo" type="radio" name="pagamento_dinheiro_modo" id="din-mod-troco" value="com_troco" @checked($dinModoOld === 'com_troco')>
+                                <label class="form-check-label small" for="din-mod-troco">Sim — preciso de troco</label>
+                            </div>
+                            <div id="vf-dinheiro-valor-wrap" class="{{ $dinModoOld === 'com_troco' ? '' : 'd-none' }}">
+                                <label class="form-label small mb-1" for="pagamento_troco_para">Com quanto vai pagar? <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-sm" style="max-width: 14rem;">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="number" class="form-control @error('pagamento_troco_para') is-invalid @enderror" name="pagamento_troco_para" id="pagamento_troco_para" value="{{ old('pagamento_troco_para') }}" min="0" step="0.01" placeholder="0,00" @if ($dinModoOld === 'com_troco') required @endif>
+                                </div>
+                                @error('pagamento_troco_para')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                                <p class="small text-muted mb-0 mt-2">Informe o valor da nota ou do montante (deve ser igual ou maior ao total <span id="vf-dinheiro-min-total">R$ {{ number_format($total, 2, ',', '.') }}</span>). O troco é calculado automaticamente.</p>
+                            </div>
+                            <p id="vf-dinheiro-ajuda-exato" class="small text-muted mb-0 mt-2 {{ $dinModoOld === 'com_troco' ? 'd-none' : '' }}">Leve dinheiro trocado para o valor exato do pedido no momento da entrega ou retirada.</p>
                         </div>
                     </div>
                     <div class="vf-card p-3">
@@ -183,6 +203,26 @@
                         }
                     });
                 });
+
+                function syncDinheiroModo() {
+                    var wrapVal = document.getElementById('vf-dinheiro-valor-wrap');
+                    var ajudaExato = document.getElementById('vf-dinheiro-ajuda-exato');
+                    var inp = document.getElementById('pagamento_troco_para');
+                    var troco = document.getElementById('din-mod-troco');
+                    if (!wrapVal || !inp) return;
+                    var precisa = troco && troco.checked;
+                    wrapVal.classList.toggle('d-none', !precisa);
+                    inp.required = !!precisa;
+                    if (!precisa) {
+                        inp.value = '';
+                        inp.classList.remove('is-invalid');
+                    }
+                    if (ajudaExato) ajudaExato.classList.toggle('d-none', !!precisa);
+                }
+                document.querySelectorAll('.vf-dinheiro-modo').forEach(function (r) {
+                    r.addEventListener('change', syncDinheiroModo);
+                });
+                syncDinheiroModo();
 
                 var entrega = '{{ \App\Models\Pedido::TIPO_ENTREGA_ENTREGA }}';
                 var sub = {{ number_format($subtotal, 2, '.', '') }};

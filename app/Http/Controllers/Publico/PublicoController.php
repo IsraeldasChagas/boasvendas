@@ -1200,6 +1200,7 @@ class PublicoController extends Controller
             'endereco' => ['nullable', 'string', 'max:255'],
             'complemento' => ['nullable', 'string', 'max:120'],
             'forma_pagamento' => ['required', 'string', Rule::in($formasCheckout)],
+            'pagamento_dinheiro_modo' => ['nullable', 'string', Rule::in(['exato', 'com_troco'])],
             'pagamento_troco_para' => ['nullable', 'numeric', 'min:0'],
             'observacoes' => ['nullable', 'string', 'max:1000'],
         ]);
@@ -1250,19 +1251,28 @@ class PublicoController extends Controller
         $taxaVal = round((float) $taxaVal, 2);
         $totalPedido = round($subtotalVal + $taxaVal, 2);
 
-        $trocoPara = $data['pagamento_troco_para'] ?? null;
-        if ($data['forma_pagamento'] === Pedido::PAGAMENTO_DINHEIRO && $trocoPara !== null && $trocoPara !== '') {
-            $v = (float) $trocoPara;
-            if ($v > 0 && $v < $totalPedido) {
-                return back()
-                    ->withInput()
-                    ->withErrors(['pagamento_troco_para' => 'Informe um valor igual ou maior que o total (R$ '.number_format($totalPedido, 2, ',', '.').') para calcular o troco, ou deixe em branco se for pagamento em valor exato.']);
-            }
-        }
-
         $pagamentoTrocoPara = null;
-        if ($data['forma_pagamento'] === Pedido::PAGAMENTO_DINHEIRO && $trocoPara !== null && $trocoPara !== '') {
-            $pagamentoTrocoPara = round((float) $trocoPara, 2);
+        if ($data['forma_pagamento'] === Pedido::PAGAMENTO_DINHEIRO) {
+            $modo = $data['pagamento_dinheiro_modo'] ?? 'exato';
+            if ($modo === 'com_troco') {
+                $trocoPara = $data['pagamento_troco_para'] ?? null;
+                if ($trocoPara === null || $trocoPara === '') {
+                    return back()
+                        ->withInput()
+                        ->withErrors([
+                            'pagamento_troco_para' => 'Informe com quanto vai pagar em dinheiro (valor igual ou maior ao total) para levarmos o troco.',
+                        ]);
+                }
+                $v = (float) $trocoPara;
+                if ($v < $totalPedido) {
+                    return back()
+                        ->withInput()
+                        ->withErrors([
+                            'pagamento_troco_para' => 'O valor deve ser igual ou maior ao total do pedido (R$ '.number_format($totalPedido, 2, ',', '.').').',
+                        ]);
+                }
+                $pagamentoTrocoPara = round($v, 2);
+            }
         }
 
         if ($data['forma_pagamento'] === Pedido::PAGAMENTO_PIX && ! $empresa->lojaPixConfiguradaParaCheckout()) {
