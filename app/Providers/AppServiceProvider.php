@@ -248,6 +248,7 @@ class AppServiceProvider extends ServiceProvider
                 $view->with('carrinhoContagem', 0);
                 $view->with('vfPassoCompra', null);
                 $view->with('vfPedidoShowUrl', null);
+                $view->with('vfRodapeFluirCompra', false);
 
                 return;
             }
@@ -292,10 +293,20 @@ class AppServiceProvider extends ServiceProvider
                 }
             }
 
+            $rotasRodapeNoFluxoCompra = [
+                'publico.carrinho',
+                'publico.checkout',
+                'publico.pedido.show',
+                'publico.acompanhar',
+                'publico.acompanhar.buscar',
+            ];
+            $rodapeFluirCompra = in_array($nomeRota, $rotasRodapeNoFluxoCompra, true);
+
             $view->with([
                 'carrinhoContagem' => $count,
                 'vfPassoCompra' => $passo,
                 'vfPedidoShowUrl' => $pedidoShowUrl,
+                'vfRodapeFluirCompra' => $rodapeFluirCompra,
             ]);
         });
 
