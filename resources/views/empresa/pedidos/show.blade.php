@@ -14,6 +14,28 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
         </div>
     @endif
+    @if (session('warning'))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            {{ session('warning') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    @endif
+    @if (session('vf_whatsapp_indisponivel'))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            {{ session('vf_whatsapp_indisponivel') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    @endif
+    @if (session('vf_whatsapp_aviso_cliente'))
+        <div class="alert alert-success border border-success-subtle d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3" role="alert">
+            <div class="small mb-0">
+                <strong>Avisar o cliente no WhatsApp</strong> — o texto já inclui o <strong>código do pedido</strong> e o <strong>link para acompanhar</strong>. Clique para abrir o app e enviar.
+            </div>
+            <a href="{{ session('vf_whatsapp_aviso_cliente') }}" target="_blank" rel="noopener noreferrer" class="btn btn-success text-nowrap flex-shrink-0">
+                <i class="bi bi-whatsapp me-1"></i>Abrir WhatsApp do cliente
+            </a>
+        </div>
+    @endif
 
     <div class="row g-3">
         <div class="col-lg-8">

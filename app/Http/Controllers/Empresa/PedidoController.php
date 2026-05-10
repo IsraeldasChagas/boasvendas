@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Empresa;
 
 use App\Http\Controllers\Controller;
 use App\Models\Pedido;
+use App\Support\WhatsAppPedidoCliente;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -57,10 +58,33 @@ class PedidoController extends Controller
             'status' => ['required', 'string', Rule::in(array_keys(Pedido::statusRotulos()))],
         ]);
 
-        $pedido->update(['status' => $data['status']]);
+        $novoStatus = $data['status'];
+        $statusAnterior = $pedido->status;
 
-        return redirect()
+        if ($statusAnterior === $novoStatus) {
+            return redirect()
+                ->route('empresa.pedidos.show', $pedido)
+                ->with('warning', 'O status já estava assim. Escolha outro para atualizar.');
+        }
+
+        $pedido->update(['status' => $novoStatus]);
+
+        $redirect = redirect()
             ->route('empresa.pedidos.show', $pedido)
             ->with('status', 'Status do pedido atualizado.');
+
+        $waUrl = WhatsAppPedidoCliente::urlAvisoStatus($pedido->fresh(), $empresa, $novoStatus);
+        if ($waUrl !== null) {
+            return $redirect->with('vf_whatsapp_aviso_cliente', $waUrl);
+        }
+
+        if (($pedido->canal ?? Pedido::CANAL_LOJA) === Pedido::CANAL_LOJA) {
+            return $redirect->with(
+                'vf_whatsapp_indisponivel',
+                'Não foi possível gerar o link do WhatsApp. Confira se o telefone do cliente tem DDD e número corretos.'
+            );
+        }
+
+        return $redirect;
     }
 }
