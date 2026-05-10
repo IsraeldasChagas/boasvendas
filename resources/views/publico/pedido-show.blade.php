@@ -1,11 +1,11 @@
 @extends('layouts.publico')
 
-@section('title', $empresa->nome.' — Pedido '.$pedido->codigo_publico)
+@section('title', $empresa->nome)
 
 @push('head_meta')
     @php
-        $ogTitle = $empresa->nome.' — Pedido '.$pedido->codigo_publico;
-        $ogDesc = 'Acompanhe o pedido '.$pedido->codigo_publico.' na '.$empresa->nome.'. Status: '.$pedido->rotuloStatus().'.';
+        $ogTitle = $empresa->nome;
+        $ogDesc = 'Pedido '.$pedido->codigo_publico.' · '.$pedido->rotuloStatus().' · Acompanhe na '.$empresa->nome.'.';
     @endphp
     <meta property="og:title" content="{{ $ogTitle }}">
     <meta property="og:description" content="{{ $ogDesc }}">

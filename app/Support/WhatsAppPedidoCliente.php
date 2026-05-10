@@ -58,23 +58,29 @@ final class WhatsAppPedidoCliente
         $linkPedido = route('publico.pedido.show', ['slug' => $slug, 'codigo' => $codigo], absolute: true);
         $nomeCliente = trim((string) $pedido->cliente_nome);
         $nomeLoja = trim((string) ($empresa->nome ?? 'Loja'));
+        $nomeLojaEsc = str_replace('*', '', $nomeLoja);
+        $nomeClienteEsc = str_replace('*', '', $nomeCliente);
+        $codigoEsc = str_replace('*', '', $codigo);
 
         // Ícones só via \u{…} — arquivo ASCII evita emoji corrompido (?) no WhatsApp.
-        // *…* vira negrito no WhatsApp.
-        $iconLoja = "\u{1F6CD}\u{FE0F}"; // 🛍️
-        $iconPedido = "\u{1F194}"; // 🆔 ID / código
-        $iconStatus = "\u{1F4E6}"; // 📦 situação do pedido
-        $iconLink = "\u{1F517}"; // 🔗
+        // Ordem: casa (loja só nome) → boneco (cliente) → sacola (código) → risco (status) → lupa (acompanhar).
+        $iconLoja = "\u{1F3E0}"; // 🏠 casa
+        $iconCliente = "\u{1F464}"; // 👤 boneco / pessoa
+        $iconSacola = "\u{1F6CD}\u{FE0F}"; // 🛍️ sacola / código
+        $iconRisco = "\u{2796}"; // ➖ traço (status)
+        $iconLupa = "\u{1F50D}"; // 🔍 lupa / acompanhar
 
-        $msg = $iconLoja.' *'.$nomeLoja."*\n\n";
-        $msg .= 'Olá';
-        if ($nomeCliente !== '') {
-            $msg .= ', '.$nomeCliente;
+        $msg = $iconLoja.' *'.$nomeLojaEsc."*\n\n";
+        $msg .= $iconCliente.' ';
+        if ($nomeClienteEsc !== '') {
+            $msg .= '*'.$nomeClienteEsc.'*';
+        } else {
+            $msg .= 'Cliente';
         }
-        $msg .= "!\n\n";
-        $msg .= $iconPedido.' *Pedido:* *'.$codigo."*\n\n";
-        $msg .= $iconStatus.' *Situação:* '.$rotulo."\n\n";
-        $msg .= $iconLink." *Acompanhar seu pedido*\n".$linkPedido;
+        $msg .= "\n\n";
+        $msg .= $iconSacola.' *'.$codigoEsc."*\n\n";
+        $msg .= $iconRisco.' '.$rotulo."\n\n";
+        $msg .= $iconLupa." Acompanhar seu pedido\n".$linkPedido;
 
         return 'https://wa.me/'.$digits.'?text='.rawurlencode($msg);
     }
