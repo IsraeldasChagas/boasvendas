@@ -1,6 +1,18 @@
 @extends('layouts.publico')
 
-@section('title', 'Pedido '.$pedido->codigo_publico)
+@section('title', $empresa->nome.' — Pedido '.$pedido->codigo_publico)
+
+@push('head_meta')
+    @php
+        $ogTitle = $empresa->nome.' — Pedido '.$pedido->codigo_publico;
+        $ogDesc = 'Acompanhe o pedido '.$pedido->codigo_publico.' na '.$empresa->nome.'. Status: '.$pedido->rotuloStatus().'.';
+    @endphp
+    <meta property="og:title" content="{{ $ogTitle }}">
+    <meta property="og:description" content="{{ $ogDesc }}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta name="twitter:card" content="summary_large_image">
+@endpush
 
 @section('content')
     <div class="container" style="max-width:640px">

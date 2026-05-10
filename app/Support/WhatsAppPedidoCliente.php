@@ -59,16 +59,22 @@ final class WhatsAppPedidoCliente
         $nomeCliente = trim((string) $pedido->cliente_nome);
         $nomeLoja = trim((string) ($empresa->nome ?? 'Loja'));
 
-        // Emojis destacam blocos; *…* vira negrito no WhatsApp (nome da loja e número do pedido).
-        $msg = '🏪 *'.$nomeLoja."*\n\n";
+        // Ícones só via \u{…} — arquivo ASCII evita emoji corrompido (?) no WhatsApp.
+        // *…* vira negrito no WhatsApp.
+        $iconLoja = "\u{1F6CD}\u{FE0F}"; // 🛍️
+        $iconPedido = "\u{1F194}"; // 🆔 ID / código
+        $iconStatus = "\u{1F4E6}"; // 📦 situação do pedido
+        $iconLink = "\u{1F517}"; // 🔗
+
+        $msg = $iconLoja.' *'.$nomeLoja."*\n\n";
         $msg .= 'Olá';
         if ($nomeCliente !== '') {
             $msg .= ', '.$nomeCliente;
         }
         $msg .= "!\n\n";
-        $msg .= '📋 Código: *'.$codigo."*\n\n";
-        $msg .= '📦 Situação: '.$rotulo."\n\n";
-        $msg .= '🔗 Acompanhar seu pedido:'."\n".$linkPedido;
+        $msg .= $iconPedido.' *Pedido:* *'.$codigo."*\n\n";
+        $msg .= $iconStatus.' *Situação:* '.$rotulo."\n\n";
+        $msg .= $iconLink." *Acompanhar seu pedido*\n".$linkPedido;
 
         return 'https://wa.me/'.$digits.'?text='.rawurlencode($msg);
     }
