@@ -72,6 +72,27 @@
             </div>
         </div>
         <div class="col-lg-4">
+            @php
+                $cupomImpressaoOk = ! \Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_impressao_pedido_habilitada')
+                    || ($empresa->loja_impressao_pedido_habilitada ?? true);
+            @endphp
+            <div class="vf-card p-3 mb-3">
+                <h3 class="h6 fw-bold mb-2">Cupom do cliente</h3>
+                <p class="small text-muted mb-3">Cupom estilo comanda (80&nbsp;mm): loja, pedido, itens com extras, valores e link para acompanhar. Use na <strong>impressora térmica</strong> pelo navegador ou envie o <strong>mesmo texto</strong> pelo WhatsApp.</p>
+                <div class="d-grid gap-2">
+                    @if ($cupomImpressaoOk)
+                        <a href="{{ route('empresa.pedidos.imprimir', $pedido) }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-dark btn-sm"><i class="bi bi-printer me-1"></i>Abrir cupom / imprimir</a>
+                        <a href="{{ route('empresa.pedidos.imprimir', $pedido) }}?auto=1" target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary btn-sm"><i class="bi bi-lightning-charge me-1"></i>Abrir e pedir impressão</a>
+                    @else
+                        <p class="small text-muted mb-0">Impressão desativada em Configurações. Ainda pode enviar pelo WhatsApp.</p>
+                    @endif
+                    @if (! empty($cupomWhatsUrl ?? null))
+                        <a href="{{ $cupomWhatsUrl }}" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-sm"><i class="bi bi-whatsapp me-1"></i>Enviar cupom no WhatsApp</a>
+                    @else
+                        <p class="small text-warning mb-0">WhatsApp: confira o telefone do cliente (DDD + número).</p>
+                    @endif
+                </div>
+            </div>
             @if (($pedido->tipo_entrega ?? \App\Models\Pedido::TIPO_ENTREGA_ENTREGA) === \App\Models\Pedido::TIPO_ENTREGA_ENTREGA && $pedido->entregador_token)
                 @php
                     $urlEntregador = route('publico.entregador.show', [

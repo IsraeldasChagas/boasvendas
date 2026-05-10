@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Empresa;
 use App\Http\Controllers\Controller;
 use App\Models\Empresa;
 use App\Models\Pedido;
+use App\Support\CupomPedidoCliente;
 use App\Support\WhatsAppPedidoCliente;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -51,7 +52,9 @@ class PedidoController extends Controller
             $pedido->ensureEntregadorToken();
         }
 
-        return view('empresa.pedidos.show', compact('empresa', 'pedido'));
+        $cupomWhatsUrl = CupomPedidoCliente::urlWhatsAppCupom($pedido, $empresa);
+
+        return view('empresa.pedidos.show', compact('empresa', 'pedido', 'cupomWhatsUrl'));
     }
 
     public function imprimir(Request $request, Pedido $pedido): View
