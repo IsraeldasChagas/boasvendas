@@ -154,8 +154,9 @@
                         </div>
                     </div>
                     <div class="vf-card p-3">
-                        <h2 class="h6 fw-bold mb-2">Observações</h2>
-                        <textarea class="form-control @error('observacoes') is-invalid @enderror" name="observacoes" rows="2" placeholder="Ex.: portão ou interfone, ponto de referência, melhor horário para entrega…" maxlength="1000">{{ old('observacoes') }}</textarea>
+                        <h2 class="h6 fw-bold mb-2">Observação <span class="text-muted fw-normal">(opcional, uma só)</span></h2>
+                        <p class="small text-muted mb-2">Até 220 caracteres — ex.: interfone, referência, melhor horário.</p>
+                        <textarea class="form-control @error('observacoes') is-invalid @enderror" name="observacoes" rows="2" placeholder="Ex.: portão azul, interfone 12…" maxlength="220">{{ old('observacoes') }}</textarea>
                         @error('observacoes')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                 </div>

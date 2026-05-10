@@ -47,12 +47,19 @@
             if ($pedido->status === \App\Models\Pedido::STATUS_ENDERECO_NAO_ENCONTRADO) {
                 $idxAtual = false;
             }
+            if ($pedido->status === \App\Models\Pedido::STATUS_PENDENTE_LOJA) {
+                $idxAtual = false;
+            }
         @endphp
 
         @if ($pedido->status === \App\Models\Pedido::STATUS_CANCELADO)
             <div class="alert alert-secondary small">Este pedido foi cancelado.</div>
         @elseif ($pedido->status === \App\Models\Pedido::STATUS_ENDERECO_NAO_ENCONTRADO)
             <div class="alert alert-warning small">Entrega não realizada: endereço não encontrado.</div>
+        @elseif ($pedido->status === \App\Models\Pedido::STATUS_PENDENTE_LOJA)
+            <div class="alert alert-warning small mb-4">
+                <strong>Aguardando a loja confirmar seu pedido.</strong> Você recebeu o código {{ $pedido->codigo_publico }}; assim que a loja aceitar, o andamento aparece aqui.
+            </div>
         @else
             <div class="vf-card p-3 mb-4">
                 <h2 class="h6 fw-bold mb-3">Andamento</h2>

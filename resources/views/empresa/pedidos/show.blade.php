@@ -37,6 +37,27 @@
         </div>
     @endif
 
+    @if ($pedido->status === \App\Models\Pedido::STATUS_PENDENTE_LOJA)
+        <div class="alert alert-danger border border-danger-subtle shadow-sm mb-3 py-3 px-3">
+            <div class="d-flex flex-column flex-md-row align-items-start justify-content-between gap-3">
+                <div>
+                    <strong class="d-block mb-1"><i class="bi bi-bell-fill me-1"></i>Novo pedido — precisa da sua confirmação</strong>
+                    <span class="small">O cliente já finalizou na vitrine. Só avance o preparo depois que você <strong>aceitar</strong>. Se recusar, o pedido é cancelado e o estoque volta.</span>
+                </div>
+                <div class="d-flex flex-wrap gap-2 flex-shrink-0">
+                    <form action="{{ route('empresa.pedidos.pendente', $pedido) }}" method="post" class="d-inline">
+                        @csrf
+                        <button type="submit" name="decisao" value="aceitar" class="btn btn-success btn-sm px-3"><i class="bi bi-check-lg me-1"></i>Aceitar pedido</button>
+                    </form>
+                    <form action="{{ route('empresa.pedidos.pendente', $pedido) }}" method="post" class="d-inline" onsubmit="return confirm('Recusar este pedido? O cliente verá como cancelado.');">
+                        @csrf
+                        <button type="submit" name="decisao" value="recusar" class="btn btn-outline-danger btn-sm px-3"><i class="bi bi-x-lg me-1"></i>Recusar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <div class="row g-3">
         <div class="col-lg-8">
             <div class="vf-card p-3 mb-3">
@@ -142,16 +163,20 @@
             </div>
             <div class="vf-card p-3 mb-3">
                 <h3 class="h6 fw-bold mb-3">Status do pedido</h3>
-                <form action="{{ route('empresa.pedidos.status', $pedido) }}" method="post">
-                    @csrf
-                    @method('PUT')
-                    <select class="form-select form-select-sm mb-2" name="status" required>
-                        @foreach (\App\Models\Pedido::statusRotulos() as $val => $rotulo)
-                            <option value="{{ $val }}" @selected($pedido->status === $val)>{{ $rotulo }}</option>
-                        @endforeach
-                    </select>
-                    <button type="submit" class="btn btn-primary btn-sm w-100">Atualizar status</button>
-                </form>
+                @if ($pedido->status === \App\Models\Pedido::STATUS_PENDENTE_LOJA)
+                    <p class="small text-muted mb-0">Enquanto o pedido não for aceito, o status não pode ser alterado aqui. Use <strong>Aceitar pedido</strong> ou <strong>Recusar</strong> no aviso vermelho acima.</p>
+                @else
+                    <form action="{{ route('empresa.pedidos.status', $pedido) }}" method="post">
+                        @csrf
+                        @method('PUT')
+                        <select class="form-select form-select-sm mb-2" name="status" required>
+                            @foreach (\App\Models\Pedido::statusRotulos() as $val => $rotulo)
+                                <option value="{{ $val }}" @selected($pedido->status === $val)>{{ $rotulo }}</option>
+                            @endforeach
+                        </select>
+                        <button type="submit" class="btn btn-primary btn-sm w-100">Atualizar status</button>
+                    </form>
+                @endif
             </div>
             <a href="{{ route('empresa.pedidos.index') }}" class="btn btn-outline-secondary w-100">Voltar à lista</a>
         </div>

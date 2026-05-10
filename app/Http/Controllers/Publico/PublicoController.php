@@ -1202,7 +1202,7 @@ class PublicoController extends Controller
             'forma_pagamento' => ['required', 'string', Rule::in($formasCheckout)],
             'pagamento_dinheiro_modo' => ['nullable', 'string', Rule::in(['exato', 'com_troco'])],
             'pagamento_troco_para' => ['nullable', 'numeric', 'min:0'],
-            'observacoes' => ['nullable', 'string', 'max:1000'],
+            'observacoes' => ['nullable', 'string', 'max:220'],
         ]);
 
         $tipoEntrega = $data['tipo_entrega'];

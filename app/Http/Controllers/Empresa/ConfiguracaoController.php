@@ -115,6 +115,12 @@ class ConfiguracaoController extends Controller
         if (Schema::hasColumn('empresas', 'loja_aberta')) {
             $rules['loja_aberta'] = ['required', 'in:0,1'];
         }
+        if (Schema::hasColumn('empresas', 'loja_confirmar_pedidos')) {
+            $rules['loja_confirmar_pedidos'] = ['nullable', 'in:0,1'];
+        }
+        if (Schema::hasColumn('empresas', 'loja_impressao_pedido_habilitada')) {
+            $rules['loja_impressao_pedido_habilitada'] = ['nullable', 'in:0,1'];
+        }
 
         if (Empresa::schemaTemColunaLojaBannerCategoria()) {
             $rules['loja_banner_categoria_id'] = [
@@ -143,6 +149,25 @@ class ConfiguracaoController extends Controller
             $data['loja_aberta'] = ((string) $request->input('loja_aberta')) === '1';
         } else {
             unset($data['loja_aberta']);
+        }
+
+        if (Schema::hasColumn('empresas', 'loja_confirmar_pedidos')) {
+            if ($empresa->temTelaMenu('loja_online') && array_key_exists('loja_confirmar_pedidos', $request->all())) {
+                $data['loja_confirmar_pedidos'] = (string) $request->input('loja_confirmar_pedidos') === '1';
+            } else {
+                unset($data['loja_confirmar_pedidos']);
+            }
+        } else {
+            unset($data['loja_confirmar_pedidos']);
+        }
+        if (Schema::hasColumn('empresas', 'loja_impressao_pedido_habilitada')) {
+            if ($empresa->temTelaMenu('loja_online') && array_key_exists('loja_impressao_pedido_habilitada', $request->all())) {
+                $data['loja_impressao_pedido_habilitada'] = (string) $request->input('loja_impressao_pedido_habilitada') === '1';
+            } else {
+                unset($data['loja_impressao_pedido_habilitada']);
+            }
+        } else {
+            unset($data['loja_impressao_pedido_habilitada']);
         }
 
         if (Schema::hasColumn('empresas', 'cep')) {

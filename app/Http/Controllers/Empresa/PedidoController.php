@@ -121,6 +121,12 @@ class PedidoController extends Controller
             'status' => ['required', 'string', Rule::in(array_keys(Pedido::statusRotulos()))],
         ]);
 
+        if ($pedido->status === Pedido::STATUS_PENDENTE_LOJA) {
+            return redirect()
+                ->route('empresa.pedidos.show', $pedido)
+                ->with('warning', 'Este pedido ainda não foi aceito pela loja. Use Aceitar ou Recusar no painel acima.');
+        }
+
         $novoStatus = $data['status'];
         $statusAnterior = $pedido->status;
 
