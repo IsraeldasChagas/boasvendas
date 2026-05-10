@@ -7,7 +7,6 @@
         $lojaColAcrescMinMax = \Illuminate\Support\Facades\Schema::hasColumn('produtos', 'acrescimo_escolhas_min');
     @endphp
     <div class="container">
-        @include('partials.publico.compra-fluxo-etapas', ['slug' => $slug, 'passoAtual' => 'loja'])
         @if ($empresa->fidelidadePrograma && $empresa->fidelidadePrograma->ativo)
             <div class="mb-3 d-flex flex-wrap align-items-center gap-2">
                 <a href="{{ route('publico.fidelidade', ['slug' => $slug]) }}" class="vf-badge bg-primary-subtle text-primary text-decoration-none">

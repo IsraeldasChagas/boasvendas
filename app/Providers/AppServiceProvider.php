@@ -246,9 +246,12 @@ class AppServiceProvider extends ServiceProvider
             $slug = request()->route('slug');
             if (! is_string($slug) || $slug === '') {
                 $view->with('carrinhoContagem', 0);
+                $view->with('vfPassoCompra', null);
+                $view->with('vfPedidoShowUrl', null);
 
                 return;
             }
+
             $raw = session('loja_carrinho.'.$slug, []);
             $count = 0;
             if (is_array($raw) && $raw !== []) {
@@ -266,7 +269,34 @@ class AppServiceProvider extends ServiceProvider
                     }
                 }
             }
-            $view->with('carrinhoContagem', $count);
+
+            $nomeRota = Route::currentRouteName();
+            $passosPorRota = [
+                'publico.loja' => 'loja',
+                'publico.produto' => 'loja',
+                'publico.fidelidade' => 'loja',
+                'publico.fidelidade.consultar' => 'loja',
+                'publico.carrinho' => 'carrinho',
+                'publico.checkout' => 'checkout',
+                'publico.pedido.show' => 'pedido',
+                'publico.acompanhar' => 'loja',
+                'publico.acompanhar.buscar' => 'loja',
+            ];
+            $passo = $passosPorRota[$nomeRota] ?? 'loja';
+
+            $pedidoShowUrl = null;
+            if ($nomeRota === 'publico.pedido.show') {
+                $codigo = request()->route('codigo');
+                if (is_string($codigo) && $codigo !== '') {
+                    $pedidoShowUrl = route('publico.pedido.show', ['slug' => $slug, 'codigo' => $codigo]);
+                }
+            }
+
+            $view->with([
+                'carrinhoContagem' => $count,
+                'vfPassoCompra' => $passo,
+                'vfPedidoShowUrl' => $pedidoShowUrl,
+            ]);
         });
 
         RedirectIfAuthenticated::redirectUsing(function (Request $request) {

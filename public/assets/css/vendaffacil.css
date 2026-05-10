@@ -327,8 +327,8 @@ body.vf-body {
 }
 
 /* Fluxo de compra (vitrine): Cardápio → Carrinho → Checkout → Pedido */
-.vf-compra-fluxo__link:hover {
-  text-decoration: underline !important;
+.vf-compra-fluxo--painel {
+  border-color: rgba(15, 23, 42, 0.12) !important;
 }
 
 .vf-produto-wa-loja-btn {
@@ -823,13 +823,14 @@ footer.vf-publico-footer--fixed {
   box-shadow: 0 -4px 20px rgba(15, 23, 42, 0.07);
 }
 
+/* Rodapé fixo: reserva generosa no main para o último bloco nunca ficar por baixo do rodapé (ícone + texto + py-4 + safe area) */
 body.vf-body--public-footer-fixed main {
-  padding-bottom: calc(9rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(13rem + env(safe-area-inset-bottom, 0px));
 }
 
 @media (min-width: 768px) {
   body.vf-body--public-footer-fixed main {
-    padding-bottom: calc(8.5rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(12rem + env(safe-area-inset-bottom, 0px));
   }
 }
 

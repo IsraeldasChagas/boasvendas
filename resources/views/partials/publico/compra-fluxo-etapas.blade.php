@@ -19,7 +19,7 @@
         ['id' => 'pedido', 'label' => 'Pedido', 'href' => $pedidoUrl],
     ];
 @endphp
-<nav class="vf-compra-fluxo mb-3" aria-label="Etapas da compra">
+<nav class="vf-compra-fluxo vf-compra-fluxo--painel border rounded-3 bg-white shadow-sm px-3 py-3 mb-0" aria-label="Etapas da compra">
     <ol class="vf-compra-fluxo__list list-unstyled d-flex flex-wrap align-items-center gap-1 gap-sm-2 mb-0">
         @foreach ($etapas as $i => $e)
             @php

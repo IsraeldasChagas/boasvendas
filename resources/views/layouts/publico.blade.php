@@ -27,6 +27,15 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
             </div></div>
         @endif
+        @if (! empty($slug) && ! empty($vfPassoCompra))
+            <div class="container">
+                @include('partials.publico.compra-fluxo-etapas', [
+                    'slug' => $slug,
+                    'passoAtual' => $vfPassoCompra,
+                    'pedidoShowUrl' => $vfPedidoShowUrl ?? null,
+                ])
+            </div>
+        @endif
         @yield('content')
     </main>
     @include('partials.publico.footer')
