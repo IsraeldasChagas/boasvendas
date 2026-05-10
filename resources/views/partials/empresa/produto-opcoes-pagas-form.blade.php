@@ -72,7 +72,8 @@
             </fieldset>
         @endif
 
-        <fieldset id="vf-opcoes-pagas-fieldset" class="border-0 p-0 m-0" @disabled(!$opcoesPagasAberto)>
+        {{-- Não usar disabled no fieldset: campos desativados não vão no POST e a vitrine deixa de atualizar vínculos/min-máx. Só ocultamos com d-none no pai. --}}
+        <fieldset id="vf-opcoes-pagas-fieldset" class="border-0 p-0 m-0">
             <div class="form-check mb-2">
                 <input class="form-check-input" type="checkbox" name="permite_adicionais" id="permite_adicionais" value="1" @checked($permiteChecked)>
                 <label class="form-check-label" for="permite_adicionais">Permitir acréscimos pagos na loja</label>
@@ -97,7 +98,7 @@
             @error('adicional_ids.*')<div class="text-danger small">{{ $message }}</div>@enderror
             @error('permite_adicionais')<div class="text-danger small">{{ $message }}</div>@enderror
             <p class="small text-muted mt-2 mb-0">
-                <strong>Recolher</strong> só limpa a tela. Para <strong>salvar</strong> mudanças nos adicionais, envie o formulário com este bloco <strong>aberto</strong>.
+                <strong>Recolher</strong> só esconde este bloco na tela — ao salvar o produto, o que estiver marcado aqui <strong>continua sendo enviado</strong> e atualiza a loja.
             </p>
         </fieldset>
     </div>
@@ -113,20 +114,17 @@
                 var btnMostrar = document.getElementById('vf-btn-mostrar-adicionais-produto');
                 var btnRecolher = document.getElementById('vf-btn-recolher-adicionais-produto');
                 var conteudo = document.getElementById('vf-opcoes-pagas-conteudo');
-                var fs = document.getElementById('vf-opcoes-pagas-fieldset');
-                if (!intro || !btnMostrar || !btnRecolher || !conteudo || !fs) return;
+                if (!intro || !btnMostrar || !btnRecolher || !conteudo) return;
 
                 function expandir() {
                     intro.classList.add('d-none');
                     conteudo.classList.remove('d-none');
-                    fs.disabled = false;
                     btnMostrar.setAttribute('aria-expanded', 'true');
                 }
 
                 function recolher() {
                     intro.classList.remove('d-none');
                     conteudo.classList.add('d-none');
-                    fs.disabled = true;
                     btnMostrar.setAttribute('aria-expanded', 'false');
                 }
 
