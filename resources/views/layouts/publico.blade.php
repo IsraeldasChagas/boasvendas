@@ -14,8 +14,10 @@
     @stack('styles')
 </head>
 <body class="vf-body d-flex flex-column min-vh-100 bg-light {{ ($vfRodapeFluirCompra ?? false) ? 'vf-body--public-footer-flow' : 'vf-body--public-footer-fixed' }}">
-    @include('partials.publico.nav', ['slug' => $slug ?? 'demo', 'empresa' => $empresa ?? null])
-    <main class="flex-grow-1 py-3">
+    @unless ($vfOcultarNavPublica ?? false)
+        @include('partials.publico.nav', ['slug' => $slug ?? 'demo', 'empresa' => $empresa ?? null])
+    @endunless
+    <main class="flex-grow-1 py-3{{ ($vfOcultarNavPublica ?? false) ? ' pt-4' : '' }}">
         @if (session('status'))
             <div class="container"><div class="alert alert-success alert-dismissible fade show" role="alert">
                 {{ session('status') }}

@@ -249,6 +249,7 @@ class AppServiceProvider extends ServiceProvider
                 $view->with('vfPassoCompra', null);
                 $view->with('vfPedidoShowUrl', null);
                 $view->with('vfRodapeFluirCompra', false);
+                $view->with('vfOcultarNavPublica', false);
 
                 return;
             }
@@ -285,6 +286,11 @@ class AppServiceProvider extends ServiceProvider
             ];
             $passo = $passosPorRota[$nomeRota] ?? 'loja';
 
+            // Página do entregador: mesmo rodapé “fluindo” que checkout/carrinho; sem barra de etapas da compra.
+            if ($nomeRota === 'publico.entregador.show') {
+                $passo = null;
+            }
+
             $pedidoShowUrl = null;
             if ($nomeRota === 'publico.pedido.show') {
                 $codigo = request()->route('codigo');
@@ -299,6 +305,7 @@ class AppServiceProvider extends ServiceProvider
                 'publico.pedido.show',
                 'publico.acompanhar',
                 'publico.acompanhar.buscar',
+                'publico.entregador.show',
             ];
             $rodapeFluirCompra = in_array($nomeRota, $rotasRodapeNoFluxoCompra, true);
 
@@ -307,6 +314,7 @@ class AppServiceProvider extends ServiceProvider
                 'vfPassoCompra' => $passo,
                 'vfPedidoShowUrl' => $pedidoShowUrl,
                 'vfRodapeFluirCompra' => $rodapeFluirCompra,
+                'vfOcultarNavPublica' => $nomeRota === 'publico.entregador.show',
             ]);
         });
 
