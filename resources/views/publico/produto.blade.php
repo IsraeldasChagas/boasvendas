@@ -132,8 +132,7 @@
 
                                 @if ($produto->permite_adicionais && $acres->isNotEmpty())
                                     @if ($temLimiteAcrescimo && $minEsc !== null && $maxEsc !== null && (int) $minEsc === (int) $maxEsc)
-                                        <p class="fw-semibold mb-1">Escolha {{ (int) $minEsc }} opções</p>
-                                        <div class="small text-muted mb-2">Mínimo: {{ (int) $minEsc }} · Máximo: {{ (int) $maxEsc }}</div>
+                                        <p class="fw-semibold mb-2">Escolha {{ (int) $minEsc }} opções · <span class="text-muted fw-normal">Mínimo: {{ (int) $minEsc }} · Máximo: {{ (int) $maxEsc }}</span></p>
                                     @else
                                         <p class="fw-semibold mb-2">Opções</p>
                                     @endif
@@ -195,8 +194,7 @@
 
                                 @if ($temRetirarIng)
                                     @if ($uiRetirarIng === \App\Models\Produto::ING_RETIRAR_UI_CHECKBOX)
-                                        <p class="fw-semibold mb-1 {{ $produto->permite_adicionais && $acres->isNotEmpty() ? 'mt-3' : '' }}">Escolha {{ $maxRet }} {{ (int) $maxRet === 1 ? 'opção' : 'opções' }}</p>
-                                        <div class="small text-muted mb-2">Mínimo: {{ $maxRet }} · Máximo: {{ $maxRet }}</div>
+                                        <p class="fw-semibold mb-2 {{ $produto->permite_adicionais && $acres->isNotEmpty() ? 'mt-3' : '' }}">Escolha {{ $maxRet }} {{ (int) $maxRet === 1 ? 'opção' : 'opções' }} · <span class="text-muted fw-normal">Mínimo: {{ $maxRet }} · Máximo: {{ $maxRet }}</span></p>
                                         <div class="vf-personalizar-grid vf-retirar-checkbox-grid mb-1 {{ $produto->permite_adicionais && $acres->isNotEmpty() ? 'mt-1' : '' }}"
                                             id="vf-retirar-checkbox"
                                             data-min-total="{{ $maxRet }}"
@@ -220,8 +218,7 @@
                                             @endforeach
                                         </div>
                                     @else
-                                        <p class="fw-semibold mb-1 {{ $produto->permite_adicionais && $acres->isNotEmpty() ? 'mt-3' : '' }}">Escolha {{ $maxRet }} {{ (int) $maxRet === 1 ? 'opção' : 'opções' }}</p>
-                                        <div class="small text-muted mb-2">Mínimo: {{ $maxRet }} · Máximo: {{ $maxRet }}</div>
+                                        <p class="fw-semibold mb-2 {{ $produto->permite_adicionais && $acres->isNotEmpty() ? 'mt-3' : '' }}">Escolha {{ $maxRet }} {{ (int) $maxRet === 1 ? 'opção' : 'opções' }} · <span class="text-muted fw-normal">Mínimo: {{ $maxRet }} · Máximo: {{ $maxRet }}</span></p>
                                         <div class="vf-personalizar-grid vf-acrescimo-stepper-grid vf-retirar-stepper-grid mb-1 {{ $produto->permite_adicionais && $acres->isNotEmpty() ? 'mt-1' : '' }}"
                                             id="vf-retirar-stepper"
                                             data-min-total="{{ $maxRet }}"
