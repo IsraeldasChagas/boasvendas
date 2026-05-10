@@ -43,9 +43,9 @@
                         $vfWaHref = 'https://wa.me/?text='.rawurlencode($vfWaTexto);
                         $vfFbHref = 'https://www.facebook.com/sharer/sharer.php?u='.rawurlencode($vfShareProdutoUrl);
                     @endphp
-                    <div class="vf-produto-share-bloco d-flex flex-column align-items-stretch align-items-md-end gap-2 pt-1 pt-md-0 align-self-stretch w-100 w-md-auto">
-                        <span id="vf-share-produto-legenda" class="small text-muted mb-0 text-start text-md-end lh-sm">Compartilhar este produto nas redes:</span>
-                        <div class="vf-produto-share d-flex flex-wrap align-items-center justify-content-between justify-content-md-end gap-2 gap-md-3 w-100" role="group" aria-labelledby="vf-share-produto-legenda">
+                    <div class="vf-produto-share-bloco d-flex flex-nowrap align-items-center justify-content-between justify-content-md-end gap-2 gap-md-3 pt-1 pt-md-0 align-self-stretch w-100 w-md-auto overflow-x-auto">
+                        <span id="vf-share-produto-legenda" class="fw-bold mb-0 text-body lh-sm flex-shrink-0">Compartilhar</span>
+                        <div class="vf-produto-share d-flex flex-wrap align-items-center justify-content-between justify-content-md-end gap-2 gap-md-3 flex-grow-1 flex-md-grow-0" role="group" aria-labelledby="vf-share-produto-legenda">
                         <a href="{{ $vfWaHref }}" target="_blank" rel="noopener noreferrer"
                            class="btn btn-success vf-produto-share__btn rounded-3"
                            title="WhatsApp"
