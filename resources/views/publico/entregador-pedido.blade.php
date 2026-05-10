@@ -12,6 +12,11 @@
         <div class="vf-card p-3 mb-3 border border-2 border-primary-subtle">
             <div class="small text-muted mb-1">Confirme com o cliente</div>
             <div class="fs-3 fw-bold font-monospace text-primary user-select-all">{{ $pedido->codigo_publico }}</div>
+            <p class="small text-muted mb-0 mt-2">
+                <span class="text-body-secondary">Pedido em</span> {{ $pedido->created_at->format('d/m/Y H:i') }}
+                <span class="text-muted"> · </span>{{ $pedido->rotuloTipoEntrega() }}
+                <span class="text-muted"> · </span>Loja online
+            </p>
         </div>
 
         <div class="vf-card p-3 mb-3">
@@ -20,6 +25,9 @@
             <p class="small mb-0">
                 <a href="tel:{{ preg_replace('/\D+/', '', $pedido->cliente_telefone) }}" class="link-primary text-decoration-none">{{ $pedido->cliente_telefone }}</a>
             </p>
+            @if ($pedido->cliente_email)
+                <p class="small text-muted mb-0 mt-1">{{ $pedido->cliente_email }}</p>
+            @endif
         </div>
 
         <div class="vf-card p-3 mb-3">
@@ -32,11 +40,15 @@
 
         <div class="vf-card p-3 mb-3">
             <h2 class="h6 fw-bold mb-2">Itens e valores</h2>
+            <p class="small text-muted mb-2">Confira produto, quantidade, extras e observações — igual ao pedido na cozinha/caixa.</p>
             <ul class="list-unstyled small mb-0">
                 @foreach ($pedido->itens as $it)
-                    <li class="py-1 border-bottom d-flex justify-content-between gap-2">
-                        <span>{{ $it->nome_produto }} × {{ $it->quantidade }}</span>
-                        <span class="text-nowrap">R$ {{ number_format((float) $it->subtotal, 2, ',', '.') }}</span>
+                    <li class="py-2 border-bottom">
+                        <div class="d-flex justify-content-between gap-2 align-items-start">
+                            <span class="fw-medium">{{ $it->nome_produto }} × {{ $it->quantidade }}</span>
+                            <span class="text-nowrap">R$ {{ number_format((float) $it->subtotal, 2, ',', '.') }}</span>
+                        </div>
+                        @include('partials.opcoes-pedido-item', ['opcoesLinha' => $it->opcoes_linha])
                     </li>
                 @endforeach
             </ul>
