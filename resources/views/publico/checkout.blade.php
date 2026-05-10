@@ -5,6 +5,7 @@
 @section('content')
     @php $modoFreteLoja = $empresa->lojaFreteModoEfetivo(); @endphp
     <div class="container">
+        @include('partials.publico.compra-fluxo-etapas', ['slug' => $slug, 'passoAtual' => 'checkout'])
         <h1 class="h4 fw-bold mb-3">Finalizar pedido</h1>
         <form action="{{ route('publico.checkout.finalizar', ['slug' => $slug]) }}" method="post">
             @csrf

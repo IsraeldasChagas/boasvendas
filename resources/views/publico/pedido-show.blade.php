@@ -4,6 +4,11 @@
 
 @section('content')
     <div class="container" style="max-width:640px">
+        @include('partials.publico.compra-fluxo-etapas', [
+            'slug' => $slug,
+            'passoAtual' => 'pedido',
+            'pedidoShowUrl' => route('publico.pedido.show', ['slug' => $slug, 'codigo' => $pedido->codigo_publico]),
+        ])
         <nav aria-label="breadcrumb" class="mb-3">
             <ol class="breadcrumb small mb-0">
                 <li class="breadcrumb-item"><a href="{{ route('publico.loja', ['slug' => $slug]) }}">Cardápio</a></li>

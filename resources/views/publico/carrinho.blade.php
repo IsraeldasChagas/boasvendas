@@ -4,6 +4,7 @@
 
 @section('content')
     <div class="container">
+        @include('partials.publico.compra-fluxo-etapas', ['slug' => $slug, 'passoAtual' => 'carrinho'])
         <h1 class="h4 fw-bold mb-3">Carrinho</h1>
         @if (session('status'))
             <div class="alert alert-success alert-dismissible fade show small" role="alert">

@@ -326,6 +326,11 @@ body.vf-body {
   }
 }
 
+/* Fluxo de compra (vitrine): Cardápio → Carrinho → Checkout → Pedido */
+.vf-compra-fluxo__link:hover {
+  text-decoration: underline !important;
+}
+
 .vf-produto-wa-loja-btn {
   min-height: 2.85rem;
   padding-left: 1rem;
