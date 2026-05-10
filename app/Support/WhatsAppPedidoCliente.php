@@ -62,12 +62,14 @@ final class WhatsAppPedidoCliente
         $nomeClienteEsc = str_replace('*', '', $nomeCliente);
         $codigoEsc = str_replace('*', '', $codigo);
 
-        // Ícones só via \u{…} — arquivo ASCII evita emoji corrompido (?) no WhatsApp.
-        // Ordem: loja (nome) → cliente → sacola + texto "Código:" → traço (status) → lupa (acompanhar).
+        // Ordem: loja → cliente → sacola + "Código:" → status (🍳🥄 em preparo; demais ➖) → lupa.
         $iconLoja = "\u{1F3EA}"; // 🏪 loja
         $iconCliente = "\u{1F464}"; // 👤 cliente
         $iconSacola = "\u{1F6CD}\u{FE0F}"; // 🛍️ sacola + linha do código
-        $iconRisco = "\u{2796}"; // ➖ status
+        // Ícone da linha de status: em preparo → panela + colher; demais → traço.
+        $iconStatus = $statusNovo === Pedido::STATUS_PREPARO
+            ? "\u{1F373}\u{2009}\u{1F944}" // 🍳 🥄 panela + colher
+            : "\u{2796}"; // ➖
         $iconLupa = "\u{1F50D}"; // 🔍 acompanhar
 
         $msg = $iconLoja.' *'.$nomeLojaEsc."*\n\n";
@@ -79,7 +81,7 @@ final class WhatsAppPedidoCliente
         }
         $msg .= "\n\n";
         $msg .= $iconSacola.' Código: *'.$codigoEsc."*\n\n";
-        $msg .= $iconRisco.' '.$rotulo."\n\n";
+        $msg .= $iconStatus.' '.$rotulo."\n\n";
         $msg .= $iconLupa." Acompanhar seu pedido\n".$linkPedido;
 
         return 'https://wa.me/'.$digits.'?text='.rawurlencode($msg);
