@@ -7,6 +7,7 @@ use App\Models\Empresa;
 use App\Models\Pedido;
 use App\Support\CupomPedidoCliente;
 use App\Support\WhatsAppPedidoCliente;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -74,11 +75,39 @@ class PedidoController extends Controller
         return view('empresa.pedidos.imprimir', compact('empresa', 'pedido'));
     }
 
-    public function decisaoPendente(Request $request, Pedido $pedido): RedirectResponse
+    public function pollPendentes(Request $request): JsonResponse
     {
         $empresa = $request->user()->empresa;
+        if (! $empresa) {
+            return response()->json(['enabled' => false, 'pedidos' => []]);
+        }
+
+        if (! $this->empresaUsaConfirmacaoPedidoPendente($empresa)) {
+            return response()->json(['enabled' => false, 'pedidos' => []]);
+        }
+
+        $pedidos = Pedido::query()
+            ->where('empresa_id', $empresa->id)
+            ->where('status', Pedido::STATUS_PENDENTE_LOJA)
+            ->with(['itens'])
+            ->orderBy('created_at')
+            ->get();
+
+        return response()->json([
+            'enabled' => true,
+            'pedidos' => $pedidos->map(fn (Pedido $p) => $this->serializePedidoPendentePoll($p))->values()->all(),
+        ]);
+    }
+
+    public function decisaoPendente(Request $request, Pedido $pedido): RedirectResponse|JsonResponse
+    {
+        $empresa = $request->user()->empresa;
+        $expectsJson = $request->expectsJson();
+
         if (! $empresa || (int) $pedido->empresa_id !== (int) $empresa->id) {
-            abort(403);
+            return $expectsJson
+                ? response()->json(['ok' => false, 'message' => 'Sem permissão para este pedido.'], 403)
+                : abort(403);
         }
 
         $data = $request->validate([
@@ -86,6 +115,13 @@ class PedidoController extends Controller
         ]);
 
         if ($pedido->status !== Pedido::STATUS_PENDENTE_LOJA) {
+            if ($expectsJson) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'Este pedido não está aguardando confirmação.',
+                ], 422);
+            }
+
             return redirect()
                 ->route('empresa.pedidos.show', $pedido)
                 ->with('warning', 'Este pedido não está aguardando confirmação.');
@@ -93,9 +129,19 @@ class PedidoController extends Controller
 
         if ($data['decisao'] === 'aceitar') {
             $pedido->update(['status' => Pedido::STATUS_RECEBIDO]);
+            $fresh = $pedido->fresh(['itens']);
+
+            if ($expectsJson) {
+                return response()->json([
+                    'ok' => true,
+                    'mensagem' => 'Pedido aceito. Você pode seguir com o preparo.',
+                    'proximo' => $this->proximoPedidoPendentePollPayload($empresa),
+                    'whatsapp_aviso_url' => WhatsAppPedidoCliente::urlAvisoStatus($fresh, $empresa, Pedido::STATUS_RECEBIDO),
+                ]);
+            }
 
             return $this->finalizePedidoStatusResponse(
-                $pedido->fresh(),
+                $fresh,
                 $empresa,
                 Pedido::STATUS_RECEBIDO,
                 'Pedido aceito. Você pode seguir com o preparo.'
@@ -104,10 +150,67 @@ class PedidoController extends Controller
 
         $pedido->restaurarEstoqueProdutos();
         $pedido->update(['status' => Pedido::STATUS_CANCELADO]);
+        $fresh = $pedido->fresh(['itens']);
+
+        if ($expectsJson) {
+            return response()->json([
+                'ok' => true,
+                'mensagem' => 'Pedido recusado. O estoque dos itens foi restaurado.',
+                'proximo' => $this->proximoPedidoPendentePollPayload($empresa),
+                'whatsapp_aviso_url' => WhatsAppPedidoCliente::urlAvisoStatus($fresh, $empresa, Pedido::STATUS_CANCELADO),
+            ]);
+        }
 
         return redirect()
-            ->route('empresa.pedidos.show', $pedido->fresh())
+            ->route('empresa.pedidos.show', $fresh)
             ->with('status', 'Pedido recusado. O estoque dos itens foi restaurado.');
+    }
+
+    private function empresaUsaConfirmacaoPedidoPendente(Empresa $empresa): bool
+    {
+        if (! $empresa->temTelaMenu('loja_online')) {
+            return false;
+        }
+
+        if (! Schema::hasColumn('empresas', 'loja_confirmar_pedidos')) {
+            return false;
+        }
+
+        return (bool) ($empresa->loja_confirmar_pedidos ?? false);
+    }
+
+    /** @return array<string, mixed>|null */
+    private function proximoPedidoPendentePollPayload(Empresa $empresa): ?array
+    {
+        $proximo = Pedido::query()
+            ->where('empresa_id', $empresa->id)
+            ->where('status', Pedido::STATUS_PENDENTE_LOJA)
+            ->with(['itens'])
+            ->orderBy('created_at')
+            ->first();
+
+        return $proximo ? $this->serializePedidoPendentePoll($proximo) : null;
+    }
+
+    /** @return array<string, mixed> */
+    private function serializePedidoPendentePoll(Pedido $pedido): array
+    {
+        $pedido->loadMissing('itens');
+
+        return [
+            'id' => $pedido->id,
+            'codigo_publico' => $pedido->codigo_publico,
+            'cliente_nome' => $pedido->cliente_nome,
+            'total_fmt' => 'R$ '.number_format((float) $pedido->total, 2, ',', '.'),
+            'tipo_entrega' => $pedido->rotuloTipoEntrega(),
+            'created_at' => $pedido->created_at->format('d/m/Y H:i'),
+            'pendente_post_url' => route('empresa.pedidos.pendente', $pedido),
+            'show_url' => route('empresa.pedidos.show', $pedido),
+            'itens' => $pedido->itens->map(fn ($it) => [
+                'nome' => $it->nome_produto,
+                'qtd' => (int) $it->quantidade,
+            ])->values()->all(),
+        ];
     }
 
     public function updateStatus(Request $request, Pedido $pedido): RedirectResponse

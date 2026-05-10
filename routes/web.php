@@ -121,6 +121,9 @@ Route::middleware(['auth', 'empresa.painel', 'empresa.menu'])->prefix('empresa')
     Route::get('/suporte/chamados/{suporteTicket}', [EmpresaChamadoController::class, 'show'])->name('chamados.show');
 
     Route::get('/pedidos', [PedidoController::class, 'index'])->name('pedidos.index');
+    Route::get('/pedidos/pendentes-poll', [PedidoController::class, 'pollPendentes'])
+        ->middleware('throttle:120,1')
+        ->name('pedidos.pendentes-poll');
     Route::get('/pedidos/{pedido}', [PedidoController::class, 'show'])->name('pedidos.show');
     Route::get('/pedidos/{pedido}/imprimir', [PedidoController::class, 'imprimir'])->name('pedidos.imprimir');
     Route::post('/pedidos/{pedido}/pendente', [PedidoController::class, 'decisaoPendente'])

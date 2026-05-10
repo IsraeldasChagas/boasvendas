@@ -52,7 +52,21 @@
                             <td class="small text-muted">{{ $p->created_at->format('d/m H:i') }}</td>
                             <td><span class="vf-badge {{ $p->classeBadgeStatus() }}">{{ $p->rotuloStatus() }}</span></td>
                             <td class="text-end fw-medium">R$ {{ number_format((float) $p->total, 2, ',', '.') }}</td>
-                            <td class="text-end"><a href="{{ route('empresa.pedidos.show', $p) }}" class="btn btn-sm btn-outline-primary">Abrir</a></td>
+                            <td class="text-end">
+                                <div class="d-flex flex-wrap gap-1 justify-content-end align-items-center">
+                                    @if ($p->status === \App\Models\Pedido::STATUS_PENDENTE_LOJA)
+                                        <form action="{{ route('empresa.pedidos.pendente', $p) }}" method="post" class="d-inline">
+                                            @csrf
+                                            <button type="submit" name="decisao" value="aceitar" class="btn btn-sm btn-success">Aceitar</button>
+                                        </form>
+                                        <form action="{{ route('empresa.pedidos.pendente', $p) }}" method="post" class="d-inline" onsubmit="return confirm('Recusar este pedido? O cliente verá como cancelado.');">
+                                            @csrf
+                                            <button type="submit" name="decisao" value="recusar" class="btn btn-sm btn-outline-danger">Recusar</button>
+                                        </form>
+                                    @endif
+                                    <a href="{{ route('empresa.pedidos.show', $p) }}" class="btn btn-sm btn-outline-primary">Abrir</a>
+                                </div>
+                            </td>
                         </tr>
                     @empty
                         <tr>

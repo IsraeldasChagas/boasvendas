@@ -31,6 +31,14 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
     <script src="{{ asset('assets/js/vendaffacil.js') }}?v={{ @filemtime(public_path('assets/js/vendaffacil.js')) ?: time() }}"></script>
+    @auth
+        @php
+            $vfEmpPainel = Auth::user()?->empresa;
+        @endphp
+        @if ($vfEmpPainel && $vfEmpPainel->temTelaMenu('pedidos'))
+            @include('partials.empresa.pedido-pendente-modal')
+        @endif
+    @endauth
     @stack('scripts')
 </body>
 </html>
