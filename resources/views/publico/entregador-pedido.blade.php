@@ -31,15 +31,26 @@
         </div>
 
         <div class="vf-card p-3 mb-3">
-            <h2 class="h6 fw-bold mb-2">Itens</h2>
+            <h2 class="h6 fw-bold mb-2">Itens e valores</h2>
             <ul class="list-unstyled small mb-0">
                 @foreach ($pedido->itens as $it)
-                    <li class="py-1 border-bottom">{{ $it->nome_produto }} × {{ $it->quantidade }}</li>
+                    <li class="py-1 border-bottom d-flex justify-content-between gap-2">
+                        <span>{{ $it->nome_produto }} × {{ $it->quantidade }}</span>
+                        <span class="text-nowrap">R$ {{ number_format((float) $it->subtotal, 2, ',', '.') }}</span>
+                    </li>
                 @endforeach
             </ul>
-            <div class="d-flex justify-content-between fw-semibold mt-3 pt-2 border-top small">
+            <div class="d-flex justify-content-between small mt-3 pt-2 border-top text-muted">
+                <span>Subtotal</span>
+                <span>R$ {{ number_format((float) $pedido->subtotal, 2, ',', '.') }}</span>
+            </div>
+            <div class="d-flex justify-content-between small mt-1 text-muted">
                 <span>Taxa de entrega</span>
-                <span class="text-success text-nowrap">R$ {{ number_format((float) $pedido->taxa_entrega, 2, ',', '.') }}</span>
+                <span>R$ {{ number_format((float) $pedido->taxa_entrega, 2, ',', '.') }}</span>
+            </div>
+            <div class="d-flex justify-content-between fw-bold mt-2 pt-2 border-top">
+                <span>Total</span>
+                <span class="text-success">R$ {{ number_format((float) $pedido->total, 2, ',', '.') }}</span>
             </div>
         </div>
 
