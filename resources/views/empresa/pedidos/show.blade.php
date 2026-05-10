@@ -29,7 +29,7 @@
     @if (session('vf_whatsapp_aviso_cliente'))
         <div class="alert alert-success border border-success-subtle d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3" role="alert">
             <div class="small mb-0">
-                <strong>Avisar o cliente no WhatsApp</strong> — só o <strong>nome da loja</strong> na primeira linha; depois <strong>cliente</strong>, <strong>código</strong>, <strong>status</strong> e o link para acompanhar (ícones casa, pessoa, sacola, traço e lupa). Clique para abrir o app e enviar.
+                <strong>Avisar o cliente no WhatsApp</strong> — ícone de <strong>loja</strong>, cliente, <strong>sacola</strong> com a palavra <strong>Código</strong> antes do número, status e link para acompanhar. Clique para abrir o app e enviar.
             </div>
             <a href="{{ session('vf_whatsapp_aviso_cliente') }}" target="_blank" rel="noopener noreferrer" class="btn btn-success text-nowrap flex-shrink-0">
                 <i class="bi bi-whatsapp me-1"></i>Abrir WhatsApp do cliente
