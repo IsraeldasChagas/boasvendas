@@ -38,7 +38,7 @@
         </div>
     @elseif ($empresa->temTelaMenu('pedidos') || $empresa->temTelaMenu('loja_online'))
         <div class="alert alert-primary border-primary-subtle small mb-3" role="alert">
-            <strong>Onde ativar aviso de pedido (som + janela):</strong> role esta página até o cartão <strong>Pedidos na vitrine</strong>, coloque <strong>Confirmar cada pedido na loja</strong> em <strong>Ativado</strong> e clique em <strong>Salvar</strong> no fim da página. Isso obriga aceitar ou recusar cada pedido novo e dispara o alerta no painel.
+            <strong>Aviso de pedido (som + janela):</strong> use o cartão <a href="#vf-config-pedidos-vitrine" class="alert-link fw-semibold">Pedidos na vitrine</a> abaixo (primeiro bloco da página), ative <strong>Confirmar cada pedido na loja</strong> e clique em <strong>Salvar</strong> no fim da página.
         </div>
     @endif
     @if (! \Illuminate\Support\Facades\Schema::hasColumn('empresas', 'instagram_url'))
@@ -57,6 +57,56 @@
 
         <div class="row g-3">
             <div class="col-lg-8">
+                @if ($empresa->temTelaMenu('loja_online') || $empresa->temTelaMenu('pedidos'))
+                    @php
+                        $temColConfPed = \Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_confirmar_pedidos');
+                        $temColImpPed = \Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_impressao_pedido_habilitada');
+                        $confPedVal = old('loja_confirmar_pedidos');
+                        if ($confPedVal === null && $temColConfPed) {
+                            $confPedVal = ($empresa->loja_confirmar_pedidos ?? false) ? '1' : '0';
+                        } else {
+                            $confPedVal = (string) ($confPedVal ?? '0');
+                        }
+                        $impPedVal = old('loja_impressao_pedido_habilitada');
+                        if ($impPedVal === null && $temColImpPed) {
+                            $impPedVal = ($empresa->loja_impressao_pedido_habilitada ?? true) ? '1' : '0';
+                        } else {
+                            $impPedVal = (string) ($impPedVal ?? '1');
+                        }
+                    @endphp
+                    <div class="vf-card p-4 mb-3 border border-primary border-2 shadow-sm" id="vf-config-pedidos-vitrine">
+                        <h2 class="h6 fw-bold mb-2"><i class="bi bi-receipt-cutoff text-primary me-1"></i>Pedidos na vitrine</h2>
+                        <p class="small text-muted mb-3">Som tipo loja, janela no painel e confirmação manual — ative <strong>Confirmar cada pedido na loja</strong> e salve.</p>
+                        @if (! $temColConfPed && ! $temColImpPed)
+                            <div class="alert alert-warning mb-0 small">
+                                <strong>Neste servidor as opções ainda não existem no banco.</strong> Peça para rodar <code class="user-select-all">php artisan migrate</code> na hospedagem. Depois voltando aqui você verá os botões <strong>Ativado / Desativado</strong>.
+                            </div>
+                        @else
+                            @if ($temColConfPed)
+                                <p class="small fw-semibold mb-2">Confirmar cada pedido na loja</p>
+                                <p class="small text-muted mb-2">Se estiver <strong>ativado</strong>, cada pedido novo fica <strong>aguardando confirmação</strong> até você aceitar ou recusar no painel (com som até responder).</p>
+                                <div class="btn-group w-100 mb-3" role="group" aria-label="Confirmar pedidos manualmente">
+                                    <input type="radio" class="btn-check" name="loja_confirmar_pedidos" id="vf-loja-conf-ped-1" value="1" autocomplete="off" @checked($confPedVal === '1')>
+                                    <label class="btn btn-outline-primary" for="vf-loja-conf-ped-1">Ativado</label>
+                                    <input type="radio" class="btn-check" name="loja_confirmar_pedidos" id="vf-loja-conf-ped-0" value="0" autocomplete="off" @checked($confPedVal === '0')>
+                                    <label class="btn btn-outline-secondary" for="vf-loja-conf-ped-0">Desativado</label>
+                                </div>
+                                @error('loja_confirmar_pedidos')<div class="invalid-feedback d-block mb-2">{{ $message }}</div>@enderror
+                            @endif
+                            @if ($temColImpPed)
+                                <p class="small fw-semibold mb-2">Cupom para impressão</p>
+                                <p class="small text-muted mb-2">Botões de imprimir cupom na tela do pedido. Desative se não usar impressora térmica.</p>
+                                <div class="btn-group w-100" role="group" aria-label="Impressão do cupom">
+                                    <input type="radio" class="btn-check" name="loja_impressao_pedido_habilitada" id="vf-loja-imp-ped-1" value="1" autocomplete="off" @checked($impPedVal === '1')>
+                                    <label class="btn btn-outline-primary" for="vf-loja-imp-ped-1">Habilitada</label>
+                                    <input type="radio" class="btn-check" name="loja_impressao_pedido_habilitada" id="vf-loja-imp-ped-0" value="0" autocomplete="off" @checked($impPedVal === '0')>
+                                    <label class="btn btn-outline-secondary" for="vf-loja-imp-ped-0">Desabilitada</label>
+                                </div>
+                                @error('loja_impressao_pedido_habilitada')<div class="invalid-feedback d-block mt-2">{{ $message }}</div>@enderror
+                            @endif
+                        @endif
+                    </div>
+                @endif
                 @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_aberta'))
                     @php
                         $lojaAbertaVal = old('loja_aberta');
@@ -76,48 +126,6 @@
                             <label class="btn btn-lg btn-outline-danger vf-loja-aberta-touch py-3" for="vf-loja-aberta-0"><i class="bi bi-door-closed me-2"></i>Fechada</label>
                         </div>
                         @error('loja_aberta')<div class="invalid-feedback d-block mt-2">{{ $message }}</div>@enderror
-                    </div>
-                @endif
-                @if (($empresa->temTelaMenu('loja_online') || $empresa->temTelaMenu('pedidos')) && (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_confirmar_pedidos') || \Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_impressao_pedido_habilitada')))
-                    @php
-                        $confPedVal = old('loja_confirmar_pedidos');
-                        if ($confPedVal === null && \Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_confirmar_pedidos')) {
-                            $confPedVal = ($empresa->loja_confirmar_pedidos ?? false) ? '1' : '0';
-                        } else {
-                            $confPedVal = (string) ($confPedVal ?? '0');
-                        }
-                        $impPedVal = old('loja_impressao_pedido_habilitada');
-                        if ($impPedVal === null && \Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_impressao_pedido_habilitada')) {
-                            $impPedVal = ($empresa->loja_impressao_pedido_habilitada ?? true) ? '1' : '0';
-                        } else {
-                            $impPedVal = (string) ($impPedVal ?? '1');
-                        }
-                    @endphp
-                    <div class="vf-card p-4 mb-3">
-                        <h2 class="h6 fw-bold mb-2">Pedidos na vitrine</h2>
-                        <p class="small text-muted mb-3">Controle como novos pedidos entram no painel e se o cupom para impressora térmica fica disponível.</p>
-                        @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_confirmar_pedidos'))
-                            <p class="small fw-semibold mb-2">Confirmar cada pedido na loja</p>
-                            <p class="small text-muted mb-2">Se estiver <strong>ativado</strong>, o pedido fica <strong>aguardando confirmação</strong> até você aceitar ou recusar no painel. O cliente vê que a loja ainda não confirmou.</p>
-                            <div class="btn-group w-100 mb-3" role="group" aria-label="Confirmar pedidos manualmente">
-                                <input type="radio" class="btn-check" name="loja_confirmar_pedidos" id="vf-loja-conf-ped-1" value="1" autocomplete="off" @checked($confPedVal === '1')>
-                                <label class="btn btn-outline-primary" for="vf-loja-conf-ped-1">Ativado</label>
-                                <input type="radio" class="btn-check" name="loja_confirmar_pedidos" id="vf-loja-conf-ped-0" value="0" autocomplete="off" @checked($confPedVal === '0')>
-                                <label class="btn btn-outline-secondary" for="vf-loja-conf-ped-0">Desativado</label>
-                            </div>
-                            @error('loja_confirmar_pedidos')<div class="invalid-feedback d-block mb-2">{{ $message }}</div>@enderror
-                        @endif
-                        @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_impressao_pedido_habilitada'))
-                            <p class="small fw-semibold mb-2">Cupom para impressão</p>
-                            <p class="small text-muted mb-2">Botões de imprimir cupom na tela do pedido. Desative se não usar impressora térmica.</p>
-                            <div class="btn-group w-100" role="group" aria-label="Impressão do cupom">
-                                <input type="radio" class="btn-check" name="loja_impressao_pedido_habilitada" id="vf-loja-imp-ped-1" value="1" autocomplete="off" @checked($impPedVal === '1')>
-                                <label class="btn btn-outline-primary" for="vf-loja-imp-ped-1">Habilitada</label>
-                                <input type="radio" class="btn-check" name="loja_impressao_pedido_habilitada" id="vf-loja-imp-ped-0" value="0" autocomplete="off" @checked($impPedVal === '0')>
-                                <label class="btn btn-outline-secondary" for="vf-loja-imp-ped-0">Desabilitada</label>
-                            </div>
-                            @error('loja_impressao_pedido_habilitada')<div class="invalid-feedback d-block mt-2">{{ $message }}</div>@enderror
-                        @endif
                     </div>
                 @endif
                 @if (\App\Models\Empresa::schemaTemColunaLojaBannerCategoria() && $empresa->temTelaMenu('loja_online'))
