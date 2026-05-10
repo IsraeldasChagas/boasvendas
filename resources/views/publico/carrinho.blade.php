@@ -94,8 +94,7 @@
                         <div class="vf-carrinho-sidebar-sticky">
                             <div class="vf-card p-3 mb-3">
                             <h2 class="h6 fw-bold">Como receber</h2>
-                            <form action="{{ route('publico.carrinho.entrega-prefs', ['slug' => $slug]) }}" method="post" class="mb-3">
-                                @csrf
+                            <div class="mb-3">
                                 <div class="form-check mb-2">
                                     <input class="form-check-input" type="radio" name="modo" id="car-mod-entrega" value="{{ \App\Models\Pedido::TIPO_ENTREGA_ENTREGA }}" @checked($prefs['modo'] === \App\Models\Pedido::TIPO_ENTREGA_ENTREGA)>
                                     <label class="form-check-label small" for="car-mod-entrega">Entrega</label>
@@ -109,10 +108,10 @@
                                 <label class="form-label small text-muted mb-0" for="car-cep">CEP <span class="text-muted">(para simular frete)</span></label>
                                 <div class="input-group input-group-sm mb-2">
                                     <input type="text" class="form-control" id="car-cep" name="cep" value="{{ $prefs['cep'] !== '' ? substr($prefs['cep'], 0, 5).'-'.substr($prefs['cep'], 5) : '' }}" placeholder="00000-000" maxlength="9" autocomplete="postal-code">
-                                    <button type="submit" class="btn btn-outline-primary">Atualizar</button>
+                                    <button type="submit" class="btn btn-outline-primary" formaction="{{ route('publico.carrinho.entrega-prefs', ['slug' => $slug]) }}" formmethod="post">Atualizar</button>
                                 </div>
                                 <p class="small text-muted mb-0">No checkout o CEP é obrigatório para entrega.@if (\App\Models\Empresa::lojaFreteModoUsaKmRodoviario($empresa->lojaFreteModoEfetivo())) Com frete por km (Google ou OSRM), a simulação usa só o CEP; o valor final pode variar um pouco com o endereço completo.@endif</p>
-                            </form>
+                            </div>
                         </div>
                         <div class="vf-card p-3">
                             <h2 class="h6 fw-bold">Resumo</h2>
