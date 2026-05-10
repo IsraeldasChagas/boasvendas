@@ -99,16 +99,16 @@
             @if (\Illuminate\Support\Facades\Schema::hasColumn('produtos', 'acrescimo_escolhas_min'))
                 <div class="row g-2 mt-3">
                     <div class="col-md-4">
-                        <label class="form-label" for="acrescimo_escolhas_min">Mínimo neste produto</label>
+                        <label class="form-label" for="acrescimo_escolhas_min">Min. de ingrediente</label>
                         <input type="number" class="form-control @error('acrescimo_escolhas_min') is-invalid @enderror" id="acrescimo_escolhas_min" name="acrescimo_escolhas_min" value="{{ old('acrescimo_escolhas_min', isset($produto) ? $produto->acrescimo_escolhas_min : null) }}" min="0" max="999">
                         @error('acrescimo_escolhas_min')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                        <div class="form-text">Total de acréscimos (soma das quantidades). Em branco = sem mínimo na vitrine.</div>
+                        <div class="form-text">Mínimo de ingredientes para acrescentar (soma das quantidades). Em branco = sem mínimo.</div>
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label" for="acrescimo_escolhas_max">Máximo neste produto</label>
+                        <label class="form-label" for="acrescimo_escolhas_max">Máx. ingredientes para acrescentar</label>
                         <input type="number" class="form-control @error('acrescimo_escolhas_max') is-invalid @enderror" id="acrescimo_escolhas_max" name="acrescimo_escolhas_max" value="{{ old('acrescimo_escolhas_max', isset($produto) ? $produto->acrescimo_escolhas_max : null) }}" min="0" max="999">
                         @error('acrescimo_escolhas_max')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                        <div class="form-text">Total de acréscimos (soma das quantidades). Em branco = sem máximo na vitrine.</div>
+                        <div class="form-text">Máximo de ingredientes para acrescentar (soma das quantidades). Em branco = sem máximo.</div>
                     </div>
                 </div>
             @endif
