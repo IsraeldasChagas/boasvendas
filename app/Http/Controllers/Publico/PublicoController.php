@@ -599,6 +599,12 @@ class PublicoController extends Controller
         return $logradouro.', '.$cepFmt.', Brasil';
     }
 
+    /** Explicação ao cliente quando não há rota por km: o valor é o de «Taxa de entrega» nas configurações. */
+    private function rotuloFreteTaxaBaseLoja(float $valor, string $motivo): string
+    {
+        return 'Frete R$ '.number_format($valor, 2, ',', '.').' (taxa da loja em Configurações) — '.$motivo;
+    }
+
     /**
      * @return array{taxa: float, rotulo: string, entrega_bloqueada: bool}
      */
@@ -677,7 +683,7 @@ class PublicoController extends Controller
         if ($origem === null) {
             return [
                 'taxa' => $padrao,
-                'rotulo' => 'Taxa padrão (informe o endereço de origem nas configurações da loja)',
+                'rotulo' => $this->rotuloFreteTaxaBaseLoja($padrao, 'informe endereço ou CEP da loja em Configurações / Dados da empresa.'),
                 'entrega_bloqueada' => false,
             ];
         }
@@ -685,7 +691,7 @@ class PublicoController extends Controller
         if ($rsKm === null) {
             return [
                 'taxa' => $padrao,
-                'rotulo' => 'Taxa padrão (defina R$ por km nas configurações)',
+                'rotulo' => $this->rotuloFreteTaxaBaseLoja($padrao, 'defina R$ por km no modo frete por distância.'),
                 'entrega_bloqueada' => false,
             ];
         }
@@ -694,7 +700,7 @@ class PublicoController extends Controller
         if ($ua === '') {
             return [
                 'taxa' => $padrao,
-                'rotulo' => 'Taxa padrão (configure OSM_HTTP_USER_AGENT no servidor para usar Nominatim/OSRM)',
+                'rotulo' => $this->rotuloFreteTaxaBaseLoja($padrao, 'servidor sem OSM_HTTP_USER_AGENT (Nominatim/OSRM).'),
                 'entrega_bloqueada' => false,
             ];
         }
@@ -711,7 +717,7 @@ class PublicoController extends Controller
         if ($km === null) {
             return [
                 'taxa' => $padrao,
-                'rotulo' => 'Taxa padrão (rota indisponível via OSRM — verifique CEP/endereço ou tente depois)',
+                'rotulo' => $this->rotuloFreteTaxaBaseLoja($padrao, 'sem rota OSRM (CEP/endereço ou serviço indisponível). Confira CEP da loja e do cliente.'),
                 'entrega_bloqueada' => false,
             ];
         }

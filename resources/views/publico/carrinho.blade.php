@@ -92,6 +92,11 @@
                     </div>
                     <div class="col-lg-4">
                         <div class="vf-carrinho-sidebar-sticky">
+                            @if ($permiteBalcao && $prefs['modo'] === \App\Models\Pedido::TIPO_ENTREGA_BALCAO)
+                                <div class="alert alert-info small py-2 mb-3 mb-lg-0">
+                                    <strong>Retirada no balcão</strong> está selecionada — a taxa de entrega é <strong>R$ 0,00</strong>. Para calcular frete de entrega, marque <strong>Entrega</strong> e informe o CEP.
+                                </div>
+                            @endif
                             <div class="vf-card p-3 mb-3">
                             <h2 class="h6 fw-bold">Como receber</h2>
                             <div class="mb-3">
