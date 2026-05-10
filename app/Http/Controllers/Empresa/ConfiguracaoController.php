@@ -151,8 +151,10 @@ class ConfiguracaoController extends Controller
             unset($data['loja_aberta']);
         }
 
+        $podePedidosVitrineCfg = $empresa->temTelaMenu('loja_online') || $empresa->temTelaMenu('pedidos');
+
         if (Schema::hasColumn('empresas', 'loja_confirmar_pedidos')) {
-            if ($empresa->temTelaMenu('loja_online') && array_key_exists('loja_confirmar_pedidos', $request->all())) {
+            if ($podePedidosVitrineCfg && array_key_exists('loja_confirmar_pedidos', $request->all())) {
                 $data['loja_confirmar_pedidos'] = (string) $request->input('loja_confirmar_pedidos') === '1';
             } else {
                 unset($data['loja_confirmar_pedidos']);
@@ -161,7 +163,7 @@ class ConfiguracaoController extends Controller
             unset($data['loja_confirmar_pedidos']);
         }
         if (Schema::hasColumn('empresas', 'loja_impressao_pedido_habilitada')) {
-            if ($empresa->temTelaMenu('loja_online') && array_key_exists('loja_impressao_pedido_habilitada', $request->all())) {
+            if ($podePedidosVitrineCfg && array_key_exists('loja_impressao_pedido_habilitada', $request->all())) {
                 $data['loja_impressao_pedido_habilitada'] = (string) $request->input('loja_impressao_pedido_habilitada') === '1';
             } else {
                 unset($data['loja_impressao_pedido_habilitada']);

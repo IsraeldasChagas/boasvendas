@@ -32,6 +32,15 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
         </div>
     @endif
+    @if (! \Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_confirmar_pedidos'))
+        <div class="alert alert-warning small mb-3" role="alert">
+            <strong>Som e confirmação de pedidos:</strong> no servidor ainda não existe a coluna no banco. Rode <code class="user-select-all">php artisan migrate</code>. Depois volte aqui e ative <strong>Confirmar cada pedido na loja</strong> no bloco <strong>Pedidos na vitrine</strong>.
+        </div>
+    @elseif ($empresa->temTelaMenu('pedidos') || $empresa->temTelaMenu('loja_online'))
+        <div class="alert alert-primary border-primary-subtle small mb-3" role="alert">
+            <strong>Onde ativar aviso de pedido (som + janela):</strong> role esta página até o cartão <strong>Pedidos na vitrine</strong>, coloque <strong>Confirmar cada pedido na loja</strong> em <strong>Ativado</strong> e clique em <strong>Salvar</strong> no fim da página. Isso obriga aceitar ou recusar cada pedido novo e dispara o alerta no painel.
+        </div>
+    @endif
     @if (! \Illuminate\Support\Facades\Schema::hasColumn('empresas', 'instagram_url'))
         <div class="alert alert-warning small mb-3" role="alert">
             <strong>Instagram e Facebook:</strong> rode <code class="user-select-all">php artisan migrate</code> no servidor para criar as colunas no banco; até lá os links podem não ser gravados.
@@ -69,7 +78,7 @@
                         @error('loja_aberta')<div class="invalid-feedback d-block mt-2">{{ $message }}</div>@enderror
                     </div>
                 @endif
-                @if ($empresa->temTelaMenu('loja_online') && (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_confirmar_pedidos') || \Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_impressao_pedido_habilitada')))
+                @if (($empresa->temTelaMenu('loja_online') || $empresa->temTelaMenu('pedidos')) && (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_confirmar_pedidos') || \Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_impressao_pedido_habilitada')))
                     @php
                         $confPedVal = old('loja_confirmar_pedidos');
                         if ($confPedVal === null && \Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_confirmar_pedidos')) {
