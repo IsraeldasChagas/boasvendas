@@ -21,7 +21,7 @@ final class OsrmRouting
             return null;
         }
 
-        $cacheKey = 'nominatim_geo_v1:'.md5($query);
+        $cacheKey = 'nominatim_geo_v2:'.md5($query);
         if (Cache::has($cacheKey)) {
             return Cache::get($cacheKey);
         }
@@ -32,28 +32,29 @@ final class OsrmRouting
             return null;
         }
 
-        $response = Http::timeout(12)
-            ->withHeaders([
-                'User-Agent' => $ua,
-                'Accept' => 'application/json',
-            ])
-            ->get(rtrim($base, '/').'/search', [
-                'q' => $query,
-                'format' => 'json',
-                'limit' => 1,
-            ]);
+        $headers = [
+            'User-Agent' => $ua,
+            'Accept' => 'application/json',
+        ];
 
-        if (! $response->successful()) {
-            return null;
+        $first = self::primeiroResultadoNominatim($base, $headers, [
+            'q' => $query,
+            'format' => 'json',
+            'limit' => 1,
+        ]);
+
+        if ($first === null) {
+            $digits = preg_replace('/\D+/', '', $query);
+            if (strlen($digits) >= 8) {
+                $cep8 = substr($digits, 0, 8);
+                $cepNorm = Cep::normalizar8($cep8);
+                if ($cepNorm !== null) {
+                    $first = self::geocodeCepBrasilFallback($base, $headers, $cepNorm);
+                }
+            }
         }
 
-        $json = $response->json();
-        if (! is_array($json) || $json === []) {
-            return null;
-        }
-
-        $first = $json[0];
-        if (! is_array($first)) {
+        if ($first === null) {
             return null;
         }
 
@@ -67,6 +68,92 @@ final class OsrmRouting
         Cache::put($cacheKey, $out, now()->addDays(7));
 
         return $out;
+    }
+
+    /**
+     * @param  array<string, scalar|null>  $params
+     * @return array<string, mixed>|null
+     */
+    private static function primeiroResultadoNominatim(string $base, array $headers, array $params): ?array
+    {
+        $response = Http::timeout(12)
+            ->withHeaders($headers)
+            ->get(rtrim($base, '/').'/search', $params);
+
+        if (! $response->successful()) {
+            return null;
+        }
+
+        $json = $response->json();
+        if (! is_array($json) || $json === []) {
+            return null;
+        }
+
+        $first = $json[0];
+
+        return is_array($first) ? $first : null;
+    }
+
+    /** Texto livre no Nominatim costuma falhar só com "xxxx-xxxx, Brasil"; tenta CEP estruturado e ViaCEP. */
+    private static function geocodeCepBrasilFallback(string $base, array $headers, string $cep8): ?array
+    {
+        $cepFmt = substr($cep8, 0, 5).'-'.substr($cep8, 5);
+
+        $try = self::primeiroResultadoNominatim($base, $headers, [
+            'postalcode' => $cepFmt,
+            'countrycodes' => 'br',
+            'format' => 'json',
+            'limit' => 1,
+        ]);
+        if ($try !== null) {
+            return $try;
+        }
+
+        $try = self::primeiroResultadoNominatim($base, $headers, [
+            'postalcode' => $cep8,
+            'countrycodes' => 'br',
+            'format' => 'json',
+            'limit' => 1,
+        ]);
+        if ($try !== null) {
+            return $try;
+        }
+
+        $response = Http::timeout(10)->get('https://viacep.com.br/ws/'.$cep8.'/json/');
+        if (! $response->successful()) {
+            return null;
+        }
+
+        $data = $response->json();
+        if (! is_array($data) || (isset($data['erro']) && $data['erro'])) {
+            return null;
+        }
+
+        $cidade = trim((string) ($data['localidade'] ?? ''));
+        $uf = trim((string) ($data['uf'] ?? ''));
+        if ($cidade === '' || $uf === '') {
+            return null;
+        }
+
+        $partes = [];
+        $log = trim((string) ($data['logradouro'] ?? ''));
+        $bai = trim((string) ($data['bairro'] ?? ''));
+        if ($log !== '') {
+            $partes[] = $log;
+        }
+        if ($bai !== '') {
+            $partes[] = $bai;
+        }
+        $partes[] = $cidade;
+        $partes[] = $uf;
+        $partes[] = 'Brasil';
+        $q = implode(', ', $partes);
+
+        return self::primeiroResultadoNominatim($base, $headers, [
+            'q' => $q,
+            'format' => 'json',
+            'limit' => 1,
+        ]);
     }
 
     /** Distância em km pela rota (modo driving OSRM), ou null se indisponível. */
