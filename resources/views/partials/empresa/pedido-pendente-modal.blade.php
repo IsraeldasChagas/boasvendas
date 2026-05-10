@@ -48,68 +48,55 @@ body.modal-open:has(#vfModalPedidoPendente.show) .modal-backdrop { z-index: 1079
     var modal = window.bootstrap ? new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: false }) : null;
     if (!modal) return;
 
-    var STORAGE_SOM = 'vf_pedido_pendente_som_ids';
-    var somLembreteTimer = null;
+    /** Alarme tipo loja/iFood: repete até aceitar ou recusar (pararAlarmePedido). */
+    var alarmePedidoTimer = null;
+    var INTERVALO_ALARM_SEG = 2.35;
+
     var atual = null;
     var submitando = false;
 
-    function somIds() {
-        try {
-            var raw = sessionStorage.getItem(STORAGE_SOM);
-            var o = raw ? JSON.parse(raw) : {};
-            return o && typeof o === 'object' ? o : {};
-        } catch (e) {
-            return {};
+    function pararAlarmePedido() {
+        if (alarmePedidoTimer) {
+            clearInterval(alarmePedidoTimer);
+            alarmePedidoTimer = null;
         }
     }
 
-    function salvarSomId(id) {
-        var m = somIds();
-        m[String(id)] = 1;
-        sessionStorage.setItem(STORAGE_SOM, JSON.stringify(m));
-    }
-
-    function jaTocouSom(id) {
-        return !!somIds()[String(id)];
-    }
-
-    function tocarSomNovoPedido() {
+    /** Tom “cozinha/pedido novo”: sequência curta e alta, bem audível. */
+    function tocarSomAlarmePedido() {
         try {
             var ctx = new (window.AudioContext || window.webkitAudioContext)();
             var t = ctx.currentTime;
-            var freqs = [880, 1100, 880];
-            var i;
-            for (i = 0; i < freqs.length; i++) {
+            var seq = [
+                { f: 1046, d: 0.11, off: 0 },
+                { f: 784, d: 0.11, off: 0.14 },
+                { f: 1318, d: 0.14, off: 0.32 }
+            ];
+            seq.forEach(function (s) {
                 var o = ctx.createOscillator();
                 var g = ctx.createGain();
-                o.type = 'sine';
-                o.frequency.value = freqs[i];
-                g.gain.value = 0.08;
+                o.type = 'square';
+                o.frequency.value = s.f;
+                g.gain.value = 0.055;
                 o.connect(g);
                 g.connect(ctx.destination);
-                var start = t + i * 0.2;
-                o.start(start);
-                o.stop(start + 0.13);
-            }
+                var st = t + s.off;
+                o.start(st);
+                o.stop(st + s.d);
+            });
             setTimeout(function () { ctx.close(); }, 900);
         } catch (e) {}
     }
 
-    function tocarSomLembrete() {
-        try {
-            var ctx = new (window.AudioContext || window.webkitAudioContext)();
-            var t = ctx.currentTime;
-            var o = ctx.createOscillator();
-            var g = ctx.createGain();
-            o.type = 'sine';
-            o.frequency.value = 660;
-            g.gain.value = 0.06;
-            o.connect(g);
-            g.connect(ctx.destination);
-            o.start(t);
-            o.stop(t + 0.15);
-            setTimeout(function () { ctx.close(); }, 400);
-        } catch (e) {}
+    function iniciarAlarmePedido() {
+        pararAlarmePedido();
+        function tick() {
+            if (modalEl.classList.contains('show') && atual) {
+                tocarSomAlarmePedido();
+            }
+        }
+        tick();
+        alarmePedidoTimer = setInterval(tick, INTERVALO_ALARM_SEG * 1000);
     }
 
     function esc(payload) {
@@ -174,12 +161,14 @@ body.modal-open:has(#vfModalPedidoPendente.show) .modal-backdrop { z-index: 1079
 
     document.getElementById('vf-modal-btn-aceitar').addEventListener('click', function () {
         if (!atual || submitando) return;
+        pararAlarmePedido();
         submitando = true;
         document.getElementById('vf-modal-btn-aceitar').disabled = true;
         document.getElementById('vf-modal-btn-recusar').disabled = true;
         postDecisao(atual.pendente_post_url, 'aceitar').then(function (j) {
             if (j.proximo) {
                 renderCorpo(j.proximo);
+                iniciarAlarmePedido();
             } else {
                 modal.hide();
                 atual = null;
@@ -187,6 +176,7 @@ body.modal-open:has(#vfModalPedidoPendente.show) .modal-backdrop { z-index: 1079
         }).catch(function (err) {
             alert(err.message || 'Erro ao aceitar.');
             if (atual) renderCorpo(atual);
+            if (modalEl.classList.contains('show') && atual) iniciarAlarmePedido();
         }).finally(function () {
             submitando = false;
         });
@@ -195,12 +185,14 @@ body.modal-open:has(#vfModalPedidoPendente.show) .modal-backdrop { z-index: 1079
     document.getElementById('vf-modal-btn-recusar').addEventListener('click', function () {
         if (!atual || submitando) return;
         if (!confirm('Recusar este pedido? O cliente verá como cancelado e o estoque volta.')) return;
+        pararAlarmePedido();
         submitando = true;
         document.getElementById('vf-modal-btn-aceitar').disabled = true;
         document.getElementById('vf-modal-btn-recusar').disabled = true;
         postDecisao(atual.pendente_post_url, 'recusar').then(function (j) {
             if (j.proximo) {
                 renderCorpo(j.proximo);
+                iniciarAlarmePedido();
             } else {
                 modal.hide();
                 atual = null;
@@ -208,6 +200,7 @@ body.modal-open:has(#vfModalPedidoPendente.show) .modal-backdrop { z-index: 1079
         }).catch(function (err) {
             alert(err.message || 'Erro ao recusar.');
             if (atual) renderCorpo(atual);
+            if (modalEl.classList.contains('show') && atual) iniciarAlarmePedido();
         }).finally(function () {
             submitando = false;
         });
@@ -216,19 +209,13 @@ body.modal-open:has(#vfModalPedidoPendente.show) .modal-backdrop { z-index: 1079
     function processarPoll(data) {
         var lista = data.pedidos || [];
         if (!data.enabled || lista.length === 0) {
+            pararAlarmePedido();
             if (modalEl.classList.contains('show')) {
                 modal.hide();
             }
             atual = null;
             return;
         }
-
-        lista.forEach(function (p) {
-            if (!jaTocouSom(p.id)) {
-                tocarSomNovoPedido();
-                salvarSomId(p.id);
-            }
-        });
 
         var primeiro = lista[0];
         if (!modalEl.classList.contains('show')) {
@@ -238,6 +225,7 @@ body.modal-open:has(#vfModalPedidoPendente.show) .modal-backdrop { z-index: 1079
         }
         if (!atual || atual.id !== primeiro.id) {
             renderCorpo(primeiro);
+            iniciarAlarmePedido();
         }
     }
 
@@ -249,19 +237,13 @@ body.modal-open:has(#vfModalPedidoPendente.show) .modal-backdrop { z-index: 1079
     }
 
     modalEl.addEventListener('shown.bs.modal', function () {
-        if (somLembreteTimer) clearInterval(somLembreteTimer);
-        somLembreteTimer = setInterval(function () {
-            if (modalEl.classList.contains('show') && atual) {
-                tocarSomLembrete();
-            }
-        }, 45000);
+        if (atual) {
+            iniciarAlarmePedido();
+        }
     });
 
     modalEl.addEventListener('hidden.bs.modal', function () {
-        if (somLembreteTimer) {
-            clearInterval(somLembreteTimer);
-            somLembreteTimer = null;
-        }
+        pararAlarmePedido();
     });
 
     poll();
