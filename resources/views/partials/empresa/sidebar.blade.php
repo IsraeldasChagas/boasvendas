@@ -23,8 +23,14 @@
     @php $menu = $empresa?->telasMenuEmpresaLiberadas() ?? []; @endphp
     @php $tem = fn (string $k) => $menu === [] ? true : in_array($k, $menu, true); @endphp
     @if ($tem('pedidos'))
+        @php
+            $badgePedPend = $empresa ? \App\Models\Pedido::query()->where('empresa_id', $empresa->id)->where('status', \App\Models\Pedido::STATUS_PENDENTE_LOJA)->count() : 0;
+        @endphp
         <a class="nav-link {{ request()->routeIs('empresa.pedidos.*') ? 'active' : '' }}" href="{{ route('empresa.pedidos.index') }}">
             <i class="bi bi-receipt"></i> Pedidos
+            @if ($badgePedPend > 0)
+                <span class="badge bg-danger rounded-pill ms-1">{{ $badgePedPend }}</span>
+            @endif
         </a>
     @endif
     @if ($tem('produtos'))

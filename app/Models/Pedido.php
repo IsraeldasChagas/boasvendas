@@ -19,6 +19,9 @@ class Pedido extends Model
 
     public const STATUS_RECEBIDO = 'recebido';
 
+    /** Novo pedido na vitrine aguardando aceite manual da loja (quando configurado). */
+    public const STATUS_PENDENTE_LOJA = 'pendente_loja';
+
     public const STATUS_PREPARO = 'preparo';
 
     public const STATUS_PRONTO = 'pronto';
@@ -90,6 +93,7 @@ class Pedido extends Model
     public static function statusRotulos(): array
     {
         return [
+            self::STATUS_PENDENTE_LOJA => 'Aguardando confirmação',
             self::STATUS_RECEBIDO => 'Recebido',
             self::STATUS_PREPARO => 'Em preparo',
             self::STATUS_PRONTO => 'Pronto',
@@ -119,6 +123,18 @@ class Pedido extends Model
         return in_array($this->status, [self::STATUS_PRONTO, self::STATUS_ROTA], true);
     }
 
+    /** Devolve ao estoque as quantidades dos itens (ex.: pedido pendente recusado). */
+    public function restaurarEstoqueProdutos(): void
+    {
+        $this->loadMissing('itens.produto');
+        foreach ($this->itens as $it) {
+            $p = $it->produto;
+            if ($p !== null && $p->estoque !== null) {
+                $p->increment('estoque', (int) $it->quantidade);
+            }
+        }
+    }
+
     public function rotuloStatus(): string
     {
         return self::statusRotulos()[$this->status] ?? $this->status;
@@ -130,6 +146,7 @@ class Pedido extends Model
             self::STATUS_ENTREGUE => 'bg-success-subtle text-success',
             self::STATUS_CANCELADO => 'bg-secondary-subtle text-secondary',
             self::STATUS_ENDERECO_NAO_ENCONTRADO => 'bg-warning-subtle text-warning-emphasis',
+            self::STATUS_PENDENTE_LOJA => 'bg-danger-subtle text-danger-emphasis',
             self::STATUS_ROTA, self::STATUS_PRONTO => 'bg-warning-subtle text-warning',
             self::STATUS_PREPARO => 'bg-info-subtle text-info',
             default => 'bg-primary-subtle text-primary',

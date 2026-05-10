@@ -34,15 +34,12 @@
             <h2 class="h6 fw-bold mb-2">Itens</h2>
             <ul class="list-unstyled small mb-0">
                 @foreach ($pedido->itens as $it)
-                    <li class="py-1 border-bottom d-flex justify-content-between gap-2">
-                        <span>{{ $it->nome_produto }} × {{ $it->quantidade }}</span>
-                        <span class="text-nowrap">R$ {{ number_format((float) $it->subtotal, 2, ',', '.') }}</span>
-                    </li>
+                    <li class="py-1 border-bottom">{{ $it->nome_produto }} × {{ $it->quantidade }}</li>
                 @endforeach
             </ul>
-            <div class="d-flex justify-content-between fw-bold mt-3 pt-2 border-top small">
-                <span>Total</span>
-                <span class="text-success">R$ {{ number_format((float) $pedido->total, 2, ',', '.') }}</span>
+            <div class="d-flex justify-content-between fw-semibold mt-3 pt-2 border-top small">
+                <span>Taxa de entrega</span>
+                <span class="text-success text-nowrap">R$ {{ number_format((float) $pedido->taxa_entrega, 2, ',', '.') }}</span>
             </div>
         </div>
 

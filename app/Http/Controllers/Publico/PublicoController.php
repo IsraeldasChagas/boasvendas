@@ -1293,7 +1293,13 @@ class PublicoController extends Controller
         $taxa = $taxaVal;
         $total = $totalPedido;
 
-        $pedido = DB::transaction(function () use ($empresa, $linhas, $data, $subtotal, $taxa, $total, $pagamentoTrocoPara, $tipoEntrega, $cepNorm, $enderecoPedido, $complementoPedido) {
+        $statusInicial = Pedido::STATUS_RECEBIDO;
+        if (Schema::hasColumn('empresas', 'loja_confirmar_pedidos')
+            && (bool) ($empresa->loja_confirmar_pedidos ?? false)) {
+            $statusInicial = Pedido::STATUS_PENDENTE_LOJA;
+        }
+
+        $pedido = DB::transaction(function () use ($empresa, $linhas, $data, $subtotal, $taxa, $total, $pagamentoTrocoPara, $tipoEntrega, $cepNorm, $enderecoPedido, $complementoPedido, $statusInicial) {
             $pedido = Pedido::query()->create([
                 'empresa_id' => $empresa->id,
                 'codigo_publico' => $this->gerarCodigoPublico(),
@@ -1308,7 +1314,7 @@ class PublicoController extends Controller
                 'forma_pagamento' => $data['forma_pagamento'],
                 'pagamento_troco_para' => $pagamentoTrocoPara,
                 'observacoes' => $data['observacoes'] ?: null,
-                'status' => Pedido::STATUS_RECEBIDO,
+                'status' => $statusInicial,
                 'subtotal' => $subtotal,
                 'taxa_entrega' => $taxa,
                 'total' => $total,

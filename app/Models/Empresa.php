@@ -38,6 +38,8 @@ class Empresa extends Model
         'facebook_url',
         'loja_taxa_entrega_padrao',
         'loja_permite_retirada_balcao',
+        'loja_confirmar_pedidos',
+        'loja_impressao_pedido_habilitada',
         'loja_frete_modo',
         'loja_frete_google_rs_por_km',
         'loja_frete_google_taxa_minima',
@@ -67,6 +69,8 @@ class Empresa extends Model
             'loja_frete_google_taxa_minima' => 'decimal:2',
             'loja_frete_google_km_max' => 'decimal:2',
             'loja_permite_retirada_balcao' => 'boolean',
+            'loja_confirmar_pedidos' => 'boolean',
+            'loja_impressao_pedido_habilitada' => 'boolean',
             'loja_aberta' => 'boolean',
         ];
     }

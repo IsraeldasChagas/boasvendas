@@ -169,6 +169,9 @@
             <div class="vf-card p-3 mb-3">
                 <h2 class="h6 fw-bold mb-3">Atalhos</h2>
                 <div class="d-grid gap-2">
+                    @if (($pedidosPendentesConfirmacao ?? 0) > 0)
+                        <a href="{{ route('empresa.pedidos.index', ['status' => \App\Models\Pedido::STATUS_PENDENTE_LOJA]) }}" class="btn btn-danger btn-sm text-start"><i class="bi bi-hourglass-split me-2"></i>{{ $pedidosPendentesConfirmacao }} pedido(s) aguardando sua confirmação</a>
+                    @endif
                     <a href="{{ route('empresa.chamados.index') }}" class="btn btn-outline-secondary btn-sm text-start"><i class="bi bi-headset me-2"></i>Meus chamados</a>
                     <a href="{{ route('empresa.produtos.create') }}" class="btn btn-outline-primary btn-sm text-start"><i class="bi bi-plus-lg me-2"></i>Novo produto</a>
                     <a href="{{ route('empresa.venda-externa.remessas.index') }}" class="btn btn-outline-primary btn-sm text-start"><i class="bi bi-boxes me-2"></i>Entregas (parceiro)</a>
@@ -178,6 +181,9 @@
             <div class="vf-card p-3">
                 <h2 class="h6 fw-bold mb-2">Alertas</h2>
                 @if ($empresa)
+                    @if (($pedidosPendentesConfirmacao ?? 0) > 0)
+                        <div class="alert alert-danger small mb-2 py-2"><strong>Pedidos na vitrine:</strong> {{ $pedidosPendentesConfirmacao }} aguardando você aceitar ou recusar. <a href="{{ route('empresa.pedidos.index', ['status' => \App\Models\Pedido::STATUS_PENDENTE_LOJA]) }}" class="alert-link">Abrir lista</a>.</div>
+                    @endif
                     @if ($assinatura && $assinatura->status === 'pendente')
                         <div class="alert alert-warning small mb-2 py-2">Há cobrança pendente. Próxima data: {{ $assinatura->proxima_cobranca->format('d/m/Y') }}.</div>
                     @endif

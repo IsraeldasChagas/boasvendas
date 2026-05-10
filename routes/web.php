@@ -122,6 +122,10 @@ Route::middleware(['auth', 'empresa.painel', 'empresa.menu'])->prefix('empresa')
 
     Route::get('/pedidos', [PedidoController::class, 'index'])->name('pedidos.index');
     Route::get('/pedidos/{pedido}', [PedidoController::class, 'show'])->name('pedidos.show');
+    Route::get('/pedidos/{pedido}/imprimir', [PedidoController::class, 'imprimir'])->name('pedidos.imprimir');
+    Route::post('/pedidos/{pedido}/pendente', [PedidoController::class, 'decisaoPendente'])
+        ->middleware('throttle:30,1')
+        ->name('pedidos.pendente');
     Route::put('/pedidos/{pedido}/status', [PedidoController::class, 'updateStatus'])->name('pedidos.status');
 
     Route::get('/produtos', [ProdutoController::class, 'index'])->name('produtos.index');

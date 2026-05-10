@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Empresa;
 
 use App\Http\Controllers\Controller;
 use App\Models\Assinatura;
+use App\Models\Pedido;
 use App\Models\SuporteTicket;
 use Illuminate\View\View;
 
@@ -17,6 +18,7 @@ class DashboardController extends Controller
         $ticketsAbertos = 0;
         $ticketsRecentes = collect();
         $chartHeights = [];
+        $pedidosPendentesConfirmacao = 0;
 
         if ($empresa) {
             $assinatura = Assinatura::query()
@@ -52,6 +54,11 @@ class DashboardController extends Controller
             }
             $max = max($counts) ?: 1;
             $chartHeights = array_map(fn (int $c): int => (int) round(($c / $max) * 100), $counts);
+
+            $pedidosPendentesConfirmacao = Pedido::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('status', Pedido::STATUS_PENDENTE_LOJA)
+                ->count();
         }
 
         return view('empresa.dashboard', compact(
@@ -59,7 +66,8 @@ class DashboardController extends Controller
             'assinatura',
             'ticketsAbertos',
             'ticketsRecentes',
-            'chartHeights'
+            'chartHeights',
+            'pedidosPendentesConfirmacao'
         ));
     }
 }
