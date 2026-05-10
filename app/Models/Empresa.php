@@ -192,11 +192,11 @@ class Empresa extends Model
     public static function lojaFreteModosRotulos(): array
     {
         $out = [
-            self::LOJA_FRETE_FAIXAS_CEP => 'Faixas de CEP + taxa padrão (fora da faixa)',
-            self::LOJA_FRETE_PADRAO_UNICO => 'Só taxa padrão (ignora faixas de CEP)',
+            self::LOJA_FRETE_FAIXAS_CEP => 'Por CEP (faixas que você cadastra)',
+            self::LOJA_FRETE_PADRAO_UNICO => 'Valor único para todas as entregas',
         ];
         if (Schema::hasColumn('empresas', 'loja_frete_google_rs_por_km')) {
-            $out[self::LOJA_FRETE_GOOGLE_DISTANCIA] = 'Distância pelo Google Maps (R$ por km)';
+            $out[self::LOJA_FRETE_GOOGLE_DISTANCIA] = 'Por km rodado (Google Maps)';
         }
 
         return $out;
