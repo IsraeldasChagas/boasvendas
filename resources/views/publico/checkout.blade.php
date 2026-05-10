@@ -33,8 +33,8 @@
                                 @error('cep_entrega')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="col-md-8 d-flex align-items-end">
-                                @if ($modoFreteLoja === \App\Models\Empresa::LOJA_FRETE_GOOGLE_DISTANCIA)
-                                    <p class="small text-muted mb-0">O frete usa a <strong>rota de carro</strong> (Google) entre a loja e o endereço informado. No carrinho a simulação usa só o CEP; no pedido vale o endereço completo.</p>
+                                @if (\App\Models\Empresa::lojaFreteModoUsaKmRodoviario($modoFreteLoja))
+                                    <p class="small text-muted mb-0">O frete usa a <strong>rota de carro</strong> entre a loja e o endereço informado.@if ($modoFreteLoja === \App\Models\Empresa::LOJA_FRETE_GOOGLE_DISTANCIA) Google Maps.@elseif ($modoFreteLoja === \App\Models\Empresa::LOJA_FRETE_OSRM_DISTANCIA) OpenStreetMap + OSRM.@endif No carrinho a simulação usa só o CEP; no pedido vale o endereço completo.</p>
                                 @elseif ($modoFreteLoja === \App\Models\Empresa::LOJA_FRETE_PADRAO_UNICO)
                                     <p class="small text-muted mb-0">Esta loja usa <strong>taxa fixa</strong> de entrega (sem faixas de CEP).</p>
                                 @else

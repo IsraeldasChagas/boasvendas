@@ -111,7 +111,7 @@
                                     <input type="text" class="form-control" id="car-cep" name="cep" value="{{ $prefs['cep'] !== '' ? substr($prefs['cep'], 0, 5).'-'.substr($prefs['cep'], 5) : '' }}" placeholder="00000-000" maxlength="9" autocomplete="postal-code">
                                     <button type="submit" class="btn btn-outline-primary">Atualizar</button>
                                 </div>
-                                <p class="small text-muted mb-0">No checkout o CEP é obrigatório para entrega.@if ($empresa->lojaFreteModoEfetivo() === \App\Models\Empresa::LOJA_FRETE_GOOGLE_DISTANCIA) Com Google Maps, a simulação usa só o CEP; o valor final pode variar um pouco com o endereço completo.@endif</p>
+                                <p class="small text-muted mb-0">No checkout o CEP é obrigatório para entrega.@if (\App\Models\Empresa::lojaFreteModoUsaKmRodoviario($empresa->lojaFreteModoEfetivo())) Com frete por km (Google ou OSRM), a simulação usa só o CEP; o valor final pode variar um pouco com o endereço completo.@endif</p>
                             </form>
                         </div>
                         <div class="vf-card p-3">

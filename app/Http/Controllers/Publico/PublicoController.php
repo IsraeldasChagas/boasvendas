@@ -14,6 +14,7 @@ use App\Models\Produto;
 use App\Models\ProdutoIngrediente;
 use App\Support\Cep;
 use App\Support\GoogleMapsDistanceMatrix;
+use App\Support\OsrmRouting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -556,6 +557,15 @@ class PublicoController extends Controller
             return $this->taxaFreteGoogleDistancia($empresa, $destino);
         }
 
+        if ($empresa->lojaFreteModoEfetivo() === Empresa::LOJA_FRETE_OSRM_DISTANCIA) {
+            $cep8 = Cep::normalizar8($cepSoDigitos);
+            $destino = ($cep8 !== null && $cepSoDigitos !== null && $cepSoDigitos !== '')
+                ? $this->formatoDestinoFreteGoogleCep($cep8)
+                : '';
+
+            return $this->taxaFreteOsrmDistancia($empresa, $destino);
+        }
+
         $cep8 = Cep::normalizar8($cepSoDigitos);
         if ($cep8 === null || $cepSoDigitos === null || $cepSoDigitos === '') {
             return [
@@ -640,6 +650,86 @@ class PublicoController extends Controller
             ];
         }
 
+        return $this->precificarFreteKmRodoviario(
+            $empresa,
+            $km,
+            'Google Maps (~'.number_format($km, 1, ',', '.').' km × R$ '.number_format($rsKm, 2, ',', '.').'/km)'
+        );
+    }
+
+    /**
+     * @return array{taxa: float, rotulo: string, entrega_bloqueada: bool}
+     */
+    private function taxaFreteOsrmDistancia(Empresa $empresa, string $destino): array
+    {
+        $padrao = round($empresa->lojaTaxaEntregaPadraoEfetiva(), 2);
+        $origem = $empresa->lojaFreteOrigemEnderecoEfetiva();
+        $rsKm = $empresa->lojaFreteGoogleRsPorKm();
+
+        if (trim($destino) === '') {
+            return [
+                'taxa' => $padrao,
+                'rotulo' => 'Informe o CEP para calcular o frete (OpenStreetMap / OSRM)',
+                'entrega_bloqueada' => false,
+            ];
+        }
+
+        if ($origem === null) {
+            return [
+                'taxa' => $padrao,
+                'rotulo' => 'Taxa padrão (informe o endereço de origem nas configurações da loja)',
+                'entrega_bloqueada' => false,
+            ];
+        }
+
+        if ($rsKm === null) {
+            return [
+                'taxa' => $padrao,
+                'rotulo' => 'Taxa padrão (defina R$ por km nas configurações)',
+                'entrega_bloqueada' => false,
+            ];
+        }
+
+        $ua = trim((string) config('services.osm_routing.http_user_agent', ''));
+        if ($ua === '') {
+            return [
+                'taxa' => $padrao,
+                'rotulo' => 'Taxa padrão (configure OSM_HTTP_USER_AGENT no servidor para usar Nominatim/OSRM)',
+                'entrega_bloqueada' => false,
+            ];
+        }
+
+        $km = OsrmRouting::distanciaKmRodoviaria($origem, $destino);
+        if ($km === null) {
+            return [
+                'taxa' => $padrao,
+                'rotulo' => 'Taxa padrão (rota indisponível via OSRM — verifique CEP/endereço ou tente depois)',
+                'entrega_bloqueada' => false,
+            ];
+        }
+
+        return $this->precificarFreteKmRodoviario(
+            $empresa,
+            $km,
+            'OpenStreetMap / OSRM (~'.number_format($km, 1, ',', '.').' km × R$ '.number_format($rsKm, 2, ',', '.').'/km)'
+        );
+    }
+
+    /**
+     * @return array{taxa: float, rotulo: string, entrega_bloqueada: bool}
+     */
+    private function precificarFreteKmRodoviario(Empresa $empresa, float $km, string $rotuloDetalhe): array
+    {
+        $padrao = round($empresa->lojaTaxaEntregaPadraoEfetiva(), 2);
+        $rsKm = $empresa->lojaFreteGoogleRsPorKm();
+        if ($rsKm === null) {
+            return [
+                'taxa' => $padrao,
+                'rotulo' => 'Taxa padrão (defina R$ por km nas configurações)',
+                'entrega_bloqueada' => false,
+            ];
+        }
+
         $kmMax = $empresa->lojaFreteGoogleKmMax();
         if ($kmMax !== null && $km > $kmMax) {
             return [
@@ -657,7 +747,7 @@ class PublicoController extends Controller
 
         return [
             'taxa' => round($bruto, 2),
-            'rotulo' => 'Google Maps (~'.number_format($km, 1, ',', '.').' km × R$ '.number_format($rsKm, 2, ',', '.').'/km)',
+            'rotulo' => $rotuloDetalhe,
             'entrega_bloqueada' => false,
         ];
     }
@@ -1228,17 +1318,19 @@ class PublicoController extends Controller
             }
             if ($empresa->lojaFreteModoEfetivo() === Empresa::LOJA_FRETE_PADRAO_UNICO) {
                 $taxaVal = $empresa->lojaTaxaEntregaPadraoEfetiva();
-            } elseif ($empresa->lojaFreteModoEfetivo() === Empresa::LOJA_FRETE_GOOGLE_DISTANCIA) {
+            } elseif (Empresa::lojaFreteModoUsaKmRodoviario($empresa->lojaFreteModoEfetivo())) {
                 $destino = $this->formatoDestinoFreteGoogleEnderecoCompleto($enderecoTrim, $cepNorm);
-                $rGoogle = $this->taxaFreteGoogleDistancia($empresa, $destino);
-                if ($rGoogle['entrega_bloqueada']) {
+                $rKm = $empresa->lojaFreteModoEfetivo() === Empresa::LOJA_FRETE_GOOGLE_DISTANCIA
+                    ? $this->taxaFreteGoogleDistancia($empresa, $destino)
+                    : $this->taxaFreteOsrmDistancia($empresa, $destino);
+                if ($rKm['entrega_bloqueada']) {
                     return back()
                         ->withInput()
                         ->withErrors([
                             'cep_entrega' => 'Este CEP/endereço está fora da área de entrega da loja.',
                         ]);
                 }
-                $taxaVal = $rGoogle['taxa'];
+                $taxaVal = $rKm['taxa'];
             } elseif (Schema::hasTable('empresa_entrega_faixas_cep')) {
                 $porFaixa = EmpresaEntregaFaixaCep::taxaParaCep((int) $empresa->id, $cepNorm);
                 $taxaVal = $porFaixa !== null ? (float) $porFaixa : $empresa->lojaTaxaEntregaPadraoEfetiva();

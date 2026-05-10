@@ -28,9 +28,9 @@
         </div>
     @endif
 
-    @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_frete_modo') && ($empresa->lojaFreteModoEfetivo() === \App\Models\Empresa::LOJA_FRETE_GOOGLE_DISTANCIA))
+    @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_frete_modo') && (\App\Models\Empresa::lojaFreteModoUsaKmRodoviario($empresa->lojaFreteModoEfetivo())))
         <div class="alert alert-info small mb-3">
-            A loja está em <strong>“Distância pelo Google Maps”</strong> nas <a href="{{ route('empresa.configuracoes.index') }}">configurações</a>. As faixas abaixo ficam cadastradas, mas <strong>não entram</strong> no cálculo do frete.
+            A loja está em <strong>frete por distância (km)</strong> nas <a href="{{ route('empresa.configuracoes.index') }}">configurações</a>. As faixas abaixo ficam cadastradas, mas <strong>não entram</strong> no cálculo do frete.
         </div>
     @endif
 

@@ -44,4 +44,14 @@ return [
         'default_origin_address' => env('GOOGLE_MAPS_DEFAULT_ORIGIN_ADDRESS'),
     ],
 
+    /*
+    | Frete por km com OSRM + Nominatim (OpenStreetMap). Sem chave de API;
+    | em produção use seu próprio Nominatim/OSRM ou URLs públicas com moderação.
+    */
+    'osm_routing' => [
+        'osrm_base_url' => env('OSRM_BASE_URL', 'https://router.project-osrm.org'),
+        'nominatim_base_url' => env('NOMINATIM_BASE_URL', 'https://nominatim.openstreetmap.org'),
+        'http_user_agent' => env('OSM_HTTP_USER_AGENT', 'VendAffacil/1.0 (frete por distância; contacte o suporte do sistema)'),
+    ],
+
 ];

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Categoria;
 use App\Models\Empresa;
 use App\Models\EmpresaSlug;
+use App\Support\OsrmRouting;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -40,7 +41,16 @@ class ConfiguracaoController extends Controller
                 ->get();
         }
 
-        return view('empresa.configuracoes.index', compact('empresa', 'categoriasBanner'));
+        $fretePreviewMapaOrigem = null;
+        if (Schema::hasColumn('empresas', 'loja_frete_modo')
+            && $empresa->lojaFreteModoEfetivo() === Empresa::LOJA_FRETE_OSRM_DISTANCIA) {
+            $addr = $empresa->lojaFreteOrigemEnderecoEfetiva();
+            if ($addr !== null) {
+                $fretePreviewMapaOrigem = OsrmRouting::geocodeEndereco($addr);
+            }
+        }
+
+        return view('empresa.configuracoes.index', compact('empresa', 'categoriasBanner', 'fretePreviewMapaOrigem'));
     }
 
     public function update(Request $request): RedirectResponse
@@ -99,7 +109,8 @@ class ConfiguracaoController extends Controller
             $rules['loja_frete_modo'] = ['required', 'string', Rule::in(array_keys(Empresa::lojaFreteModosRotulos()))];
         }
         if (Schema::hasColumn('empresas', 'loja_frete_google_rs_por_km')) {
-            $rules['loja_frete_google_rs_por_km'] = $request->input('loja_frete_modo') === Empresa::LOJA_FRETE_GOOGLE_DISTANCIA
+            $modoFreteInput = (string) $request->input('loja_frete_modo', '');
+            $rules['loja_frete_google_rs_por_km'] = in_array($modoFreteInput, [Empresa::LOJA_FRETE_GOOGLE_DISTANCIA, Empresa::LOJA_FRETE_OSRM_DISTANCIA], true)
                 ? ['required', 'numeric', 'min:0.01', 'max:99999999.99']
                 : ['nullable', 'numeric', 'min:0', 'max:99999999.99'];
         }
@@ -193,9 +204,10 @@ class ConfiguracaoController extends Controller
             unset($data['cep']);
         }
 
-        if (($data['loja_frete_modo'] ?? null) === Empresa::LOJA_FRETE_GOOGLE_DISTANCIA
+        $modoFrete = $data['loja_frete_modo'] ?? null;
+        if (in_array($modoFrete, [Empresa::LOJA_FRETE_GOOGLE_DISTANCIA, Empresa::LOJA_FRETE_OSRM_DISTANCIA], true)
             && Schema::hasColumn('empresas', 'loja_frete_google_rs_por_km')) {
-            if (! filled(config('services.google_maps.api_key'))) {
+            if ($modoFrete === Empresa::LOJA_FRETE_GOOGLE_DISTANCIA && ! filled(config('services.google_maps.api_key'))) {
                 throw ValidationException::withMessages([
                     'loja_frete_modo' => 'O servidor ainda não tem GOOGLE_MAPS_API_KEY no .env. Configure a chave e a Distance Matrix API no Google Cloud antes de usar este modo.',
                 ]);
@@ -213,7 +225,9 @@ class ConfiguracaoController extends Controller
                 && $cepPersistidoOuNovo !== null
                 && trim((string) $cepPersistidoOuNovo) !== '';
             if ($origemCampo === '' && $origemEmpresa === '' && $origemGlobal === '' && ! $temCep) {
-                $msg = 'Informe o CEP da loja, o endereço de origem do frete, o Endereço em Dados da empresa, ou defina GOOGLE_MAPS_DEFAULT_ORIGIN_ADDRESS no servidor.';
+                $msg = $modoFrete === Empresa::LOJA_FRETE_OSRM_DISTANCIA
+                    ? 'Informe o CEP da loja, o endereço de origem do frete ou o Endereço em Dados da empresa (OpenStreetMap precisa localizar a loja).'
+                    : 'Informe o CEP da loja, o endereço de origem do frete, o Endereço em Dados da empresa, ou defina GOOGLE_MAPS_DEFAULT_ORIGIN_ADDRESS no servidor.';
                 if (Schema::hasColumn('empresas', 'loja_frete_origem_endereco')) {
                     throw ValidationException::withMessages(['loja_frete_origem_endereco' => $msg]);
                 }

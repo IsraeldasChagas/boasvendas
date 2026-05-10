@@ -25,6 +25,9 @@ class Empresa extends Model
     /** Frete por distância rodoviária (Google Distance Matrix). */
     public const LOJA_FRETE_GOOGLE_DISTANCIA = 'google_distancia';
 
+    /** Frete por distância (Nominatim + OSRM / OpenStreetMap). */
+    public const LOJA_FRETE_OSRM_DISTANCIA = 'osrm_distancia';
+
     protected $fillable = [
         'nome',
         'loja_aberta',
@@ -197,6 +200,7 @@ class Empresa extends Model
         ];
         if (Schema::hasColumn('empresas', 'loja_frete_google_rs_por_km')) {
             $out[self::LOJA_FRETE_GOOGLE_DISTANCIA] = 'Por km rodado (Google Maps)';
+            $out[self::LOJA_FRETE_OSRM_DISTANCIA] = 'Por km rodado (OpenStreetMap + OSRM)';
         }
 
         return $out;
@@ -212,10 +216,14 @@ class Empresa extends Model
         if ($m === self::LOJA_FRETE_GOOGLE_DISTANCIA && ! Schema::hasColumn('empresas', 'loja_frete_google_rs_por_km')) {
             return self::LOJA_FRETE_FAIXAS_CEP;
         }
+        if ($m === self::LOJA_FRETE_OSRM_DISTANCIA && ! Schema::hasColumn('empresas', 'loja_frete_google_rs_por_km')) {
+            return self::LOJA_FRETE_FAIXAS_CEP;
+        }
         $permitidos = [
             self::LOJA_FRETE_FAIXAS_CEP,
             self::LOJA_FRETE_PADRAO_UNICO,
             self::LOJA_FRETE_GOOGLE_DISTANCIA,
+            self::LOJA_FRETE_OSRM_DISTANCIA,
         ];
 
         return in_array($m, $permitidos, true) ? $m : self::LOJA_FRETE_FAIXAS_CEP;
@@ -323,6 +331,33 @@ class Empresa extends Model
             'origem' => $origem,
             'pronto' => $api && $rs && $origem,
         ];
+    }
+
+    /**
+     * Requisitos do frete OSRM/OSM (sem chave de API; geocoding + rota no servidor).
+     *
+     * @return array{rs_por_km: bool, origem: bool, pronto: bool}
+     */
+    public function lojaFreteOsrmChecklistPronto(): array
+    {
+        $rs = $this->lojaFreteGoogleRsPorKm() !== null;
+        $origem = $this->lojaFreteOrigemEnderecoEfetiva() !== null;
+
+        return [
+            'rs_por_km' => $rs,
+            'origem' => $origem,
+            'pronto' => $rs && $origem,
+        ];
+    }
+
+    /** Modos que calculam km rodoviário (Google ou OSRM). */
+    public static function lojaFreteModoUsaKmRodoviario(?string $modo): bool
+    {
+        if ($modo === null || $modo === '') {
+            return false;
+        }
+
+        return in_array($modo, [self::LOJA_FRETE_GOOGLE_DISTANCIA, self::LOJA_FRETE_OSRM_DISTANCIA], true);
     }
 
     /** Taxa padrão da loja ou valor global do sistema. */

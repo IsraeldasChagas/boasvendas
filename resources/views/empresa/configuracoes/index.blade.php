@@ -9,6 +9,7 @@
     ]])
 
     @push('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
     <style>
         .vf-config-section-toggle:focus-visible { outline: 2px solid var(--bs-primary); outline-offset: 2px; }
         .vf-config-section-toggle[aria-expanded="true"] .vf-config-chevron { transform: rotate(180deg); }
@@ -364,6 +365,7 @@
                                     <span class="vf-frete-ajuda vf-frete-ajuda-faixas {{ old('loja_frete_modo', $empresa->loja_frete_modo ?? \App\Models\Empresa::LOJA_FRETE_FAIXAS_CEP) === \App\Models\Empresa::LOJA_FRETE_FAIXAS_CEP ? '' : 'd-none' }}">Cadastre faixas em <a href="{{ route('empresa.loja-entrega-faixas.index') }}">Frete por CEP</a>. Fora das faixas usa a taxa acima.</span>
                                     <span class="vf-frete-ajuda vf-frete-ajuda-padrao {{ old('loja_frete_modo', $empresa->loja_frete_modo ?? '') === \App\Models\Empresa::LOJA_FRETE_PADRAO_UNICO ? '' : 'd-none' }}">Todo pedido com entrega usa só o valor em <strong>Taxa de entrega</strong>.</span>
                                     <span class="vf-frete-ajuda vf-frete-ajuda-google {{ old('loja_frete_modo', $empresa->loja_frete_modo ?? '') === \App\Models\Empresa::LOJA_FRETE_GOOGLE_DISTANCIA ? '' : 'd-none' }}">O sistema calcula km pela rota e multiplica pelo valor por km. Confira <strong>CEP e endereço da loja</strong> em <em>Dados da empresa</em>.</span>
+                                    <span class="vf-frete-ajuda vf-frete-ajuda-osrm {{ old('loja_frete_modo', $empresa->loja_frete_modo ?? '') === \App\Models\Empresa::LOJA_FRETE_OSRM_DISTANCIA ? '' : 'd-none' }}">Usa <strong>OpenStreetMap</strong> (geocoding) + <strong>OSRM</strong> (rota). Mesmos valores de R$/km abaixo; sem chave Google. Opcional: mapa de referência e variáveis no <em>Ajuda técnica OSRM</em>.</span>
                                 </p>
                             </div>
                         @endif
@@ -383,6 +385,18 @@
                                 </div>
                             @endif
                         @endif
+                        @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_frete_google_rs_por_km') && \Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_frete_modo') && $__modoFreteForm === \App\Models\Empresa::LOJA_FRETE_OSRM_DISTANCIA)
+                            @php $ochk = $empresa->lojaFreteOsrmChecklistPronto(); @endphp
+                            @if ($ochk['pronto'])
+                                <div class="alert alert-success small py-2 mb-3"><i class="bi bi-check-circle me-1"></i>Frete OSRM / OpenStreetMap pronto para usar.</div>
+                            @else
+                                <div class="alert alert-warning small py-2 mb-3">
+                                    <strong>Falta configurar:</strong>
+                                    @if (! $ochk['rs_por_km']) Preencha <strong>R$ por km</strong> abaixo. @endif
+                                    @if (! $ochk['origem']) Informe endereço da loja em <em>Dados da empresa</em>, <strong>Saída das entregas</strong> ou CEP da loja. @endif
+                                </div>
+                            @endif
+                        @endif
                         @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_frete_google_rs_por_km'))
                         <details class="small text-muted mb-3 border rounded px-3 py-2 bg-body-secondary bg-opacity-25">
                             <summary class="fw-semibold text-body py-1 user-select-none cursor-pointer">Ajuda técnica — Google Maps no servidor</summary>
@@ -396,9 +410,22 @@
                             </p>
                             <p class="mb-0"><code class="user-select-all">php artisan vendaffacil:google-maps-test</code></p>
                         </details>
-                            <div id="vf-frete-google-campos" class="rounded border border-primary border-opacity-50 p-3 mb-3 bg-primary-subtle bg-opacity-10 {{ old('loja_frete_modo', $empresa->loja_frete_modo ?? \App\Models\Empresa::LOJA_FRETE_FAIXAS_CEP) === \App\Models\Empresa::LOJA_FRETE_GOOGLE_DISTANCIA ? '' : 'd-none' }}">
-                                <h3 class="h6 fw-bold mb-2"><i class="bi bi-signpost-split text-primary me-1"></i>Por km (Google Maps)</h3>
-                                <p class="small text-muted mb-3">Preencha <strong>R$ por km</strong>. Os outros campos são opcionais.</p>
+                        <details class="small text-muted mb-3 border rounded px-3 py-2 bg-body-secondary bg-opacity-25">
+                            <summary class="fw-semibold text-body py-1 user-select-none cursor-pointer">Ajuda técnica — OSRM + OpenStreetMap + Leaflet</summary>
+                            <p class="mb-2 mt-2">No servidor: <code>OSRM_BASE_URL</code> (roteamento), <code>NOMINATIM_BASE_URL</code> (geocoding), <code>OSM_HTTP_USER_AGENT</code> (obrigatório para Nominatim). O mapa abaixo usa tiles OSM e Leaflet só como visual da <strong>origem</strong>.</p>
+                            <p class="mb-2">
+                                @if (filled(trim((string) config('services.osm_routing.http_user_agent', ''))))
+                                    <span class="text-success">User-Agent OSM configurado.</span>
+                                @else
+                                    <span class="text-warning">Configure <code>OSM_HTTP_USER_AGENT</code> no <code>.env</code>.</span>
+                                @endif
+                            </p>
+                            <p class="mb-0 small">Servidores públicos têm limite de uso; produção exige instância própria ou provedor.</p>
+                        </details>
+                            @php $__freteKmVisivel = \App\Models\Empresa::lojaFreteModoUsaKmRodoviario((string) old('loja_frete_modo', $empresa->loja_frete_modo ?? \App\Models\Empresa::LOJA_FRETE_FAIXAS_CEP)); @endphp
+                            <div id="vf-frete-km-campos" class="rounded border border-primary border-opacity-50 p-3 mb-3 bg-primary-subtle bg-opacity-10 {{ $__freteKmVisivel ? '' : 'd-none' }}">
+                                <h3 class="h6 fw-bold mb-2"><i class="bi bi-signpost-split text-primary me-1"></i>Frete por quilômetro rodado</h3>
+                                <p class="small text-muted mb-3">Válido nos modos Google Maps ou OpenStreetMap/OSRM. Preencha <strong>R$ por km</strong>; os outros campos são opcionais.</p>
                                 <div class="row g-3">
                                     <div class="col-md-4">
                                         <label class="form-label" for="loja_frete_google_rs_por_km">Quanto cobrar por km <span class="text-danger">*</span></label>
@@ -424,6 +451,12 @@
                                         <input type="text" class="form-control form-control-sm @error('loja_frete_origem_endereco') is-invalid @enderror" id="loja_frete_origem_endereco" name="loja_frete_origem_endereco" value="{{ old('loja_frete_origem_endereco', $empresa->loja_frete_origem_endereco) }}" maxlength="500" placeholder="Deixe em branco para usar o endereço em Dados da empresa">
                                         @error('loja_frete_origem_endereco')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                     </div>
+                                    @if (($fretePreviewMapaOrigem ?? null) !== null && is_array($fretePreviewMapaOrigem))
+                                    <div class="col-12 {{ $__modoFreteForm === \App\Models\Empresa::LOJA_FRETE_OSRM_DISTANCIA ? '' : 'd-none' }}" id="vf-frete-osrm-mapa-wrap">
+                                        <p class="small text-muted mb-1">Mapa de referência — origem (Leaflet + tiles © OpenStreetMap)</p>
+                                        <div id="vf-frete-osrm-mapa" class="rounded border" style="height:220px;" data-vf-lat="{{ $fretePreviewMapaOrigem['lat'] }}" data-vf-lon="{{ $fretePreviewMapaOrigem['lon'] }}"></div>
+                                    </div>
+                                    @endif
                                 </div>
                             </div>
                         @endif
@@ -487,30 +520,49 @@
         <div class="d-lg-none" style="height: 5rem;" aria-hidden="true"></div>
     </form>
     @push('scripts')
+        <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
         <script>
             (function () {
                 var sel = document.getElementById('loja_frete_modo');
                 if (!sel) return;
-                var box = document.getElementById('vf-frete-google-campos');
+                var box = document.getElementById('vf-frete-km-campos');
                 var rs = document.querySelector('[data-vf-google-rs]');
+                var osrmMapWrap = document.getElementById('vf-frete-osrm-mapa-wrap');
                 function sync() {
                     var v = sel.value;
-                    var google = v === 'google_distancia';
-                    if (box) box.classList.toggle('d-none', !google);
-                    if (rs) rs.required = google;
+                    var distKm = v === 'google_distancia' || v === 'osrm_distancia';
+                    if (box) box.classList.toggle('d-none', !distKm);
+                    if (rs) rs.required = distKm;
                     document.querySelectorAll('.vf-frete-ajuda').forEach(function (el) {
                         el.classList.add('d-none');
                     });
                     var map = {
                         faixas_cep: '.vf-frete-ajuda-faixas',
                         padrao_unico: '.vf-frete-ajuda-padrao',
-                        google_distancia: '.vf-frete-ajuda-google'
+                        google_distancia: '.vf-frete-ajuda-google',
+                        osrm_distancia: '.vf-frete-ajuda-osrm'
                     };
                     var help = document.querySelector(map[v] || '');
                     if (help) help.classList.remove('d-none');
+                    if (osrmMapWrap) osrmMapWrap.classList.toggle('d-none', v !== 'osrm_distancia');
                 }
                 sel.addEventListener('change', sync);
                 sync();
+
+                var mapEl = document.getElementById('vf-frete-osrm-mapa');
+                if (mapEl && typeof L !== 'undefined') {
+                    var la = parseFloat(mapEl.getAttribute('data-vf-lat'));
+                    var lo = parseFloat(mapEl.getAttribute('data-vf-lon'));
+                    if (!isNaN(la) && !isNaN(lo)) {
+                        var m = L.map(mapEl).setView([la, lo], 15);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            maxZoom: 19,
+                            attribution: '&copy; OpenStreetMap'
+                        }).addTo(m);
+                        L.marker([la, lo]).addTo(m);
+                        setTimeout(function () { m.invalidateSize(); }, 300);
+                    }
+                }
             })();
         </script>
     @endpush
