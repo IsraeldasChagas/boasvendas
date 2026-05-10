@@ -8,6 +8,14 @@
         ['label' => 'Configurações', 'url' => route('empresa.configuracoes.index')],
     ]])
 
+    @push('styles')
+    <style>
+        .vf-config-section-toggle:focus-visible { outline: 2px solid var(--bs-primary); outline-offset: 2px; }
+        .vf-config-section-toggle[aria-expanded="true"] .vf-config-chevron { transform: rotate(180deg); }
+        .vf-config-chevron { transition: transform 0.2s ease; display: inline-block; }
+    </style>
+    @endpush
+
     @if ($errors->any())
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <strong>Não foi possível salvar.</strong> Corrija abaixo ou role a página para ver os campos em vermelho.
@@ -74,9 +82,14 @@
                             $impPedVal = (string) ($impPedVal ?? '1');
                         }
                     @endphp
-                    <div class="vf-card p-4 mb-3 border border-primary border-2 shadow-sm" id="vf-config-pedidos-vitrine">
-                        <h2 class="h6 fw-bold mb-2"><i class="bi bi-receipt-cutoff text-primary me-1"></i>Pedidos na vitrine</h2>
-                        <p class="small text-muted mb-3">Som tipo loja, janela no painel e confirmação manual — ative <strong>Confirmar cada pedido na loja</strong> e salve.</p>
+                    <div class="vf-card mb-3 border border-primary border-2 shadow-sm overflow-hidden rounded-2" id="vf-config-pedidos-vitrine">
+                        <button type="button" class="vf-config-section-toggle w-100 d-flex align-items-center justify-content-between gap-2 btn border-0 rounded-0 py-3 px-4 text-start text-body shadow-none bg-primary-subtle bg-opacity-25" data-bs-toggle="collapse" data-bs-target="#vf-collapse-pedidos-vitrine" aria-expanded="true" aria-controls="vf-collapse-pedidos-vitrine">
+                            <span class="h6 fw-bold mb-0"><i class="bi bi-receipt-cutoff text-primary me-1"></i>Pedidos na vitrine</span>
+                            <i class="bi bi-chevron-down text-primary vf-config-chevron flex-shrink-0" aria-hidden="true"></i>
+                        </button>
+                        <div id="vf-collapse-pedidos-vitrine" class="collapse show border-top border-primary border-opacity-25">
+                            <div class="p-4 pt-3">
+                                <p class="small text-muted mb-3">Som tipo loja, janela no painel e confirmação manual — ative <strong>Confirmar cada pedido na loja</strong> e salve.</p>
                         @if (! $temColConfPed && ! $temColImpPed)
                             <div class="alert alert-warning mb-0 small">
                                 <strong>Neste servidor as opções ainda não existem no banco.</strong> Peça para rodar <code class="user-select-all">php artisan migrate</code> na hospedagem. Depois voltando aqui você verá os botões <strong>Ativado / Desativado</strong>.
@@ -105,6 +118,8 @@
                                 @error('loja_impressao_pedido_habilitada')<div class="invalid-feedback d-block mt-2">{{ $message }}</div>@enderror
                             @endif
                         @endif
+                            </div>
+                        </div>
                     </div>
                 @endif
                 @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_aberta'))
@@ -116,9 +131,14 @@
                             $lojaAbertaVal = (string) $lojaAbertaVal;
                         }
                     @endphp
-                    <div class="vf-card p-4 mb-3 vf-loja-status-card">
-                        <h2 class="h6 fw-bold mb-2">Loja na vitrine — aberta ou fechada</h2>
-                        <p class="small text-muted mb-3">Toque no botão para trocar. Na loja pública aparece um selo <span class="text-success fw-semibold">verde (Aberta)</span> ou <span class="text-danger fw-semibold">vermelho (Fechada)</span> ao lado do nome.</p>
+                    <div class="vf-card mb-3 border border-primary border-2 shadow-sm overflow-hidden rounded-2">
+                        <button type="button" class="vf-config-section-toggle w-100 d-flex align-items-center justify-content-between gap-2 btn border-0 rounded-0 py-3 px-4 text-start text-body shadow-none bg-primary-subtle bg-opacity-25" data-bs-toggle="collapse" data-bs-target="#vf-collapse-loja-aberta" aria-expanded="true" aria-controls="vf-collapse-loja-aberta">
+                            <span class="h6 fw-bold mb-0"><i class="bi bi-shop-window text-primary me-1"></i>Loja na vitrine — aberta ou fechada</span>
+                            <i class="bi bi-chevron-down text-primary vf-config-chevron flex-shrink-0" aria-hidden="true"></i>
+                        </button>
+                        <div id="vf-collapse-loja-aberta" class="collapse show border-top border-primary border-opacity-25">
+                            <div class="p-4 pt-3">
+                                <p class="small text-muted mb-3">Toque no botão para trocar. Na loja pública aparece um selo <span class="text-success fw-semibold">verde (Aberta)</span> ou <span class="text-danger fw-semibold">vermelho (Fechada)</span> ao lado do nome.</p>
                         <div class="btn-group w-100 vf-loja-aberta-group" role="group" aria-label="Loja aberta ou fechada">
                             <input type="radio" class="btn-check" name="loja_aberta" id="vf-loja-aberta-1" value="1" autocomplete="off" @checked($lojaAbertaVal === '1') required>
                             <label class="btn btn-lg btn-outline-success vf-loja-aberta-touch py-3" for="vf-loja-aberta-1"><i class="bi bi-shop-window me-2"></i>Aberta</label>
@@ -126,12 +146,19 @@
                             <label class="btn btn-lg btn-outline-danger vf-loja-aberta-touch py-3" for="vf-loja-aberta-0"><i class="bi bi-door-closed me-2"></i>Fechada</label>
                         </div>
                         @error('loja_aberta')<div class="invalid-feedback d-block mt-2">{{ $message }}</div>@enderror
+                            </div>
+                        </div>
                     </div>
                 @endif
                 @if (\App\Models\Empresa::schemaTemColunaLojaBannerCategoria() && $empresa->temTelaMenu('loja_online'))
-                    <div class="vf-card p-4 mb-3">
-                        <h2 class="h6 fw-bold mb-2">Banner no cardápio</h2>
-                        <p class="small text-muted mb-3">Bloco em destaque no topo da loja pública, <strong>antes</strong> do filtro de categorias. Ao tocar, o cliente filtra pela categoria escolhida.</p>
+                    <div class="vf-card mb-3 border border-primary border-2 shadow-sm overflow-hidden rounded-2">
+                        <button type="button" class="vf-config-section-toggle w-100 d-flex align-items-center justify-content-between gap-2 btn border-0 rounded-0 py-3 px-4 text-start text-body shadow-none bg-primary-subtle bg-opacity-25" data-bs-toggle="collapse" data-bs-target="#vf-collapse-banner-cardapio" aria-expanded="true" aria-controls="vf-collapse-banner-cardapio">
+                            <span class="h6 fw-bold mb-0"><i class="bi bi-image text-primary me-1"></i>Banner no cardápio</span>
+                            <i class="bi bi-chevron-down text-primary vf-config-chevron flex-shrink-0" aria-hidden="true"></i>
+                        </button>
+                        <div id="vf-collapse-banner-cardapio" class="collapse show border-top border-primary border-opacity-25">
+                            <div class="p-4 pt-3">
+                                <p class="small text-muted mb-3">Bloco em destaque no topo da loja pública, <strong>antes</strong> do filtro de categorias. Ao tocar, o cliente filtra pela categoria escolhida.</p>
                         <label class="form-label" for="loja_banner_categoria_id">Categoria em destaque</label>
                         <select class="form-select form-select-sm @error('loja_banner_categoria_id') is-invalid @enderror" id="loja_banner_categoria_id" name="loja_banner_categoria_id">
                             <option value="">— Sem banner —</option>
@@ -141,10 +168,17 @@
                         </select>
                         @error('loja_banner_categoria_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         <p class="small text-muted mb-0 mt-2">Só aparecem categorias <strong>ativas</strong>. Se houver foto em algum produto da categoria, ela é usada como imagem do banner.</p>
+                            </div>
+                        </div>
                     </div>
                 @endif
-                <div class="vf-card p-4 mb-3">
-                    <h2 class="h6 fw-bold mb-3">Dados da empresa</h2>
+                <div class="vf-card mb-3 border border-primary border-2 shadow-sm overflow-hidden rounded-2">
+                    <button type="button" class="vf-config-section-toggle w-100 d-flex align-items-center justify-content-between gap-2 btn border-0 rounded-0 py-3 px-4 text-start text-body shadow-none bg-primary-subtle bg-opacity-25" data-bs-toggle="collapse" data-bs-target="#vf-collapse-dados-empresa" aria-expanded="true" aria-controls="vf-collapse-dados-empresa">
+                        <span class="h6 fw-bold mb-0"><i class="bi bi-building text-primary me-1"></i>Dados da empresa</span>
+                        <i class="bi bi-chevron-down text-primary vf-config-chevron flex-shrink-0" aria-hidden="true"></i>
+                    </button>
+                    <div id="vf-collapse-dados-empresa" class="collapse show border-top border-primary border-opacity-25">
+                        <div class="p-4 pt-3">
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label" for="nome">Nome / razão social</label>
@@ -235,11 +269,18 @@
                             @error('facebook_url')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             <p class="small text-muted mb-0 mt-1">Link da página — ícones no topo da vitrine.</p>
                         </div>
+                        </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="vf-card p-4 mb-3">
-                    <h2 class="h6 fw-bold mb-3">PIX na loja online</h2>
+                <div class="vf-card mb-3 border border-primary border-2 shadow-sm overflow-hidden rounded-2">
+                    <button type="button" class="vf-config-section-toggle w-100 d-flex align-items-center justify-content-between gap-2 btn border-0 rounded-0 py-3 px-4 text-start text-body shadow-none bg-primary-subtle bg-opacity-25" data-bs-toggle="collapse" data-bs-target="#vf-collapse-pix-loja" aria-expanded="true" aria-controls="vf-collapse-pix-loja">
+                        <span class="h6 fw-bold mb-0"><i class="bi bi-qr-code-scan text-primary me-1"></i>PIX na loja online</span>
+                        <i class="bi bi-chevron-down text-primary vf-config-chevron flex-shrink-0" aria-hidden="true"></i>
+                    </button>
+                    <div id="vf-collapse-pix-loja" class="collapse show border-top border-primary border-opacity-25">
+                        <div class="p-4 pt-3">
                     @if (! $empresa->temTelaMenu('loja_online'))
                         <p class="small text-muted mb-0">A loja online (vitrine) não está liberada para sua empresa.</p>
                     @else
@@ -279,11 +320,18 @@
                         <p class="small text-muted mb-0 mt-1">Sem esse código não há QR automático; ainda pode usar só o texto acima.</p>
                     </div>
                     @endif
+                        </div>
+                    </div>
                 </div>
 
                 @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_taxa_entrega_padrao') && $empresa->temTelaMenu('loja_online'))
-                    <div class="vf-card p-4 mb-3">
-                        <h2 class="h6 fw-bold mb-3">Frete na loja online</h2>
+                    <div class="vf-card mb-3 border border-primary border-2 shadow-sm overflow-hidden rounded-2">
+                        <button type="button" class="vf-config-section-toggle w-100 d-flex align-items-center justify-content-between gap-2 btn border-0 rounded-0 py-3 px-4 text-start text-body shadow-none bg-primary-subtle bg-opacity-25" data-bs-toggle="collapse" data-bs-target="#vf-collapse-frete-loja" aria-expanded="true" aria-controls="vf-collapse-frete-loja">
+                            <span class="h6 fw-bold mb-0"><i class="bi bi-truck text-primary me-1"></i>Frete na loja online</span>
+                            <i class="bi bi-chevron-down text-primary vf-config-chevron flex-shrink-0" aria-hidden="true"></i>
+                        </button>
+                        <div id="vf-collapse-frete-loja" class="collapse show border-top border-primary border-opacity-25">
+                            <div class="p-4 pt-3">
                         @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_frete_modo'))
                             <div class="mb-3">
                                 <label class="form-label" for="loja_frete_modo">Como calcular o frete</label>
@@ -377,13 +425,20 @@
                                 </div>
                             @endif
                         </div>
+                            </div>
+                        </div>
                     </div>
                 @endif
             </div>
 
             <div class="col-lg-4">
-                <div class="vf-card p-3 mb-3">
-                    <h2 class="h6 fw-bold mb-3">Contrato e plano</h2>
+                <div class="vf-card mb-3 border border-primary border-2 shadow-sm overflow-hidden rounded-2">
+                    <button type="button" class="vf-config-section-toggle w-100 d-flex align-items-center justify-content-between gap-2 btn border-0 rounded-0 py-3 px-4 text-start text-body shadow-none bg-primary-subtle bg-opacity-25" data-bs-toggle="collapse" data-bs-target="#vf-collapse-contrato-plano" aria-expanded="true" aria-controls="vf-collapse-contrato-plano">
+                        <span class="h6 fw-bold mb-0"><i class="bi bi-file-earmark-text text-primary me-1"></i>Contrato e plano</span>
+                        <i class="bi bi-chevron-down text-primary vf-config-chevron flex-shrink-0" aria-hidden="true"></i>
+                    </button>
+                    <div id="vf-collapse-contrato-plano" class="collapse show border-top border-primary border-opacity-25">
+                        <div class="p-4 pt-3">
                     <dl class="small mb-0">
                         <dt class="text-muted fw-normal">Plano</dt>
                         <dd class="mb-2">{{ $empresa->plano?->nome ?? '—' }}</dd>
@@ -393,10 +448,17 @@
                         <dd class="mb-0">{{ $empresa->cliente_desde?->format('d/m/Y') ?? '—' }}</dd>
                     </dl>
                     <p class="small text-muted mb-0 mt-3">Plano e status são alterados pelo administrador do sistema.</p>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="vf-card p-3 mb-3">
-                    <h2 class="h6 fw-bold mb-3">Módulos</h2>
+                <div class="vf-card mb-3 border border-primary border-2 shadow-sm overflow-hidden rounded-2">
+                    <button type="button" class="vf-config-section-toggle w-100 d-flex align-items-center justify-content-between gap-2 btn border-0 rounded-0 py-3 px-4 text-start text-body shadow-none bg-primary-subtle bg-opacity-25" data-bs-toggle="collapse" data-bs-target="#vf-collapse-modulos" aria-expanded="true" aria-controls="vf-collapse-modulos">
+                        <span class="h6 fw-bold mb-0"><i class="bi bi-grid-3x3-gap text-primary me-1"></i>Módulos</span>
+                        <i class="bi bi-chevron-down text-primary vf-config-chevron flex-shrink-0" aria-hidden="true"></i>
+                    </button>
+                    <div id="vf-collapse-modulos" class="collapse show border-top border-primary border-opacity-25">
+                        <div class="p-4 pt-3">
                     @if ($empresa->modulos_resumo)
                         <ul class="list-unstyled small mb-0">
                             @foreach (preg_split('/\s*\+\s*|\s*,\s*/', $empresa->modulos_resumo, -1, PREG_SPLIT_NO_EMPTY) as $mod)
@@ -407,6 +469,8 @@
                         <p class="small text-muted mb-0">Nenhum resumo de módulos cadastrado.</p>
                     @endif
                     <p class="small text-muted mb-0 mt-3">Liberação de módulos é feita pelo suporte ou administrador.</p>
+                        </div>
+                    </div>
                 </div>
 
                 <button type="submit" class="btn btn-primary w-100 d-none d-lg-block">Salvar alterações</button>
