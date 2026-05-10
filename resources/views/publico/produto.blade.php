@@ -43,7 +43,9 @@
                         $vfWaHref = 'https://wa.me/?text='.rawurlencode($vfWaTexto);
                         $vfFbHref = 'https://www.facebook.com/sharer/sharer.php?u='.rawurlencode($vfShareProdutoUrl);
                     @endphp
-                    <div class="vf-produto-share d-flex flex-wrap align-items-center justify-content-between justify-content-md-end gap-2 gap-md-3 align-self-stretch w-100 w-md-auto pt-1 pt-md-0" role="group" aria-label="Compartilhar este produto">
+                    <div class="vf-produto-share-bloco d-flex flex-column align-items-stretch align-items-md-end gap-2 pt-1 pt-md-0 align-self-stretch w-100 w-md-auto">
+                        <span id="vf-share-produto-legenda" class="small text-muted mb-0 text-start text-md-end lh-sm">Compartilhar este produto nas redes:</span>
+                        <div class="vf-produto-share d-flex flex-wrap align-items-center justify-content-between justify-content-md-end gap-2 gap-md-3 w-100" role="group" aria-labelledby="vf-share-produto-legenda">
                         <a href="{{ $vfWaHref }}" target="_blank" rel="noopener noreferrer"
                            class="btn btn-success vf-produto-share__btn rounded-3"
                            title="WhatsApp"
@@ -64,6 +66,7 @@
                             aria-label="Copiar link do produto para compartilhar no Instagram">
                             <i class="bi bi-instagram vf-produto-share__ico" aria-hidden="true"></i><span class="vf-produto-share__label ms-1 vf-share-instagram-label">Instagram</span>
                         </button>
+                        </div>
                     </div>
                 </div>
                 @if ($produto->estoque === null || $produto->estoque > 0)
