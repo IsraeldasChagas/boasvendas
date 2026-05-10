@@ -72,6 +72,40 @@
             </div>
         </div>
         <div class="col-lg-4">
+            @if (($pedido->tipo_entrega ?? \App\Models\Pedido::TIPO_ENTREGA_ENTREGA) === \App\Models\Pedido::TIPO_ENTREGA_ENTREGA && $pedido->entregador_token)
+                @php
+                    $urlEntregador = route('publico.entregador.show', [
+                        'slug' => $empresa->slug,
+                        'codigo' => $pedido->codigo_publico,
+                        'token' => $pedido->entregador_token,
+                    ], absolute: true);
+                @endphp
+                <div class="vf-card p-3 mb-3">
+                    <h3 class="h6 fw-bold mb-2">Link do entregador</h3>
+                    <p class="small text-muted mb-2">Mostra endereço, itens, pagamento e o <strong>código do pedido</strong> para conferir com o cliente. O entregador pode marcar <strong>entregue</strong>, <strong>cancelado</strong> ou <strong>endereço não encontrado</strong>.</p>
+                    <div class="input-group input-group-sm mb-2">
+                        <input type="text" readonly class="form-control font-monospace small user-select-all" id="vf-url-entregador" value="{{ $urlEntregador }}" aria-label="URL para o entregador">
+                        <button type="button" class="btn btn-outline-primary" id="vf-copy-entregador">Copiar</button>
+                    </div>
+                    <a href="{{ $urlEntregador }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary btn-sm w-100">Abrir página do entregador</a>
+                </div>
+                @push('scripts')
+                    <script>
+                        (function () {
+                            var btn = document.getElementById('vf-copy-entregador');
+                            var inp = document.getElementById('vf-url-entregador');
+                            if (!btn || !inp) return;
+                            btn.addEventListener('click', function () {
+                                inp.select();
+                                inp.setSelectionRange(0, 99999);
+                                if (navigator.clipboard && navigator.clipboard.writeText) {
+                                    navigator.clipboard.writeText(inp.value).catch(function () {});
+                                }
+                            });
+                        })();
+                    </script>
+                @endpush
+            @endif
             <div class="vf-card p-3 mb-3">
                 <h3 class="h6 fw-bold mb-2">Cliente</h3>
                 <p class="mb-1 fw-medium">{{ $pedido->cliente_nome }}</p>

@@ -62,14 +62,16 @@ final class WhatsAppPedidoCliente
         $nomeClienteEsc = str_replace('*', '', $nomeCliente);
         $codigoEsc = str_replace('*', '', $codigo);
 
-        // Ordem: loja → cliente → sacola + "Código:" → status (🍳🥄 em preparo; demais ➖) → lupa.
+        // Ordem: loja → cliente → sacola + "Código:" → status → lupa.
         $iconLoja = "\u{1F3EA}"; // 🏪 loja
         $iconCliente = "\u{1F464}"; // 👤 cliente
         $iconSacola = "\u{1F6CD}\u{FE0F}"; // 🛍️ sacola + linha do código
-        // Ícone da linha de status: em preparo → panela + colher; demais → traço.
-        $iconStatus = $statusNovo === Pedido::STATUS_PREPARO
-            ? "\u{1F373}\u{2009}\u{1F944}" // 🍳 🥄 panela + colher
-            : "\u{2796}"; // ➖
+        // Ícone da linha de status (WhatsApp).
+        $iconStatus = match ($statusNovo) {
+            Pedido::STATUS_PREPARO => "\u{1F373}\u{2009}\u{1F944}",
+            Pedido::STATUS_ENDERECO_NAO_ENCONTRADO => "\u{1F4CD}\u{2009}\u{274C}",
+            default => "\u{2796}",
+        };
         $iconLupa = "\u{1F50D}"; // 🔍 acompanhar
 
         $msg = $iconLoja.' *'.$nomeLojaEsc."*\n\n";

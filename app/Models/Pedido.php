@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Pedido extends Model
 {
@@ -27,6 +28,9 @@ class Pedido extends Model
     public const STATUS_ENTREGUE = 'entregue';
 
     public const STATUS_CANCELADO = 'cancelado';
+
+    /** Entrega não concluída: motoboy não localizou o endereço */
+    public const STATUS_ENDERECO_NAO_ENCONTRADO = 'endereco_nao_encontrado';
 
     public const PAGAMENTO_PIX = 'pix';
 
@@ -56,6 +60,7 @@ class Pedido extends Model
         'pagamento_troco_para',
         'observacoes',
         'status',
+        'entregador_token',
         'subtotal',
         'taxa_entrega',
         'total',
@@ -91,7 +96,27 @@ class Pedido extends Model
             self::STATUS_ROTA => 'Em rota',
             self::STATUS_ENTREGUE => 'Entregue',
             self::STATUS_CANCELADO => 'Cancelado',
+            self::STATUS_ENDERECO_NAO_ENCONTRADO => 'Endereço não encontrado',
         ];
+    }
+
+    /** Link público do entregador: gera e persiste token uma vez (pedidos com entrega). */
+    public function ensureEntregadorToken(): string
+    {
+        if ($this->entregador_token !== null && $this->entregador_token !== '') {
+            return $this->entregador_token;
+        }
+
+        $token = Str::random(48);
+        $this->forceFill(['entregador_token' => $token])->save();
+
+        return $token;
+    }
+
+    /** Situações em que o entregador pode registrar resultado pela página pública. */
+    public function entregadorPodeRegistrarResultado(): bool
+    {
+        return in_array($this->status, [self::STATUS_PRONTO, self::STATUS_ROTA], true);
     }
 
     public function rotuloStatus(): string
@@ -104,6 +129,7 @@ class Pedido extends Model
         return match ($this->status) {
             self::STATUS_ENTREGUE => 'bg-success-subtle text-success',
             self::STATUS_CANCELADO => 'bg-secondary-subtle text-secondary',
+            self::STATUS_ENDERECO_NAO_ENCONTRADO => 'bg-warning-subtle text-warning-emphasis',
             self::STATUS_ROTA, self::STATUS_PRONTO => 'bg-warning-subtle text-warning',
             self::STATUS_PREPARO => 'bg-info-subtle text-info',
             default => 'bg-primary-subtle text-primary',

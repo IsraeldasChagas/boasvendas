@@ -44,10 +44,15 @@
             if ($pedido->status === \App\Models\Pedido::STATUS_CANCELADO) {
                 $idxAtual = false;
             }
+            if ($pedido->status === \App\Models\Pedido::STATUS_ENDERECO_NAO_ENCONTRADO) {
+                $idxAtual = false;
+            }
         @endphp
 
         @if ($pedido->status === \App\Models\Pedido::STATUS_CANCELADO)
             <div class="alert alert-secondary small">Este pedido foi cancelado.</div>
+        @elseif ($pedido->status === \App\Models\Pedido::STATUS_ENDERECO_NAO_ENCONTRADO)
+            <div class="alert alert-warning small">Entrega não realizada: endereço não encontrado.</div>
         @else
             <div class="vf-card p-3 mb-4">
                 <h2 class="h6 fw-bold mb-3">Andamento</h2>

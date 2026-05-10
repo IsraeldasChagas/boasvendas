@@ -24,6 +24,7 @@ use App\Http\Controllers\Empresa\ProdutoController;
 use App\Http\Controllers\Empresa\RelatorioController;
 use App\Http\Controllers\Empresa\UsuarioController;
 use App\Http\Controllers\Empresa\VendaExternaController;
+use App\Http\Controllers\Publico\EntregadorPedidoController;
 use App\Http\Controllers\Publico\FidelidadePublicController;
 use App\Http\Controllers\Publico\PublicoController;
 use App\Http\Controllers\Site\SiteController;
@@ -90,6 +91,15 @@ Route::post('/loja/{slug}/acompanhar', [PublicoController::class, 'acompanharBus
 Route::get('/loja/{slug}/pedido/{codigo}', [PublicoController::class, 'pedidoPublico'])
     ->where('codigo', '[A-Za-z0-9\-]+')
     ->name('publico.pedido.show');
+Route::get('/loja/{slug}/entrega/{codigo}/{token}', [EntregadorPedidoController::class, 'show'])
+    ->where('codigo', '[A-Za-z0-9\-]+')
+    ->where('token', '[a-zA-Z0-9]+')
+    ->name('publico.entregador.show');
+Route::post('/loja/{slug}/entrega/{codigo}/{token}', [EntregadorPedidoController::class, 'registrar'])
+    ->middleware('throttle:30,1')
+    ->where('codigo', '[A-Za-z0-9\-]+')
+    ->where('token', '[a-zA-Z0-9]+')
+    ->name('publico.entregador.registrar');
 Route::get('/loja/{slug}', [PublicoController::class, 'loja'])->name('publico.loja');
 
 Route::get('/produto/{id}', [PublicoController::class, 'legadoProduto'])->name('publico.produto.legado');

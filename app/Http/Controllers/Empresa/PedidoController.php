@@ -44,6 +44,10 @@ class PedidoController extends Controller
 
         $pedido->load(['itens.produto']);
 
+        if (($pedido->tipo_entrega ?? Pedido::TIPO_ENTREGA_ENTREGA) === Pedido::TIPO_ENTREGA_ENTREGA) {
+            $pedido->ensureEntregadorToken();
+        }
+
         return view('empresa.pedidos.show', compact('empresa', 'pedido'));
     }
 
