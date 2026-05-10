@@ -112,6 +112,7 @@
                             }
                         @endphp
                         @include('partials.empresa.produto-ingredientes-form', ['linhas' => $ingredientesLinhas])
+                        @include('partials.empresa.produto-acrescimo-ingredientes-limites', ['produto' => $produto])
                         <div class="col-md-4">
                             <label class="form-label" for="max_ingredientes_retirar">Máx. ingredientes para retirar</label>
                             <input type="number" class="form-control @error('max_ingredientes_retirar') is-invalid @enderror" id="max_ingredientes_retirar" name="max_ingredientes_retirar" value="{{ old('max_ingredientes_retirar', $produto->max_ingredientes_retirar) }}" min="0" placeholder="Ex.: 2">
@@ -120,8 +121,7 @@
                         </div>
                         @php
                             $temErroOpcoesPagas = $errors->has('adicional_ids') || $errors->has('adicional_ids.*')
-                                || $errors->has('permite_adicionais')
-                                || $errors->has('acrescimo_escolhas_min') || $errors->has('acrescimo_escolhas_max');
+                                || $errors->has('permite_adicionais');
                             $opcoesPagasAberto = $temErroOpcoesPagas;
                         @endphp
                         @include('partials.empresa.produto-opcoes-pagas-form', [

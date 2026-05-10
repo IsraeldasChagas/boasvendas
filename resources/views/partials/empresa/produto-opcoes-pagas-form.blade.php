@@ -96,22 +96,6 @@
             @error('adicional_ids')<div class="text-danger small">{{ $message }}</div>@enderror
             @error('adicional_ids.*')<div class="text-danger small">{{ $message }}</div>@enderror
             @error('permite_adicionais')<div class="text-danger small">{{ $message }}</div>@enderror
-            @if (\Illuminate\Support\Facades\Schema::hasColumn('produtos', 'acrescimo_escolhas_min'))
-                <div class="row g-2 mt-3">
-                    <div class="col-md-4">
-                        <label class="form-label" for="acrescimo_escolhas_min">Min. de ingrediente</label>
-                        <input type="number" class="form-control @error('acrescimo_escolhas_min') is-invalid @enderror" id="acrescimo_escolhas_min" name="acrescimo_escolhas_min" value="{{ old('acrescimo_escolhas_min', isset($produto) ? $produto->acrescimo_escolhas_min : null) }}" min="0" max="999">
-                        @error('acrescimo_escolhas_min')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                        <div class="form-text">Mínimo de ingredientes para acrescentar (soma das quantidades). Em branco = sem mínimo.</div>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label" for="acrescimo_escolhas_max">Máx. ingredientes para acrescentar</label>
-                        <input type="number" class="form-control @error('acrescimo_escolhas_max') is-invalid @enderror" id="acrescimo_escolhas_max" name="acrescimo_escolhas_max" value="{{ old('acrescimo_escolhas_max', isset($produto) ? $produto->acrescimo_escolhas_max : null) }}" min="0" max="999">
-                        @error('acrescimo_escolhas_max')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                        <div class="form-text">Máximo de ingredientes para acrescentar (soma das quantidades). Em branco = sem máximo.</div>
-                    </div>
-                </div>
-            @endif
             <p class="small text-muted mt-2 mb-0">
                 <strong>Recolher</strong> só limpa a tela. Para <strong>salvar</strong> mudanças nos adicionais, envie o formulário com este bloco <strong>aberto</strong>.
             </p>
