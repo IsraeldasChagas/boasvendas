@@ -49,9 +49,16 @@ return [
     | em produção use seu próprio Nominatim/OSRM ou URLs públicas com moderação.
     */
     'osm_routing' => [
-        'osrm_base_url' => env('OSRM_BASE_URL', 'https://router.project-osrm.org'),
-        'nominatim_base_url' => env('NOMINATIM_BASE_URL', 'https://nominatim.openstreetmap.org'),
-        'http_user_agent' => env('OSM_HTTP_USER_AGENT', 'VendAffacil/1.0 (frete por distância; contacte o suporte do sistema)'),
+        // Se existir no .env mas estiver vazio (''), o Laravel não usa o default — normaliza aqui.
+        'osrm_base_url' => ($u = trim((string) env('OSRM_BASE_URL', ''))) !== ''
+            ? $u
+            : 'https://router.project-osrm.org',
+        'nominatim_base_url' => ($n = trim((string) env('NOMINATIM_BASE_URL', ''))) !== ''
+            ? $n
+            : 'https://nominatim.openstreetmap.org',
+        'http_user_agent' => ($a = trim((string) env('OSM_HTTP_USER_AGENT', ''))) !== ''
+            ? $a
+            : 'VendAffacil/1.0 (frete por distância; contacte o suporte do sistema)',
     ],
 
 ];
