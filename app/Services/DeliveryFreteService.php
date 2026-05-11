@@ -178,6 +178,9 @@ final class DeliveryFreteService
     }
 
     /**
+     * Resolve o ponto de partida da rota: coordenadas cadastradas ou geocodificação do endereço da loja.
+     * Tenta várias consultas (endereço completo → nome+CEP → só CEP) para o Nominatim aceitar mesmo com cadastro incompleto.
+     *
      * @return array{lat: float, lon: float}|null
      */
     private function resolverCoordenadasOrigem(Empresa $empresa): ?array
@@ -191,14 +194,32 @@ final class DeliveryFreteService
             }
         }
 
-        $texto = $empresa->lojaFreteOrigemEnderecoEfetiva();
-        if ($texto === null || trim($texto) === '') {
-            return null;
+        $tentativas = [];
+        $textoPrincipal = $empresa->lojaFreteOrigemEnderecoEfetiva();
+        if ($textoPrincipal !== null && trim($textoPrincipal) !== '') {
+            $tentativas[] = trim($textoPrincipal);
         }
 
-        $g = $this->geocoding->geocodeByQuery($texto);
+        $cepFmt = $empresa->cepFormatadoParaMaps();
+        $nome = trim((string) ($empresa->nome ?? ''));
+        if ($nome !== '' && $cepFmt !== null) {
+            $tentativas[] = $nome.', '.$cepFmt.', Brasil';
+        }
+        if ($cepFmt !== null) {
+            $tentativas[] = $cepFmt.', Brasil';
+        }
 
-        return $g === null ? null : ['lat' => $g['lat'], 'lon' => $g['lon']];
+        foreach (array_unique($tentativas) as $q) {
+            if ($q === '') {
+                continue;
+            }
+            $g = $this->geocoding->geocodeByQuery($q);
+            if ($g !== null) {
+                return ['lat' => $g['lat'], 'lon' => $g['lon']];
+            }
+        }
+
+        return null;
     }
 
     /**
