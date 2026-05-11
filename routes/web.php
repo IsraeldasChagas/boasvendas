@@ -64,9 +64,18 @@ Route::get('/media/empresa/{empresa}', [PublicoController::class, 'empresaLogo']
     ->name('publico.empresa_logo');
 
 Route::get('/loja/{slug}/fidelidade', [FidelidadePublicController::class, 'show'])->name('publico.fidelidade');
-Route::post('/loja/{slug}/fidelidade', [FidelidadePublicController::class, 'consultar'])
+Route::post('/loja/{slug}/fidelidade/solicitar-codigo', [FidelidadePublicController::class, 'solicitarCodigo'])
+    ->middleware('throttle:12,1')
+    ->name('publico.fidelidade.solicitar-codigo');
+Route::post('/loja/{slug}/fidelidade/reenviar-codigo', [FidelidadePublicController::class, 'reenviarCodigo'])
+    ->middleware('throttle:12,1')
+    ->name('publico.fidelidade.reenviar-codigo');
+Route::post('/loja/{slug}/fidelidade/cancelar-otp', [FidelidadePublicController::class, 'cancelarOtp'])
+    ->middleware('throttle:20,1')
+    ->name('publico.fidelidade.cancelar-otp');
+Route::post('/loja/{slug}/fidelidade/verificar-codigo', [FidelidadePublicController::class, 'verificarCodigo'])
     ->middleware('throttle:30,1')
-    ->name('publico.fidelidade.consultar');
+    ->name('publico.fidelidade.verificar-codigo');
 Route::post('/loja/{slug}/fidelidade/cadastro', [FidelidadePublicController::class, 'cadastrar'])
     ->middleware('throttle:15,1')
     ->name('publico.fidelidade.cadastrar');

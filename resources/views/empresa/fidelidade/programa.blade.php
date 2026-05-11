@@ -23,7 +23,7 @@
     </div>
 
     <p class="text-muted small mb-4">
-        Defina quantas compras geram a recompensa e se será um produto ou valor em desconto. O cliente acompanha na vitrine pública informando o celular.
+        Defina quantas compras geram a recompensa e se será um produto ou valor em desconto. O cliente acompanha na vitrine pública: ele informa o celular e recebe um código no <strong>WhatsApp</strong> para ver os selos (o envio automático depende da configuração do servidor pelo suporte do sistema).
         Quando existir integração com pedidos online, os selos poderão ser lançados automaticamente; por enquanto você registra cada compra na tela de cartões.
     </p>
 

@@ -61,4 +61,18 @@ return [
             : 'VendAffacil/1.0 (frete por distância; contacte o suporte do sistema)',
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | OTP fidelidade (código no WhatsApp do cliente)
+    |--------------------------------------------------------------------------
+    | POST JSON para URL configurada: { "phone": "5511999999999", "message": "..." }
+    | Chaves customizáveis (ex.: provedores que usam "to" / "body").
+    */
+    'fidelidade_otp' => [
+        'notify_url' => trim((string) env('FIDELIDADE_OTP_NOTIFY_URL', '')),
+        'notify_bearer' => trim((string) env('FIDELIDADE_OTP_NOTIFY_BEARER', '')),
+        'json_phone_key' => trim((string) env('FIDELIDADE_OTP_JSON_PHONE_KEY', 'phone')) ?: 'phone',
+        'json_message_key' => trim((string) env('FIDELIDADE_OTP_JSON_MESSAGE_KEY', 'message')) ?: 'message',
+    ],
+
 ];
