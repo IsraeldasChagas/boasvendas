@@ -25,6 +25,7 @@ class DashboardController extends Controller
         $chartVendasValores = [];
         $pedidosPendentesConfirmacao = 0;
         $vendaDiaTotal = 0.0;
+        $vendaTotalGeral = 0.0;
         $produtosDistintosVendidosDia = 0;
         $unidadesVendidasDia = 0;
 
@@ -102,6 +103,11 @@ class DashboardController extends Controller
             $produtosDistintosVendidosDia = $comId + $semId;
 
             $unidadesVendidasDia = (int) (clone $baseItensDia)->sum('pedido_itens.quantidade');
+
+            $vendaTotalGeral = (float) Pedido::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('status', '!=', Pedido::STATUS_CANCELADO)
+                ->sum('total');
         }
 
         return view('empresa.dashboard', compact(
@@ -114,6 +120,7 @@ class DashboardController extends Controller
             'chartVendasValores',
             'pedidosPendentesConfirmacao',
             'vendaDiaTotal',
+            'vendaTotalGeral',
             'produtosDistintosVendidosDia',
             'unidadesVendidasDia'
         ));

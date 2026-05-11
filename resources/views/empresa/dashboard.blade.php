@@ -59,17 +59,6 @@
         @if ($empresa)
             @php
                 $planoNome = $empresa->plano?->nome ?? '—';
-                $statusLabel = match ($empresa->status) {
-                    'ativa' => 'Ativa',
-                    'trial' => 'Trial',
-                    default => 'Suspensa',
-                };
-                $statusTone = match ($empresa->status) {
-                    'ativa' => 'success',
-                    'trial' => 'warning',
-                    default => 'secondary',
-                };
-                $desde = $empresa->cliente_desde ? $empresa->cliente_desde->format('d/m/Y') : '—';
             @endphp
             <div class="col-6 col-xl-3">
                 <div class="vf-card vf-card-stat">
@@ -83,11 +72,11 @@
             <div class="col-6 col-xl-3">
                 <div class="vf-card vf-card-stat">
                     <div>
-                        <div class="small text-muted">Situação da conta</div>
-                        <div class="h4 mb-0 fw-bold">{{ $statusLabel }}</div>
-                        <div class="small text-muted mt-1">Desde {{ $desde }}</div>
+                        <div class="small text-muted">Venda total</div>
+                        <div class="h4 mb-0 fw-bold text-success">R$ {{ number_format((float) ($vendaTotalGeral ?? 0), 2, ',', '.') }}</div>
+                        <div class="small text-muted mt-1">Todos os pedidos (exc. cancelados)</div>
                     </div>
-                    <div class="icon-wrap bg-{{ $statusTone }}-subtle text-{{ $statusTone }}"><i class="bi bi-shield-check"></i></div>
+                    <div class="icon-wrap bg-success-subtle text-success"><i class="bi bi-graph-up-arrow"></i></div>
                 </div>
             </div>
             <div class="col-6 col-xl-3">
