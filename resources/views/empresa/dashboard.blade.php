@@ -57,16 +57,14 @@
 
     <div class="row g-3 mb-4">
         @if ($empresa)
-            @php
-                $planoNome = $empresa->plano?->nome ?? '—';
-            @endphp
             <div class="col-6 col-xl-3">
                 <div class="vf-card vf-card-stat">
                     <div>
-                        <div class="small text-muted">Plano atual</div>
-                        <div class="h4 mb-0 fw-bold text-truncate" title="{{ $planoNome }}">{{ $planoNome }}</div>
+                        <div class="small text-muted">Produtos cadastrados</div>
+                        <div class="h4 mb-0 fw-bold">{{ (int) ($produtosCadastradosTotal ?? 0) }}</div>
+                        <div class="small text-muted mt-1"><a href="{{ route('empresa.produtos.index') }}" class="text-decoration-none">Ver cardápio</a></div>
                     </div>
-                    <div class="icon-wrap bg-primary-subtle text-primary"><i class="bi bi-tag"></i></div>
+                    <div class="icon-wrap bg-primary-subtle text-primary"><i class="bi bi-box-seam"></i></div>
                 </div>
             </div>
             <div class="col-6 col-xl-3">

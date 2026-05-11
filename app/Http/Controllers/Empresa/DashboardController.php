@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Assinatura;
 use App\Models\Pedido;
 use App\Models\PedidoItem;
+use App\Models\Produto;
 use App\Models\SuporteTicket;
 use Illuminate\View\View;
 
@@ -13,7 +14,7 @@ class DashboardController extends Controller
 {
     public function index(): View
     {
-        $empresa = auth()->user()->empresa?->load('plano');
+        $empresa = auth()->user()?->empresa;
 
         $assinatura = null;
         $ticketsAbertos = 0;
@@ -28,6 +29,7 @@ class DashboardController extends Controller
         $vendaTotalGeral = 0.0;
         $produtosDistintosVendidosDia = 0;
         $unidadesVendidasDia = 0;
+        $produtosCadastradosTotal = 0;
 
         if ($empresa) {
             $assinatura = Assinatura::query()
@@ -108,6 +110,10 @@ class DashboardController extends Controller
                 ->where('empresa_id', $empresa->id)
                 ->where('status', '!=', Pedido::STATUS_CANCELADO)
                 ->sum('total');
+
+            $produtosCadastradosTotal = (int) Produto::query()
+                ->where('empresa_id', $empresa->id)
+                ->count();
         }
 
         return view('empresa.dashboard', compact(
@@ -122,7 +128,8 @@ class DashboardController extends Controller
             'vendaDiaTotal',
             'vendaTotalGeral',
             'produtosDistintosVendidosDia',
-            'unidadesVendidasDia'
+            'unidadesVendidasDia',
+            'produtosCadastradosTotal'
         ));
     }
 }
