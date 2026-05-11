@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Schema;
 
 class FidelidadeCartao extends Model
 {
@@ -110,5 +111,87 @@ class FidelidadeCartao extends Model
     public function podeResgatar(FidelidadePrograma $programa): bool
     {
         return $programa->ativo && $this->selos >= $programa->pedidos_meta;
+    }
+
+    /**
+     * Regras de unicidade por loja: CPF e e-mail não podem repetir em outro telefone;
+     * o mesmo telefone não pode ficar com outro CPF após o CPF já gravado; cadastro idêntico (telefone + CPF + e-mail) não pode repetir.
+     *
+     * @param  string  $emailLower  E-mail já em minúsculas e sem espaços nas pontas.
+     * @return array{field: string, message: string}|null
+     */
+    public static function conflitoCadastroFidelidade(int $empresaId, string $telNorm, string $cpf11, string $emailLower, bool $checkout = false): ?array
+    {
+        $table = (new static)->getTable();
+
+        $fieldTel = $checkout ? 'fidelidade_telefone' : 'cadastro_telefone';
+        $fieldTelOutroCpf = $checkout ? 'fidelidade_cpf' : 'cadastro_telefone';
+        $fieldCpf = $checkout ? 'fidelidade_cpf' : 'cadastro_cpf';
+        $fieldEmail = $checkout ? 'cliente_email' : 'cadastro_email';
+
+        $existenteTel = static::query()
+            ->where('empresa_id', $empresaId)
+            ->where('telefone_normalizado', $telNorm)
+            ->first();
+
+        if (Schema::hasColumn($table, 'cpf_normalizado')
+            && $existenteTel
+            && $existenteTel->cpf_normalizado
+            && $existenteTel->cpf_normalizado !== $cpf11
+        ) {
+            return [
+                'field' => $fieldTelOutroCpf,
+                'message' => $checkout
+                    ? 'Este telefone já possui cartão fidelidade com outro CPF.'
+                    : 'Este telefone já está cadastrado com outro CPF.',
+            ];
+        }
+
+        if (Schema::hasColumn($table, 'cpf_normalizado')) {
+            $cpfEmOutroTelefone = static::query()
+                ->where('empresa_id', $empresaId)
+                ->where('cpf_normalizado', $cpf11)
+                ->where('telefone_normalizado', '!=', $telNorm)
+                ->exists();
+            if ($cpfEmOutroTelefone) {
+                return [
+                    'field' => $fieldCpf,
+                    'message' => 'Este CPF já está cadastrado em outro telefone.',
+                ];
+            }
+        }
+
+        if (Schema::hasColumn($table, 'email') && $emailLower !== '') {
+            $emailEmOutroTelefone = static::query()
+                ->where('empresa_id', $empresaId)
+                ->whereNotNull('email')
+                ->where('email', '!=', '')
+                ->where('email', $emailLower)
+                ->where('telefone_normalizado', '!=', $telNorm)
+                ->exists();
+            if ($emailEmOutroTelefone) {
+                return [
+                    'field' => $fieldEmail,
+                    'message' => 'Este e-mail já está cadastrado em outro telefone.',
+                ];
+            }
+        }
+
+        if (
+            $existenteTel
+            && Schema::hasColumn($table, 'cpf_normalizado')
+            && Schema::hasColumn($table, 'email')
+        ) {
+            $cpfGravado = (string) ($existenteTel->cpf_normalizado ?? '');
+            $emailGravado = strtolower(trim((string) ($existenteTel->email ?? '')));
+            if ($cpfGravado === $cpf11 && $emailGravado !== '' && $emailGravado === $emailLower) {
+                return [
+                    'field' => $fieldTel,
+                    'message' => 'Este cadastro (telefone, CPF e e-mail) já existe.',
+                ];
+            }
+        }
+
+        return null;
     }
 }

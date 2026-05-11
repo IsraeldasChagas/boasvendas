@@ -113,19 +113,10 @@ class FidelidadePublicController extends Controller
 
         $email = strtolower(trim($data['cadastro_email']));
 
-        $existente = FidelidadeCartao::query()
-            ->where('empresa_id', $empresa->id)
-            ->where('telefone_normalizado', $telNorm)
-            ->first();
-
-        if (
-            Schema::hasColumn('fidelidade_cartoes', 'cpf_normalizado')
-            && $existente
-            && $existente->cpf_normalizado
-            && $existente->cpf_normalizado !== $cpfNorm
-        ) {
+        $conflito = FidelidadeCartao::conflitoCadastroFidelidade($empresa->id, $telNorm, $cpfNorm, $email, false);
+        if ($conflito !== null) {
             return back()
-                ->withErrors(['cadastro_telefone' => 'Este telefone já está cadastrado com outro CPF.'])
+                ->withErrors([$conflito['field'] => $conflito['message']])
                 ->withInput();
         }
 

@@ -1372,19 +1372,18 @@ class PublicoController extends Controller
                     ->withInput()
                     ->withErrors(['fidelidade_cpf' => 'Informe um CPF válido.']);
             }
-            $existente = FidelidadeCartao::query()
-                ->where('empresa_id', $empresa->id)
-                ->where('telefone_normalizado', $telFidNorm)
-                ->first();
-            if (
-                Schema::hasColumn('fidelidade_cartoes', 'cpf_normalizado')
-                && $existente
-                && $existente->cpf_normalizado
-                && $existente->cpf_normalizado !== $cpfFidNorm
-            ) {
+            $emailPedido = strtolower(trim((string) ($data['cliente_email'] ?? '')));
+            $conflitoFid = FidelidadeCartao::conflitoCadastroFidelidade(
+                $empresa->id,
+                $telFidNorm,
+                $cpfFidNorm,
+                $emailPedido,
+                true
+            );
+            if ($conflitoFid !== null) {
                 return back()
                     ->withInput()
-                    ->withErrors(['fidelidade_cpf' => 'Este telefone já possui cartão fidelidade com outro CPF.']);
+                    ->withErrors([$conflitoFid['field'] => $conflitoFid['message']]);
             }
         }
 
