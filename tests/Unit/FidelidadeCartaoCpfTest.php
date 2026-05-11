@@ -20,4 +20,11 @@ class FidelidadeCartaoCpfTest extends TestCase
         $this->assertFalse(FidelidadeCartao::cpfValido('11111111111'));
         $this->assertFalse(FidelidadeCartao::cpfValido('52998224726'));
     }
+
+    public function test_email_mascarado(): void
+    {
+        $c = new FidelidadeCartao(['email' => 'maria.silva@exemplo.com.br']);
+        $this->assertStringContainsString('@exemplo.com.br', $c->emailMascarado());
+        $this->assertStringContainsString('**', $c->emailMascarado());
+    }
 }

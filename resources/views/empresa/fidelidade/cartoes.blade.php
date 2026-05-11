@@ -61,6 +61,7 @@
                             <tr>
                                 <th>Telefone</th>
                                 <th>CPF</th>
+                                <th>E-mail</th>
                                 <th>Selos</th>
                                 <th>Resgates</th>
                                 <th class="text-end">Ações</th>
@@ -71,6 +72,7 @@
                                 <tr>
                                     <td class="small font-monospace">{{ $c->telefoneMascarado() }}</td>
                                     <td class="small font-monospace">{{ $c->cpfMascarado() }}</td>
+                                    <td class="small">{{ $c->emailMascarado() }}</td>
                                     <td>
                                         <span class="fw-semibold">{{ $c->selos }}</span>
                                         @if ($programa)
@@ -91,7 +93,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center text-muted py-4">Nenhum cartão encontrado. Adicione o primeiro selo ao lado.</td>
+                                    <td colspan="6" class="text-center text-muted py-4">Nenhum cartão encontrado. Adicione o primeiro selo ao lado.</td>
                                 </tr>
                             @endforelse
                         </tbody>

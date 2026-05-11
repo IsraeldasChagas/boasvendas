@@ -13,6 +13,7 @@ class FidelidadeCartao extends Model
         'empresa_id',
         'telefone_normalizado',
         'cpf_normalizado',
+        'email',
         'cliente_id',
         'selos',
         'total_resgates',
@@ -69,6 +70,21 @@ class FidelidadeCartao extends Model
         }
 
         return '***.'.$d[3].$d[4].$d[5].'.***-'.substr($d, -2);
+    }
+
+    public function emailMascarado(): string
+    {
+        $e = trim((string) ($this->email ?? ''));
+        if ($e === '' || ! str_contains($e, '@')) {
+            return '—';
+        }
+        [$local, $dom] = explode('@', $e, 2);
+        $local = (string) $local;
+        if (strlen($local) <= 2) {
+            return '**@'.$dom;
+        }
+
+        return substr($local, 0, 2).'***@'.$dom;
     }
 
     public function empresa(): BelongsTo

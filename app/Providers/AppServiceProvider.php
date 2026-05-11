@@ -278,6 +278,7 @@ class AppServiceProvider extends ServiceProvider
                 'publico.produto' => 'loja',
                 'publico.fidelidade' => 'loja',
                 'publico.fidelidade.consultar' => 'loja',
+                'publico.fidelidade.cadastrar' => 'loja',
                 'publico.carrinho' => 'carrinho',
                 'publico.checkout' => 'checkout',
                 'publico.pedido.show' => 'pedido',

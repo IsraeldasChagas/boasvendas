@@ -28,6 +28,28 @@
                     @endif
                 </p>
 
+                <div class="border-bottom pb-4 mb-4">
+                    <h2 class="h6 fw-bold mb-3">Cadastrar ou atualizar meu cartão</h2>
+                    <p class="small text-muted mb-3">Informe o telefone (WhatsApp), CPF e e-mail. Os selos continuam sendo contados pela loja a cada compra.</p>
+                    <form action="{{ route('publico.fidelidade.cadastrar', ['slug' => $slug]) }}" method="post" class="mb-0">
+                        @csrf
+                        <label class="form-label small fw-semibold" for="cad-tel">Telefone / WhatsApp</label>
+                        <input type="tel" name="cadastro_telefone" id="cad-tel" value="{{ old('cadastro_telefone') }}"
+                               class="form-control mb-2 @error('cadastro_telefone') is-invalid @enderror" placeholder="(69) 99999-0000" autocomplete="tel" required maxlength="32">
+                        @error('cadastro_telefone')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                        <label class="form-label small fw-semibold" for="cad-cpf">CPF</label>
+                        <input type="text" name="cadastro_cpf" id="cad-cpf" value="{{ old('cadastro_cpf') }}"
+                               class="form-control mb-2 @error('cadastro_cpf') is-invalid @enderror" placeholder="000.000.000-00" inputmode="numeric" autocomplete="off" required maxlength="18">
+                        @error('cadastro_cpf')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                        <label class="form-label small fw-semibold" for="cad-email">E-mail</label>
+                        <input type="email" name="cadastro_email" id="cad-email" value="{{ old('cadastro_email') }}"
+                               class="form-control @error('cadastro_email') is-invalid @enderror" placeholder="seu@email.com" autocomplete="email" required maxlength="255">
+                        @error('cadastro_email')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                        <button type="submit" class="btn btn-success w-100 mt-3">Salvar cadastro</button>
+                    </form>
+                </div>
+
+                <h2 class="h6 fw-bold mb-3">Ver meu cartão</h2>
                 <form action="{{ route('publico.fidelidade.consultar', ['slug' => $slug]) }}" method="post" class="mb-0">
                     @csrf
                     <label class="form-label small fw-semibold" for="tel-fid">Seu celular (mesmo usado nos pedidos)</label>
@@ -79,3 +101,23 @@
         @endif
     </div>
 @endsection
+
+@push('scripts')
+    @if ($programa && $programa->ativo)
+        <script>
+            (function () {
+                var el = document.getElementById('cad-cpf');
+                if (!el) return;
+                function digits(s) { return String(s || '').replace(/\D+/g, ''); }
+                function fmt(d) {
+                    d = digits(d).slice(0, 11);
+                    if (d.length <= 3) return d;
+                    if (d.length <= 6) return d.slice(0, 3) + '.' + d.slice(3);
+                    if (d.length <= 9) return d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6);
+                    return d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6, 9) + '-' + d.slice(9);
+                }
+                el.addEventListener('input', function () { el.value = fmt(el.value); });
+            })();
+        </script>
+    @endif
+@endpush

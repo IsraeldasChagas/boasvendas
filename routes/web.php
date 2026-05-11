@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ModuloController as AdminModuloController;
 use App\Http\Controllers\Admin\PlanoController as AdminPlanoController;
 use App\Http\Controllers\Admin\SuporteController as AdminSuporteController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Api\CalcularEntregaController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Empresa\AdicionalController;
 use App\Http\Controllers\Empresa\CaixaController;
@@ -66,6 +67,9 @@ Route::get('/loja/{slug}/fidelidade', [FidelidadePublicController::class, 'show'
 Route::post('/loja/{slug}/fidelidade', [FidelidadePublicController::class, 'consultar'])
     ->middleware('throttle:30,1')
     ->name('publico.fidelidade.consultar');
+Route::post('/loja/{slug}/fidelidade/cadastro', [FidelidadePublicController::class, 'cadastrar'])
+    ->middleware('throttle:15,1')
+    ->name('publico.fidelidade.cadastrar');
 Route::get('/loja/{slug}/produto/{produto_id}', [PublicoController::class, 'produto'])
     ->whereNumber('produto_id')
     ->name('publico.produto');
@@ -81,7 +85,7 @@ Route::post('/loja/{slug}/carrinho/entrega-prefs', [PublicoController::class, 'c
 Route::post('/loja/{slug}/frete-resumo', [PublicoController::class, 'freteResumoJson'])
     ->middleware('throttle:90,1')
     ->name('publico.frete.resumo');
-Route::post('/api/calcular-entrega', \App\Http\Controllers\Api\CalcularEntregaController::class)
+Route::post('/api/calcular-entrega', CalcularEntregaController::class)
     ->middleware(['web', 'throttle:60,1'])
     ->name('api.calcular-entrega');
 Route::get('/loja/{slug}/checkout', [PublicoController::class, 'checkout'])->name('publico.checkout');

@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Publico;
 
 use App\Http\Controllers\Controller;
+use App\Models\Cliente;
 use App\Models\Empresa;
 use App\Models\FidelidadeCartao;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class FidelidadePublicController extends Controller
@@ -53,6 +55,104 @@ class FidelidadePublicController extends Controller
             'cartao' => $cartao,
             'telefone_digitado' => $data['telefone'],
         ]);
+    }
+
+    public function cadastrar(Request $request, string $slug): RedirectResponse
+    {
+        $empresa = $this->empresaPorSlug($slug);
+        $programa = $empresa->fidelidadePrograma;
+        if (! $programa || ! $programa->ativo) {
+            return redirect()
+                ->route('publico.fidelidade', ['slug' => $slug])
+                ->with('warning', 'O programa de fidelidade não está disponível nesta loja.');
+        }
+
+        $data = $request->validate([
+            'cadastro_telefone' => ['required', 'string', 'min:8', 'max:32'],
+            'cadastro_cpf' => ['required', 'string', 'max:18'],
+            'cadastro_email' => ['required', 'email', 'max:255'],
+        ]);
+
+        $telNorm = FidelidadeCartao::normalizarTelefone($data['cadastro_telefone']);
+        if (strlen($telNorm) < 8) {
+            return back()
+                ->withErrors(['cadastro_telefone' => 'Informe um telefone válido (DDD + número).'])
+                ->withInput();
+        }
+
+        $cpfNorm = FidelidadeCartao::normalizarCpf($data['cadastro_cpf']);
+        if ($cpfNorm === null || ! FidelidadeCartao::cpfValido($cpfNorm)) {
+            return back()
+                ->withErrors(['cadastro_cpf' => 'Informe um CPF válido.'])
+                ->withInput();
+        }
+
+        $email = strtolower(trim($data['cadastro_email']));
+
+        $existente = FidelidadeCartao::query()
+            ->where('empresa_id', $empresa->id)
+            ->where('telefone_normalizado', $telNorm)
+            ->first();
+
+        if (
+            Schema::hasColumn('fidelidade_cartoes', 'cpf_normalizado')
+            && $existente
+            && $existente->cpf_normalizado
+            && $existente->cpf_normalizado !== $cpfNorm
+        ) {
+            return back()
+                ->withErrors(['cadastro_telefone' => 'Este telefone já está cadastrado com outro CPF.'])
+                ->withInput();
+        }
+
+        $clienteId = null;
+        foreach (Cliente::query()
+            ->where('empresa_id', $empresa->id)
+            ->whereNotNull('telefone')
+            ->get(['id', 'telefone']) as $c) {
+            if (FidelidadeCartao::normalizarTelefone($c->telefone) === $telNorm) {
+                $clienteId = (int) $c->id;
+                break;
+            }
+        }
+
+        $create = [
+            'cliente_id' => $clienteId,
+            'selos' => 0,
+            'total_resgates' => 0,
+        ];
+        if (Schema::hasColumn('fidelidade_cartoes', 'cpf_normalizado')) {
+            $create['cpf_normalizado'] = $cpfNorm;
+        }
+        if (Schema::hasColumn('fidelidade_cartoes', 'email')) {
+            $create['email'] = $email;
+        }
+
+        $cartao = FidelidadeCartao::query()->firstOrCreate(
+            [
+                'empresa_id' => $empresa->id,
+                'telefone_normalizado' => $telNorm,
+            ],
+            $create
+        );
+
+        $atualizar = [];
+        if (Schema::hasColumn('fidelidade_cartoes', 'cpf_normalizado')) {
+            $atualizar['cpf_normalizado'] = $cpfNorm;
+        }
+        if (Schema::hasColumn('fidelidade_cartoes', 'email')) {
+            $atualizar['email'] = $email;
+        }
+        if ($clienteId) {
+            $atualizar['cliente_id'] = $clienteId;
+        }
+        if ($atualizar !== []) {
+            $cartao->update($atualizar);
+        }
+
+        return redirect()
+            ->route('publico.fidelidade', ['slug' => $slug])
+            ->with('status', 'Cartão cadastrado com sucesso! Use “Ver meu cartão” com o mesmo telefone para acompanhar os selos.');
     }
 
     private function empresaPorSlug(string $slug): Empresa
