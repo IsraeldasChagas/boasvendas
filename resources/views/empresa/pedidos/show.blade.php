@@ -126,34 +126,21 @@
                                 @php
                                     $waEnt = $ent->urlWhatsAppPedido($pedido, $empresa);
                                 @endphp
-                                <div class="rounded-2 border border-primary border-opacity-25 p-3 bg-primary-subtle bg-opacity-10">
-                                    <div class="row g-3 align-items-center">
-                                        <div class="col-auto">
-                                            @if ($ent->urlFoto())
-                                                <img src="{{ $ent->urlFoto() }}" alt="" width="64" height="64" class="rounded border border-primary border-opacity-25 object-fit-cover" style="object-fit:cover">
-                                            @else
-                                                <span class="d-inline-flex align-items-center justify-content-center rounded-2 border border-primary border-opacity-25 bg-light text-muted" style="width:64px;height:64px"><i class="bi bi-person fs-4"></i></span>
-                                            @endif
-                                        </div>
-                                        <div class="col min-w-0">
-                                            <div class="fw-semibold">{{ $ent->nome }}</div>
-                                            <div class="small text-muted">{{ $ent->rotuloMotoCurto() }}</div>
-                                            <div class="small font-monospace text-body-secondary mt-1">{{ $ent->whatsapp }}</div>
-                                        </div>
-                                        <div class="col-12 col-md-4 col-lg-3">
-                                            @if ($waEnt)
-                                                <div class="d-grid">
-                                                    <a href="{{ $waEnt }}" target="_blank" rel="noopener noreferrer" class="btn btn-success py-2">
-                                                        <span class="d-flex flex-column align-items-center gap-1 text-center">
-                                                            <span><i class="bi bi-whatsapp me-1"></i>Chamar no WhatsApp</span>
-                                                            <span class="small fw-normal text-wrap lh-sm opacity-90">{{ $ent->nome }}</span>
-                                                        </span>
-                                                    </a>
-                                                </div>
-                                            @else
-                                                <p class="small text-warning mb-0">Ajuste o WhatsApp em <a href="{{ route('empresa.entregadores.edit', $ent) }}">editar entregador</a>.</p>
-                                            @endif
-                                        </div>
+                                <div class="rounded-2 border border-primary border-opacity-25 p-3 bg-primary-subtle bg-opacity-10 text-center">
+                                    <div class="d-flex flex-column align-items-center gap-2">
+                                        @if ($ent->urlFoto())
+                                            <img src="{{ $ent->urlFoto() }}" alt="" width="72" height="72" class="rounded border border-primary border-opacity-25 object-fit-cover" style="object-fit:cover">
+                                        @else
+                                            <span class="d-inline-flex align-items-center justify-content-center rounded-2 border border-primary border-opacity-25 bg-light text-muted" style="width:72px;height:72px"><i class="bi bi-person fs-3"></i></span>
+                                        @endif
+                                        <div class="fw-semibold text-break px-1">{{ $ent->nome }}</div>
+                                        @if ($waEnt)
+                                            <div class="d-grid w-100 mt-1">
+                                                <a href="{{ $waEnt }}" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-sm"><i class="bi bi-whatsapp me-1"></i>Chamar no WhatsApp</a>
+                                            </div>
+                                        @else
+                                            <p class="small text-warning mb-0">Ajuste o WhatsApp em <a href="{{ route('empresa.entregadores.edit', $ent) }}">editar entregador</a>.</p>
+                                        @endif
                                     </div>
                                 </div>
                             @endforeach
