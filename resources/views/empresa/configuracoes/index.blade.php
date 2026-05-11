@@ -333,6 +333,12 @@
                         </button>
                         <div id="vf-collapse-frete-loja" class="collapse show border-top border-primary border-opacity-25">
                             <div class="p-4 pt-3">
+                        @if (\Illuminate\Support\Facades\Schema::hasTable('empresa_entregadores') && $empresa->temTelaMenu('pedidos'))
+                            <p class="small text-muted border border-primary border-opacity-25 rounded px-3 py-2 mb-3 bg-primary-subtle bg-opacity-10">
+                                <i class="bi bi-person-badge me-1"></i>Cadastre quem entrega com você e chame pelo WhatsApp na ordem certa, antes de apps ou terceiros:
+                                <a href="{{ route('empresa.entregadores.index') }}" class="fw-semibold">Meus entregadores</a>.
+                            </p>
+                        @endif
                         <p class="small text-muted mb-3 mb-lg-4">Defina o valor base e, abaixo, <strong>como</strong> o sistema calcula na vitrine.</p>
                         <div class="row g-3 mb-4 pb-3 border-bottom border-primary border-opacity-25">
                             <div class="col-md-6">

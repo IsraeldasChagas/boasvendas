@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Empresa;
 
 use App\Http\Controllers\Controller;
 use App\Models\Empresa;
+use App\Models\EmpresaEntregador;
 use App\Models\Pedido;
 use App\Support\CupomPedidoCliente;
 use App\Support\WhatsAppPedidoCliente;
@@ -55,7 +56,18 @@ class PedidoController extends Controller
 
         $cupomWhatsUrl = CupomPedidoCliente::urlWhatsAppCupom($pedido, $empresa);
 
-        return view('empresa.pedidos.show', compact('empresa', 'pedido', 'cupomWhatsUrl'));
+        $entregadoresParaPedido = collect();
+        if (Schema::hasTable('empresa_entregadores')
+            && ($pedido->tipo_entrega ?? Pedido::TIPO_ENTREGA_ENTREGA) === Pedido::TIPO_ENTREGA_ENTREGA) {
+            $entregadoresParaPedido = EmpresaEntregador::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('ativo', true)
+                ->orderBy('ordem')
+                ->orderBy('nome')
+                ->get();
+        }
+
+        return view('empresa.pedidos.show', compact('empresa', 'pedido', 'cupomWhatsUrl', 'entregadoresParaPedido'));
     }
 
     public function imprimir(Request $request, Pedido $pedido): View

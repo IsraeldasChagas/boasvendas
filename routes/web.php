@@ -15,6 +15,7 @@ use App\Http\Controllers\Empresa\ChamadoController as EmpresaChamadoController;
 use App\Http\Controllers\Empresa\ClienteController;
 use App\Http\Controllers\Empresa\ConfiguracaoController;
 use App\Http\Controllers\Empresa\DashboardController as EmpresaDashboardController;
+use App\Http\Controllers\Empresa\EmpresaEntregadorController;
 use App\Http\Controllers\Empresa\EntregaController;
 use App\Http\Controllers\Empresa\FidelidadeController;
 use App\Http\Controllers\Empresa\FinanceiroController;
@@ -122,6 +123,18 @@ Route::middleware(['auth', 'empresa.painel', 'empresa.menu'])->prefix('empresa')
         ->middleware('throttle:30,1')
         ->name('chamados.mensagens.store');
     Route::get('/suporte/chamados/{suporteTicket}', [EmpresaChamadoController::class, 'show'])->name('chamados.show');
+
+    Route::get('/entregadores/novo', [EmpresaEntregadorController::class, 'create'])->name('entregadores.create');
+    Route::post('/entregadores', [EmpresaEntregadorController::class, 'store'])
+        ->middleware('throttle:30,1')
+        ->name('entregadores.store');
+    Route::get('/entregadores/{entregador}/foto', [EmpresaEntregadorController::class, 'foto'])
+        ->whereNumber('entregador')
+        ->name('entregadores.foto');
+    Route::get('/entregadores/{entregador}/editar', [EmpresaEntregadorController::class, 'edit'])->name('entregadores.edit');
+    Route::put('/entregadores/{entregador}', [EmpresaEntregadorController::class, 'update'])->name('entregadores.update');
+    Route::delete('/entregadores/{entregador}', [EmpresaEntregadorController::class, 'destroy'])->name('entregadores.destroy');
+    Route::get('/entregadores', [EmpresaEntregadorController::class, 'index'])->name('entregadores.index');
 
     Route::get('/pedidos', [PedidoController::class, 'index'])->name('pedidos.index');
     Route::get('/pedidos/pendentes-poll', [PedidoController::class, 'pollPendentes'])

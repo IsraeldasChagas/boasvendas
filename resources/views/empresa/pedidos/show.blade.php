@@ -114,6 +114,37 @@
                     @endif
                 </div>
             </div>
+            @if (($pedido->tipo_entrega ?? \App\Models\Pedido::TIPO_ENTREGA_ENTREGA) === \App\Models\Pedido::TIPO_ENTREGA_ENTREGA && ($entregadoresParaPedido ?? collect())->isNotEmpty())
+                <div class="vf-card p-3 mb-3 border border-success border-opacity-25">
+                    <h3 class="h6 fw-bold mb-2"><i class="bi bi-person-badge text-success me-1"></i>Seus entregadores (chame primeiro)</h3>
+                    <p class="small text-muted mb-3">Ordem de prioridade do cadastro. Use o WhatsApp abaixo antes de acionar outro canal.</p>
+                    <div class="d-flex flex-column gap-3">
+                        @foreach ($entregadoresParaPedido as $ent)
+                            @php
+                                $waEnt = $ent->urlWhatsAppPedido($pedido, $empresa);
+                            @endphp
+                            <div class="d-flex gap-3 align-items-start border rounded p-2 bg-body-secondary bg-opacity-25">
+                                <div class="flex-shrink-0">
+                                    @if ($ent->urlFoto())
+                                        <img src="{{ $ent->urlFoto() }}" alt="" width="56" height="56" class="rounded border object-fit-cover" style="object-fit:cover">
+                                    @else
+                                        <span class="d-inline-flex align-items-center justify-content-center rounded border bg-light text-muted" style="width:56px;height:56px"><i class="bi bi-person fs-5"></i></span>
+                                    @endif
+                                </div>
+                                <div class="min-w-0 flex-grow-1">
+                                    <div class="fw-semibold">{{ $ent->nome }}</div>
+                                    <div class="small text-muted mb-1">{{ $ent->rotuloMotoCurto() }}</div>
+                                    @if ($waEnt)
+                                        <a href="{{ $waEnt }}" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-sm"><i class="bi bi-whatsapp me-1"></i>Chamar no WhatsApp</a>
+                                    @else
+                                        <span class="small text-warning">Ajuste o WhatsApp do cadastro (DDD + número).</span>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
             @if (($pedido->tipo_entrega ?? \App\Models\Pedido::TIPO_ENTREGA_ENTREGA) === \App\Models\Pedido::TIPO_ENTREGA_ENTREGA && $pedido->entregador_token)
                 @php
                     $urlEntregador = route('publico.entregador.show', [

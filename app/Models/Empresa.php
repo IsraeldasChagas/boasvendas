@@ -205,6 +205,11 @@ class Empresa extends Model
         return $this->hasMany(EmpresaEntregaFaixaCep::class, 'empresa_id')->orderBy('cep_inicio');
     }
 
+    public function entregadoresProprios(): HasMany
+    {
+        return $this->hasMany(EmpresaEntregador::class, 'empresa_id');
+    }
+
     /** @return array<string, string> valor => rótulo */
     public static function lojaFreteModosRotulos(): array
     {

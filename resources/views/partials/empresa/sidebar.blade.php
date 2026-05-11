@@ -32,6 +32,11 @@
                 <span class="badge bg-danger rounded-pill ms-1">{{ $badgePedPend }}</span>
             @endif
         </a>
+        @if (\Illuminate\Support\Facades\Schema::hasTable('empresa_entregadores'))
+            <a class="nav-link {{ request()->routeIs('empresa.entregadores.*') ? 'active' : '' }}" href="{{ route('empresa.entregadores.index') }}">
+                <i class="bi bi-person-badge"></i> Meus entregadores
+            </a>
+        @endif
     @endif
     @if ($tem('produtos'))
         <a class="nav-link {{ request()->routeIs('empresa.produtos.*') ? 'active' : '' }}" href="{{ route('empresa.produtos.index') }}">
