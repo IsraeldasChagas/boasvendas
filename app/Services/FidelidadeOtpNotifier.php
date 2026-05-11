@@ -10,7 +10,7 @@ use Throwable;
  * Envia o código de verificação da fidelidade via webhook HTTP (WhatsApp Business API,
  * Evolution API, Z-API, n8n/Make, etc.).
  */
-final class FidelidadeOtpNotifier
+class FidelidadeOtpNotifier
 {
     public const RESULTADO_OK = 'ok';
 
