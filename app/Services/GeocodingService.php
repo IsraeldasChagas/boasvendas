@@ -94,8 +94,13 @@ final class GeocodingService
         $cidade = trim((string) ($p['cidade'] ?? ''));
         $estado = trim((string) ($p['estado'] ?? ''));
 
-        if ($rua === '' && $numero === '' && $bairro === '' && $cidade === '' && $estado === '' && $cepFmt !== '') {
-            return $cepFmt.', Brasil';
+        // Com CEP válido: mantém o mesmo comportamento do carrinho (só CEP) até o logradouro ter
+        // pelo menos 3 caracteres. Assim número/bairro/cidade/UF podem ser preenchidos sem derrubar o geocode.
+        if ($cepFmt !== '') {
+            $ruaLen = function_exists('mb_strlen') ? mb_strlen($rua, 'UTF-8') : strlen($rua);
+            if ($rua === '' || $ruaLen < 3) {
+                return $cepFmt.', Brasil';
+            }
         }
 
         $linha1 = trim(implode(', ', array_filter([

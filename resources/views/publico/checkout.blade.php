@@ -259,7 +259,6 @@
                 var osrmCheckout = {{ ($checkoutOsrm ?? false) ? 'true' : 'false' }};
                 var calcEntregaUrl = @json($calcularEntregaApiUrl ?? '');
                 var slugLoja = @json($slug);
-                var taxaBasePadrao = {{ number_format($empresa->lojaTaxaEntregaPadraoEfetiva(), 2, '.', '') }};
                 var fmt = function (n) {
                     return n.toFixed(2).replace('.', ',');
                 };
@@ -306,6 +305,9 @@
                             syncResumo(true);
                             return;
                         }
+                        var snapTaxaEnt = taxaEnt;
+                        var snapRotuloEnt = rotuloEnt;
+                        var snapEntregaBloq = entregaBloq;
                         fetch(calcEntregaUrl, {
                             method: 'POST',
                             headers: {
@@ -330,13 +332,20 @@
                                 elOsrmMeta.textContent = '';
                             }
                             if (!data) {
+                                taxaEnt = snapTaxaEnt;
+                                rotuloEnt = snapRotuloEnt;
+                                entregaBloq = snapEntregaBloq;
                                 syncResumo(true);
                                 return;
                             }
                             if (!data.success) {
-                                rotuloEnt = data.message || 'Não foi possível calcular o frete. Confira o endereço.';
-                                taxaEnt = taxaBasePadrao;
-                                entregaBloq = false;
+                                taxaEnt = snapTaxaEnt;
+                                rotuloEnt = snapRotuloEnt;
+                                entregaBloq = snapEntregaBloq;
+                                if (elOsrmMeta && data.message) {
+                                    elOsrmMeta.textContent = data.message;
+                                    elOsrmMeta.classList.remove('d-none');
+                                }
                                 syncResumo(true);
                                 return;
                             }
@@ -355,6 +364,9 @@
                             }
                             syncResumo(true);
                         }).catch(function () {
+                            taxaEnt = snapTaxaEnt;
+                            rotuloEnt = snapRotuloEnt;
+                            entregaBloq = snapEntregaBloq;
                             syncResumo(true);
                         });
                         return;

@@ -728,20 +728,15 @@ class PublicoController extends Controller
                 'taxa' => $padrao,
                 'rotulo' => 'Informe o CEP para calcular o frete (OpenStreetMap / OSRM)',
                 'entrega_bloqueada' => false,
-                'frete_calc_ok' => true,
-                'frete_calc_mensagem' => '',
             ];
         }
 
         $r = app(DeliveryFreteService::class)->calcular($empresa, array_merge($cliente, ['cep' => $cepDigits]), $subtotalPedido);
-        $ok = (bool) ($r['success'] ?? false);
 
         return [
             'taxa' => round((float) ($r['taxa_entrega'] ?? $padrao), 2),
             'rotulo' => (string) ($r['rotulo'] ?? 'Frete por rota'),
             'entrega_bloqueada' => (bool) ($r['entrega_bloqueada'] ?? false),
-            'frete_calc_ok' => $ok,
-            'frete_calc_mensagem' => (string) ($r['message'] ?? ''),
         ];
     }
 
@@ -1380,17 +1375,6 @@ class PublicoController extends Controller
                         'cidade' => trim((string) ($data['entrega_cidade'] ?? '')),
                         'estado' => strtoupper(trim((string) ($data['entrega_estado'] ?? ''))),
                     ], $subtotalVal);
-                    if (! ($rKm['frete_calc_ok'] ?? true)) {
-                        $msg = trim((string) ($rKm['frete_calc_mensagem'] ?? ''));
-
-                        return back()
-                            ->withInput()
-                            ->withErrors([
-                                'endereco' => $msg !== ''
-                                    ? $msg
-                                    : 'Não foi possível calcular a entrega para este endereço. Confira CEP, rua e cidade.',
-                            ]);
-                    }
                 }
                 if ($rKm['entrega_bloqueada']) {
                     return back()
