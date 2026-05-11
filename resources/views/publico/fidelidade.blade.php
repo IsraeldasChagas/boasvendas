@@ -51,8 +51,8 @@
                     </div>
                 @endif
 
-                <h2 class="h6 fw-bold mb-3">Ver meu cartão</h2>
-                <p class="small text-muted mb-3">Informe o celular e envie o código pelo <strong>WhatsApp</strong>. Depois digite o código aqui para ver seus selos.</p>
+                <h2 class="h6 fw-bold mb-3">Ver meus selos</h2>
+                <p class="small text-muted mb-3">Digite o número do seu celular (o mesmo cadastrado na loja) e envie o código pelo <strong>WhatsApp</strong>. Depois informe o código aqui.</p>
 
                 @if ($fidelidade_otp_pending ?? false)
                     @php
@@ -82,7 +82,7 @@
                 @else
                     <form action="{{ route('publico.fidelidade.solicitar-codigo', ['slug' => $slug]) }}" method="post" class="mb-0">
                         @csrf
-                        <label class="form-label small fw-semibold" for="tel-fid">Seu celular (mesmo usado nos pedidos)</label>
+                        <label class="form-label small fw-semibold" for="tel-fid">Número do celular</label>
                         <input type="tel" name="telefone" id="tel-fid" value="{{ old('telefone', $telefone_digitado) }}"
                                class="form-control @error('telefone') is-invalid @enderror" placeholder="(11) 98888-7777" autocomplete="tel" required>
                         @error('telefone')<div class="invalid-feedback">{{ $message }}</div>@enderror

@@ -136,7 +136,7 @@ class FidelidadePublicController extends Controller
 
         return redirect()
             ->route('publico.fidelidade', ['slug' => $slug])
-            ->with('status', 'Enviamos um código de 6 dígitos para o WhatsApp deste número. Digite-o abaixo.');
+            ->with('status', 'Enviamos um código de 6 dígitos pelo WhatsApp. Digite-o abaixo para ver seus selos.');
     }
 
     public function reenviarCodigo(Request $request, string $slug): RedirectResponse
@@ -186,7 +186,7 @@ class FidelidadePublicController extends Controller
                 ->with('warning', $this->mensagemFalhaEntrega($envio));
         }
 
-        $status = 'Enviamos um novo código para o seu WhatsApp.';
+        $status = 'Enviamos um novo código pelo WhatsApp. Digite-o para ver seus selos.';
 
         $pending = session('fidelidade_otp_pending', []);
         if (is_array($pending)) {
