@@ -8,8 +8,11 @@
         ['label' => $entregador->nome, 'url' => route('empresa.entregadores.edit', $entregador)],
     ]])
 
-    <div class="vf-card p-4" style="max-width: 36rem;">
-        <h2 class="h5 fw-bold mb-3">Editar entregador</h2>
+    <div class="vf-card mb-3 border border-primary border-2 shadow-sm overflow-hidden rounded-2" style="max-width: 36rem;">
+        <div class="px-4 py-3 bg-primary-subtle bg-opacity-25 border-bottom border-primary border-opacity-25">
+            <h2 class="h5 fw-bold mb-0"><i class="bi bi-pencil-square text-primary me-1"></i>Editar entregador</h2>
+        </div>
+        <div class="p-4 pt-3">
         <form action="{{ route('empresa.entregadores.update', $entregador) }}" method="post" enctype="multipart/form-data">
             @csrf
             @method('PUT')
@@ -71,5 +74,6 @@
                 <a href="{{ route('empresa.entregadores.index') }}" class="btn btn-outline-secondary">Cancelar</a>
             </div>
         </form>
+        </div>
     </div>
 @endsection
