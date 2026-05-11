@@ -365,7 +365,7 @@
                                     <span class="vf-frete-ajuda vf-frete-ajuda-faixas {{ old('loja_frete_modo', $empresa->loja_frete_modo ?? \App\Models\Empresa::LOJA_FRETE_FAIXAS_CEP) === \App\Models\Empresa::LOJA_FRETE_FAIXAS_CEP ? '' : 'd-none' }}">Cadastre faixas em <a href="{{ route('empresa.loja-entrega-faixas.index') }}">Frete por CEP</a>. Fora das faixas usa a taxa acima.</span>
                                     <span class="vf-frete-ajuda vf-frete-ajuda-padrao {{ old('loja_frete_modo', $empresa->loja_frete_modo ?? '') === \App\Models\Empresa::LOJA_FRETE_PADRAO_UNICO ? '' : 'd-none' }}">Todo pedido com entrega usa só o valor em <strong>Taxa de entrega</strong>.</span>
                                     <span class="vf-frete-ajuda vf-frete-ajuda-google {{ old('loja_frete_modo', $empresa->loja_frete_modo ?? '') === \App\Models\Empresa::LOJA_FRETE_GOOGLE_DISTANCIA ? '' : 'd-none' }}">O sistema calcula km pela rota e multiplica pelo valor por km. Confira <strong>CEP e endereço da loja</strong> em <em>Dados da empresa</em>.</span>
-                                    <span class="vf-frete-ajuda vf-frete-ajuda-osrm {{ old('loja_frete_modo', $empresa->loja_frete_modo ?? '') === \App\Models\Empresa::LOJA_FRETE_OSRM_DISTANCIA ? '' : 'd-none' }}">Usa <strong>OpenStreetMap</strong> (geocoding) + <strong>OSRM</strong> (rota). Mesmos valores de R$/km abaixo; sem chave Google. Opcional: mapa de referência e variáveis no <em>Ajuda técnica OSRM</em>.</span>
+                                    <span class="vf-frete-ajuda vf-frete-ajuda-osrm {{ old('loja_frete_modo', $empresa->loja_frete_modo ?? '') === \App\Models\Empresa::LOJA_FRETE_OSRM_DISTANCIA ? '' : 'd-none' }}">Geocoding (Nominatim) + rota OSRM entre <strong>coordenadas de origem</strong> (recomendado) ou endereço da loja e o endereço do cliente. Taxa: valor base + trechos de km acima do km incluso.</span>
                                 </p>
                             </div>
                         @endif
@@ -392,8 +392,8 @@
                             @else
                                 <div class="alert alert-warning small py-2 mb-3">
                                     <strong>Falta configurar:</strong>
-                                    @if (! $ochk['rs_por_km']) Preencha <strong>R$ por km</strong> abaixo. @endif
-                                    @if (! $ochk['origem']) Informe endereço da loja em <em>Dados da empresa</em>, <strong>Saída das entregas</strong> ou CEP da loja. @endif
+                                    @if (! $ochk['origem']) Informe <strong>latitude e longitude de origem</strong> (preferencial), ou CEP/endereço da loja. @endif
+                                    @if (! $ochk['user_agent']) Configure <code>OSM_HTTP_USER_AGENT</code> no <code>.env</code> do servidor. @endif
                                 </div>
                             @endif
                         @endif
@@ -425,10 +425,10 @@
                             @php $__freteKmVisivel = \App\Models\Empresa::lojaFreteModoUsaKmRodoviario((string) old('loja_frete_modo', $empresa->loja_frete_modo ?? \App\Models\Empresa::LOJA_FRETE_FAIXAS_CEP)); @endphp
                             <div id="vf-frete-km-campos" class="rounded border border-primary border-opacity-50 p-3 mb-3 bg-primary-subtle bg-opacity-10 {{ $__freteKmVisivel ? '' : 'd-none' }}">
                                 <h3 class="h6 fw-bold mb-2"><i class="bi bi-signpost-split text-primary me-1"></i>Frete por quilômetro rodado</h3>
-                                <p class="small text-muted mb-3">Válido nos modos Google Maps ou OpenStreetMap/OSRM. Preencha <strong>R$ por km</strong>; os outros campos são opcionais.</p>
+                                <p class="small text-muted mb-3">No modo <strong>Google Maps</strong> use R$ por km abaixo. No modo <strong>OSRM</strong> use taxa base + km incluso + valor por km extra (e opcionalmente coordenadas fixas da origem).</p>
                                 <div class="row g-3">
                                     <div class="col-md-4">
-                                        <label class="form-label" for="loja_frete_google_rs_por_km">Quanto cobrar por km <span class="text-danger">*</span></label>
+                                        <label class="form-label" for="loja_frete_google_rs_por_km">Quanto cobrar por km <span class="text-danger vf-rs-km-obr" data-vf-google-only>*</span></label>
                                         <div class="input-group input-group-sm">
                                             <span class="input-group-text">R$</span>
                                             <input type="number" step="0.01" min="0.01" class="form-control @error('loja_frete_google_rs_por_km') is-invalid @enderror" id="loja_frete_google_rs_por_km" name="loja_frete_google_rs_por_km" value="{{ old('loja_frete_google_rs_por_km', $empresa->loja_frete_google_rs_por_km) }}" placeholder="2,50" data-vf-google-rs>
@@ -451,6 +451,46 @@
                                         <input type="text" class="form-control form-control-sm @error('loja_frete_origem_endereco') is-invalid @enderror" id="loja_frete_origem_endereco" name="loja_frete_origem_endereco" value="{{ old('loja_frete_origem_endereco', $empresa->loja_frete_origem_endereco) }}" maxlength="500" placeholder="Deixe em branco para usar o endereço em Dados da empresa">
                                         @error('loja_frete_origem_endereco')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                     </div>
+                                    @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_entrega_lat_origem'))
+                                        <div class="col-12 mt-2 pt-2 border-top border-primary border-opacity-25">
+                                            <h4 class="h6 fw-semibold mb-2">Origem no mapa (OSRM) <span class="text-muted fw-normal small">— recomendado</span></h4>
+                                            <p class="small text-muted mb-3">Defina as coordenadas do restaurante para o cálculo da rota sem depender só do geocode do endereço.</p>
+                                            <div class="row g-2">
+                                                <div class="col-md-4">
+                                                    <label class="form-label small" for="loja_entrega_lat_origem">Latitude origem</label>
+                                                    <input type="number" step="any" class="form-control form-control-sm @error('loja_entrega_lat_origem') is-invalid @enderror" id="loja_entrega_lat_origem" name="loja_entrega_lat_origem" value="{{ old('loja_entrega_lat_origem', $empresa->loja_entrega_lat_origem) }}" placeholder="-8.7619">
+                                                    @error('loja_entrega_lat_origem')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label small" for="loja_entrega_lng_origem">Longitude origem</label>
+                                                    <input type="number" step="any" class="form-control form-control-sm @error('loja_entrega_lng_origem') is-invalid @enderror" id="loja_entrega_lng_origem" name="loja_entrega_lng_origem" value="{{ old('loja_entrega_lng_origem', $empresa->loja_entrega_lng_origem) }}" placeholder="-63.9039">
+                                                    @error('loja_entrega_lng_origem')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label small" for="loja_entrega_km_incluso">Km inclusos na taxa base</label>
+                                                    <input type="number" step="0.1" min="0.1" class="form-control form-control-sm @error('loja_entrega_km_incluso') is-invalid @enderror" id="loja_entrega_km_incluso" name="loja_entrega_km_incluso" value="{{ old('loja_entrega_km_incluso', $empresa->loja_entrega_km_incluso ?? 3) }}">
+                                                    @error('loja_entrega_km_incluso')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label small" for="loja_entrega_valor_km_extra">R$ por km acima do incluso</label>
+                                                    <div class="input-group input-group-sm">
+                                                        <span class="input-group-text">R$</span>
+                                                        <input type="number" step="0.01" min="0" class="form-control @error('loja_entrega_valor_km_extra') is-invalid @enderror" id="loja_entrega_valor_km_extra" name="loja_entrega_valor_km_extra" value="{{ old('loja_entrega_valor_km_extra', $empresa->loja_entrega_valor_km_extra ?? 2) }}">
+                                                    </div>
+                                                    @error('loja_entrega_valor_km_extra')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                                                </div>
+                                                <div class="col-md-8">
+                                                    <label class="form-label small" for="loja_entrega_gratis_acima_pedido">Entrega grátis acima do pedido (R$)</label>
+                                                    <div class="input-group input-group-sm">
+                                                        <span class="input-group-text">R$</span>
+                                                        <input type="number" step="0.01" min="0" class="form-control @error('loja_entrega_gratis_acima_pedido') is-invalid @enderror" id="loja_entrega_gratis_acima_pedido" name="loja_entrega_gratis_acima_pedido" value="{{ old('loja_entrega_gratis_acima_pedido', $empresa->loja_entrega_gratis_acima_pedido) }}" placeholder="Opcional — ex.: 100">
+                                                    </div>
+                                                    @error('loja_entrega_gratis_acima_pedido')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                                                    <p class="small text-muted mb-0 mt-1">A taxa base fica em <strong>Taxa de entrega</strong> acima. Ex.: base R$ 5 até 3 km inclusos; cada km (ou fração) acima cobra o valor ao lado.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
                                     @if (($fretePreviewMapaOrigem ?? null) !== null && is_array($fretePreviewMapaOrigem))
                                     <div class="col-12 {{ $__modoFreteForm === \App\Models\Empresa::LOJA_FRETE_OSRM_DISTANCIA ? '' : 'd-none' }}" id="vf-frete-osrm-mapa-wrap">
                                         <p class="small text-muted mb-1">Mapa de referência — origem (Leaflet + tiles © OpenStreetMap)</p>
@@ -527,12 +567,14 @@
                 if (!sel) return;
                 var box = document.getElementById('vf-frete-km-campos');
                 var rs = document.querySelector('[data-vf-google-rs]');
+                var rsObr = document.querySelector('.vf-rs-km-obr');
                 var osrmMapWrap = document.getElementById('vf-frete-osrm-mapa-wrap');
                 function sync() {
                     var v = sel.value;
                     var distKm = v === 'google_distancia' || v === 'osrm_distancia';
                     if (box) box.classList.toggle('d-none', !distKm);
-                    if (rs) rs.required = distKm;
+                    if (rs) rs.required = (v === 'google_distancia');
+                    if (rsObr) rsObr.classList.toggle('d-none', v !== 'google_distancia');
                     document.querySelectorAll('.vf-frete-ajuda').forEach(function (el) {
                         el.classList.add('d-none');
                     });

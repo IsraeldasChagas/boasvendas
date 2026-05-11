@@ -44,9 +44,14 @@ class ConfiguracaoController extends Controller
         $fretePreviewMapaOrigem = null;
         if (Schema::hasColumn('empresas', 'loja_frete_modo')
             && $empresa->lojaFreteModoEfetivo() === Empresa::LOJA_FRETE_OSRM_DISTANCIA) {
-            $addr = $empresa->lojaFreteOrigemEnderecoEfetiva();
-            if ($addr !== null) {
-                $fretePreviewMapaOrigem = OsrmRouting::geocodeEndereco($addr);
+            $coords = $empresa->lojaEntregaCoordenadasOrigemSalvas();
+            if ($coords !== null) {
+                $fretePreviewMapaOrigem = ['lat' => $coords['lat'], 'lon' => $coords['lon']];
+            } else {
+                $addr = $empresa->lojaFreteOrigemEnderecoEfetiva();
+                if ($addr !== null) {
+                    $fretePreviewMapaOrigem = OsrmRouting::geocodeEndereco($addr);
+                }
             }
         }
 
@@ -110,9 +115,18 @@ class ConfiguracaoController extends Controller
         }
         if (Schema::hasColumn('empresas', 'loja_frete_google_rs_por_km')) {
             $modoFreteInput = (string) $request->input('loja_frete_modo', '');
-            $rules['loja_frete_google_rs_por_km'] = in_array($modoFreteInput, [Empresa::LOJA_FRETE_GOOGLE_DISTANCIA, Empresa::LOJA_FRETE_OSRM_DISTANCIA], true)
+            $rules['loja_frete_google_rs_por_km'] = $modoFreteInput === Empresa::LOJA_FRETE_GOOGLE_DISTANCIA
                 ? ['required', 'numeric', 'min:0.01', 'max:99999999.99']
                 : ['nullable', 'numeric', 'min:0', 'max:99999999.99'];
+        }
+        if (Schema::hasColumn('empresas', 'loja_entrega_lat_origem')) {
+            $rules['loja_entrega_lat_origem'] = ['nullable', 'numeric', 'between:-90,90'];
+            $rules['loja_entrega_lng_origem'] = ['nullable', 'numeric', 'between:-180,180'];
+        }
+        if (Schema::hasColumn('empresas', 'loja_entrega_km_incluso')) {
+            $rules['loja_entrega_km_incluso'] = ['nullable', 'numeric', 'min:0.1', 'max:9999'];
+            $rules['loja_entrega_valor_km_extra'] = ['nullable', 'numeric', 'min:0', 'max:99999999.99'];
+            $rules['loja_entrega_gratis_acima_pedido'] = ['nullable', 'numeric', 'min:0', 'max:99999999.99'];
         }
         if (Schema::hasColumn('empresas', 'loja_frete_google_taxa_minima')) {
             $rules['loja_frete_google_taxa_minima'] = ['nullable', 'numeric', 'min:0', 'max:99999999.99'];
@@ -224,9 +238,17 @@ class ConfiguracaoController extends Controller
             $temCep = Schema::hasColumn('empresas', 'cep')
                 && $cepPersistidoOuNovo !== null
                 && trim((string) $cepPersistidoOuNovo) !== '';
-            if ($origemCampo === '' && $origemEmpresa === '' && $origemGlobal === '' && ! $temCep) {
+            $latOrig = Schema::hasColumn('empresas', 'loja_entrega_lat_origem')
+                ? ($data['loja_entrega_lat_origem'] ?? null)
+                : null;
+            $lngOrig = Schema::hasColumn('empresas', 'loja_entrega_lng_origem')
+                ? ($data['loja_entrega_lng_origem'] ?? null)
+                : null;
+            $temCoordSalva = $latOrig !== null && $latOrig !== ''
+                && $lngOrig !== null && $lngOrig !== '';
+            if ($origemCampo === '' && $origemEmpresa === '' && $origemGlobal === '' && ! $temCep && ! $temCoordSalva) {
                 $msg = $modoFrete === Empresa::LOJA_FRETE_OSRM_DISTANCIA
-                    ? 'Informe o CEP da loja, o endereço de origem do frete ou o Endereço em Dados da empresa (OpenStreetMap precisa localizar a loja).'
+                    ? 'Para frete por rota: informe latitude/longitude de origem, ou CEP/endereço da loja, ou endereço em Saída das entregas.'
                     : 'Informe o CEP da loja, o endereço de origem do frete, o Endereço em Dados da empresa, ou defina GOOGLE_MAPS_DEFAULT_ORIGIN_ADDRESS no servidor.';
                 if (Schema::hasColumn('empresas', 'loja_frete_origem_endereco')) {
                     throw ValidationException::withMessages(['loja_frete_origem_endereco' => $msg]);
@@ -259,6 +281,26 @@ class ConfiguracaoController extends Controller
         if (Schema::hasColumn('empresas', 'loja_frete_google_km_max')) {
             $v = $data['loja_frete_google_km_max'] ?? null;
             $data['loja_frete_google_km_max'] = ($v === null || $v === '') ? null : round((float) $v, 2);
+        }
+        if (Schema::hasColumn('empresas', 'loja_entrega_lat_origem')) {
+            foreach (['loja_entrega_lat_origem', 'loja_entrega_lng_origem'] as $c) {
+                $v = $data[$c] ?? null;
+                $data[$c] = ($v === null || $v === '') ? null : round((float) $v, 7);
+            }
+            foreach (['loja_entrega_km_incluso', 'loja_entrega_valor_km_extra'] as $c) {
+                $v = $data[$c] ?? null;
+                $data[$c] = ($v === null || $v === '') ? null : round((float) $v, 2);
+            }
+            $vg = $data['loja_entrega_gratis_acima_pedido'] ?? null;
+            $data['loja_entrega_gratis_acima_pedido'] = ($vg === null || $vg === '') ? null : round((float) $vg, 2);
+        } else {
+            unset(
+                $data['loja_entrega_lat_origem'],
+                $data['loja_entrega_lng_origem'],
+                $data['loja_entrega_km_incluso'],
+                $data['loja_entrega_valor_km_extra'],
+                $data['loja_entrega_gratis_acima_pedido']
+            );
         }
 
         if (Empresa::schemaTemColunaLojaBannerCategoria()) {

@@ -48,6 +48,11 @@ class Empresa extends Model
         'loja_frete_google_taxa_minima',
         'loja_frete_google_km_max',
         'loja_frete_origem_endereco',
+        'loja_entrega_lat_origem',
+        'loja_entrega_lng_origem',
+        'loja_entrega_km_incluso',
+        'loja_entrega_valor_km_extra',
+        'loja_entrega_gratis_acima_pedido',
         'loja_pix_instrucoes',
         'loja_pix_chave_tipo',
         'loja_pix_chave_valor',
@@ -71,6 +76,11 @@ class Empresa extends Model
             'loja_frete_google_rs_por_km' => 'decimal:2',
             'loja_frete_google_taxa_minima' => 'decimal:2',
             'loja_frete_google_km_max' => 'decimal:2',
+            'loja_entrega_lat_origem' => 'decimal:7',
+            'loja_entrega_lng_origem' => 'decimal:7',
+            'loja_entrega_km_incluso' => 'decimal:2',
+            'loja_entrega_valor_km_extra' => 'decimal:2',
+            'loja_entrega_gratis_acima_pedido' => 'decimal:2',
             'loja_permite_retirada_balcao' => 'boolean',
             'loja_confirmar_pedidos' => 'boolean',
             'loja_impressao_pedido_habilitada' => 'boolean',
@@ -340,14 +350,65 @@ class Empresa extends Model
      */
     public function lojaFreteOsrmChecklistPronto(): array
     {
-        $rs = $this->lojaFreteGoogleRsPorKm() !== null;
-        $origem = $this->lojaFreteOrigemEnderecoEfetiva() !== null;
+        $ua = filled(trim((string) config('services.osm_routing.http_user_agent', '')));
+        $coordsSalvas = $this->lojaEntregaCoordenadasOrigemSalvas() !== null;
+        $origemTexto = $this->lojaFreteOrigemEnderecoEfetiva() !== null;
+        $origem = $coordsSalvas || $origemTexto;
 
         return [
-            'rs_por_km' => $rs,
+            'user_agent' => $ua,
             'origem' => $origem,
-            'pronto' => $rs && $origem,
+            'pronto' => $ua && $origem,
         ];
+    }
+
+    /** Lat/lng gravados na loja (evita geocode a cada pedido). */
+    public function lojaEntregaCoordenadasOrigemSalvas(): ?array
+    {
+        if (! Schema::hasColumn('empresas', 'loja_entrega_lat_origem')
+            || ! Schema::hasColumn('empresas', 'loja_entrega_lng_origem')) {
+            return null;
+        }
+        $lat = $this->loja_entrega_lat_origem;
+        $lng = $this->loja_entrega_lng_origem;
+        if ($lat === null || $lng === null) {
+            return null;
+        }
+
+        return ['lat' => (float) $lat, 'lon' => (float) $lng];
+    }
+
+    public function lojaEntregaKmInclusoEfetivo(): float
+    {
+        if (! Schema::hasColumn('empresas', 'loja_entrega_km_incluso')) {
+            return 3.0;
+        }
+        $v = $this->loja_entrega_km_incluso;
+
+        return ($v === null || (float) $v <= 0) ? 3.0 : round((float) $v, 2);
+    }
+
+    public function lojaEntregaValorKmExtraEfetivo(): float
+    {
+        if (! Schema::hasColumn('empresas', 'loja_entrega_valor_km_extra')) {
+            return 2.0;
+        }
+        $v = $this->loja_entrega_valor_km_extra;
+
+        return ($v === null || (float) $v < 0) ? 2.0 : round((float) $v, 2);
+    }
+
+    public function lojaEntregaGratisAcimaPedido(): ?float
+    {
+        if (! Schema::hasColumn('empresas', 'loja_entrega_gratis_acima_pedido')) {
+            return null;
+        }
+        $v = $this->loja_entrega_gratis_acima_pedido;
+        if ($v === null || (float) $v <= 0) {
+            return null;
+        }
+
+        return round((float) $v, 2);
     }
 
     /** Modos que calculam km rodoviário (Google ou OSRM). */

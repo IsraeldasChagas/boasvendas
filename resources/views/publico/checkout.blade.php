@@ -51,6 +51,30 @@
                                 <input type="text" class="form-control @error('complemento') is-invalid @enderror" id="complemento" name="complemento" value="{{ old('complemento') }}" maxlength="120">
                                 @error('complemento')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
+                            @if ($checkoutOsrm ?? false)
+                                <div class="col-12" id="vf-checkout-osrm-extras">
+                                    <p class="small text-muted mb-2">Detalhes do endereço <span class="text-muted">(melhoram o cálculo no mapa)</span></p>
+                                    <div class="row g-2">
+                                        <div class="col-md-3">
+                                            <label class="form-label small" for="entrega_numero">Número</label>
+                                            <input type="text" class="form-control form-control-sm" id="entrega_numero" name="entrega_numero" value="{{ old('entrega_numero') }}" maxlength="32" autocomplete="address-line2">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small" for="entrega_bairro">Bairro</label>
+                                            <input type="text" class="form-control form-control-sm" id="entrega_bairro" name="entrega_bairro" value="{{ old('entrega_bairro') }}" maxlength="120">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label small" for="entrega_cidade">Cidade</label>
+                                            <input type="text" class="form-control form-control-sm" id="entrega_cidade" name="entrega_cidade" value="{{ old('entrega_cidade') }}" maxlength="120">
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label small" for="entrega_estado">UF</label>
+                                            <input type="text" class="form-control form-control-sm text-uppercase" id="entrega_estado" name="entrega_estado" value="{{ old('entrega_estado') }}" maxlength="2" placeholder="RO">
+                                        </div>
+                                    </div>
+                                    <p class="small text-muted mb-0 mt-2 d-none" id="vf-osrm-frete-meta"></p>
+                                </div>
+                            @endif
                         </div>
                         <hr class="my-3">
                         <div class="row g-2">
@@ -232,6 +256,10 @@
                 var entregaBloq = {{ ($freteEntregaBloqueadaSeEntrega ?? false) ? 'true' : 'false' }};
                 var rotuloBal = 'Retirada no balcão';
                 var freteUrl = @json(route('publico.frete.resumo', ['slug' => $slug]));
+                var osrmCheckout = {{ ($checkoutOsrm ?? false) ? 'true' : 'false' }};
+                var calcEntregaUrl = @json($calcularEntregaApiUrl ?? '');
+                var slugLoja = @json($slug);
+                var taxaBasePadrao = {{ number_format($empresa->lojaTaxaEntregaPadraoEfetiva(), 2, '.', '') }};
                 var fmt = function (n) {
                     return n.toFixed(2).replace('.', ',');
                 };
@@ -244,9 +272,14 @@
                 var elBloqMsg = document.getElementById('vf-frete-bloqueado-msg');
                 var btnSubmit = document.getElementById('vf-checkout-submit');
                 var elDinMinTot = document.getElementById('vf-dinheiro-min-total');
+                var elOsrmMeta = document.getElementById('vf-osrm-frete-meta');
                 var csrf = document.querySelector('meta[name="csrf-token"]');
                 var csrfToken = csrf ? csrf.getAttribute('content') : '';
                 var debounceTimer = null;
+                function gv(id) {
+                    var e = document.getElementById(id);
+                    return e ? (e.value || '').trim() : '';
+                }
                 function syncResumo(isEnt) {
                     var bloq = !!(isEnt && entregaBloq);
                     var taxa = isEnt ? taxaEnt : 0;
@@ -263,10 +296,70 @@
                     if (btnSubmit) btnSubmit.disabled = bloq;
                 }
                 function pedirFreteAtualizado() {
-                    if (!cepEl || !freteUrl || !csrfToken) return;
+                    if (!cepEl || !csrfToken) return;
                     var r = document.querySelector('.vf-tipo-entrega:checked');
                     if (!r || r.value !== entrega) return;
                     if (elTaxa) elTaxa.textContent = '…';
+                    if (osrmCheckout && calcEntregaUrl) {
+                        var cepDig = (cepEl.value || '').replace(/\D+/g, '');
+                        if (cepDig.length !== 8) {
+                            syncResumo(true);
+                            return;
+                        }
+                        fetch(calcEntregaUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            body: JSON.stringify({
+                                slug: slugLoja,
+                                cep: cepEl.value,
+                                rua: endEl ? endEl.value : '',
+                                numero: gv('entrega_numero'),
+                                bairro: gv('entrega_bairro'),
+                                cidade: gv('entrega_cidade'),
+                                estado: gv('entrega_estado'),
+                                subtotal_pedido: sub
+                            })
+                        }).then(function (res) { return res.json(); }).then(function (data) {
+                            if (elOsrmMeta) {
+                                elOsrmMeta.classList.add('d-none');
+                                elOsrmMeta.textContent = '';
+                            }
+                            if (!data) {
+                                syncResumo(true);
+                                return;
+                            }
+                            if (!data.success) {
+                                rotuloEnt = data.message || 'Não foi possível calcular o frete. Confira o endereço.';
+                                taxaEnt = taxaBasePadrao;
+                                entregaBloq = false;
+                                syncResumo(true);
+                                return;
+                            }
+                            taxaEnt = parseFloat(data.taxa_entrega);
+                            if (isNaN(taxaEnt)) taxaEnt = 0;
+                            entregaBloq = !!data.entrega_bloqueada;
+                            rotuloEnt = data.endereco_formatado
+                                ? ('Aprox. ' + (data.distancia_km != null ? Number(data.distancia_km).toFixed(1).replace('.', ',') + ' km' : '') +
+                                    (data.tempo_minutos != null ? ', ~' + data.tempo_minutos + ' min — ' : ' — ') +
+                                    data.endereco_formatado.substring(0, 120))
+                                : ('Rota ~' + (data.distancia_km != null ? Number(data.distancia_km).toFixed(1).replace('.', ',') + ' km' : ''));
+                            if (elOsrmMeta && data.distancia_km != null) {
+                                elOsrmMeta.textContent = 'Distância pela rota ~' + Number(data.distancia_km).toFixed(1).replace('.', ',') +
+                                    ' km · tempo estimado ~' + (data.tempo_minutos != null ? data.tempo_minutos : '—') + ' min';
+                                elOsrmMeta.classList.remove('d-none');
+                            }
+                            syncResumo(true);
+                        }).catch(function () {
+                            syncResumo(true);
+                        });
+                        return;
+                    }
+                    if (!freteUrl) return;
                     fetch(freteUrl, {
                         method: 'POST',
                         headers: {
@@ -275,7 +368,7 @@
                             'X-CSRF-TOKEN': csrfToken,
                             'X-Requested-With': 'XMLHttpRequest'
                         },
-                        body: JSON.stringify({ cep: cepEl.value })
+                        body: JSON.stringify({ cep: cepEl.value, subtotal: sub })
                     }).then(function (res) { return res.json(); }).then(function (data) {
                         if (!data || !data.ok || data.incomplete) {
                             syncResumo(true);
@@ -322,6 +415,18 @@
                         if (r && r.value === entrega) pedirFreteAtualizado();
                     });
                 }
+                ['endereco', 'entrega_numero', 'entrega_bairro', 'entrega_cidade', 'entrega_estado'].forEach(function (id) {
+                    var el = document.getElementById(id);
+                    if (!el) return;
+                    el.addEventListener('input', function () {
+                        var r = document.querySelector('.vf-tipo-entrega:checked');
+                        if (r && r.value === entrega && osrmCheckout) agendarFrete();
+                    });
+                    el.addEventListener('change', function () {
+                        var r = document.querySelector('.vf-tipo-entrega:checked');
+                        if (r && r.value === entrega && osrmCheckout) pedirFreteAtualizado();
+                    });
+                });
                 syncEntregaFields();
             })();
         </script>
