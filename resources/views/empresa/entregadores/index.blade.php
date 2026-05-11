@@ -23,13 +23,13 @@
         <a href="{{ route('empresa.entregadores.create') }}" class="btn btn-primary btn-sm"><i class="bi bi-person-plus me-1"></i>Novo entregador</a>
     </div>
 
-    <div class="vf-card p-0 overflow-hidden">
+    <div class="vf-card p-0 overflow-hidden border border-primary border-2 shadow-sm rounded-2">
         @if ($entregadores->isEmpty())
             <div class="p-4 text-center text-muted small">Nenhum entregador cadastrado. Use <strong>Novo entregador</strong> para adicionar foto, WhatsApp e dados da moto.</div>
         @else
-            <div class="table-responsive">
+            <div class="table-responsive border-top border-primary border-opacity-25">
                 <table class="table table-hover mb-0 vf-table align-middle">
-                    <thead>
+                    <thead class="bg-primary-subtle bg-opacity-25 border-bottom border-primary border-opacity-25">
                         <tr>
                             <th style="width:4rem"></th>
                             <th>Nome</th>

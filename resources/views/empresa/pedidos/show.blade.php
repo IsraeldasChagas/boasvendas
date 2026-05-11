@@ -115,33 +115,49 @@
                 </div>
             </div>
             @if (($pedido->tipo_entrega ?? \App\Models\Pedido::TIPO_ENTREGA_ENTREGA) === \App\Models\Pedido::TIPO_ENTREGA_ENTREGA && ($entregadoresParaPedido ?? collect())->isNotEmpty())
-                <div class="vf-card p-3 mb-3 border border-success border-opacity-25">
-                    <h3 class="h6 fw-bold mb-2"><i class="bi bi-person-badge text-success me-1"></i>Seus entregadores (chame primeiro)</h3>
-                    <p class="small text-muted mb-3">Ordem de prioridade do cadastro. Use o WhatsApp abaixo antes de acionar outro canal.</p>
-                    <div class="d-flex flex-column gap-3">
-                        @foreach ($entregadoresParaPedido as $ent)
-                            @php
-                                $waEnt = $ent->urlWhatsAppPedido($pedido, $empresa);
-                            @endphp
-                            <div class="d-flex gap-3 align-items-start border rounded p-2 bg-body-secondary bg-opacity-25">
-                                <div class="flex-shrink-0">
-                                    @if ($ent->urlFoto())
-                                        <img src="{{ $ent->urlFoto() }}" alt="" width="56" height="56" class="rounded border object-fit-cover" style="object-fit:cover">
-                                    @else
-                                        <span class="d-inline-flex align-items-center justify-content-center rounded border bg-light text-muted" style="width:56px;height:56px"><i class="bi bi-person fs-5"></i></span>
-                                    @endif
+                <div class="vf-card mb-3 border border-primary border-2 shadow-sm overflow-hidden rounded-2">
+                    <div class="px-4 py-3 bg-primary-subtle bg-opacity-25 border-bottom border-primary border-opacity-25">
+                        <h3 class="h6 fw-bold mb-0"><i class="bi bi-person-badge text-primary me-1"></i>Seus entregadores — chame primeiro</h3>
+                    </div>
+                    <div class="p-4 pt-3">
+                        <p class="small text-muted border border-primary border-opacity-25 rounded px-3 py-2 mb-3 bg-primary-subtle bg-opacity-10">Ordem do cadastro (menor número primeiro). Um botão de <strong>WhatsApp por entregador</strong> para chamar antes de outro canal.</p>
+                        <div class="d-flex flex-column gap-3">
+                            @foreach ($entregadoresParaPedido as $ent)
+                                @php
+                                    $waEnt = $ent->urlWhatsAppPedido($pedido, $empresa);
+                                @endphp
+                                <div class="rounded-2 border border-primary border-opacity-25 p-3 bg-primary-subtle bg-opacity-10">
+                                    <div class="row g-3 align-items-center">
+                                        <div class="col-auto">
+                                            @if ($ent->urlFoto())
+                                                <img src="{{ $ent->urlFoto() }}" alt="" width="64" height="64" class="rounded border border-primary border-opacity-25 object-fit-cover" style="object-fit:cover">
+                                            @else
+                                                <span class="d-inline-flex align-items-center justify-content-center rounded-2 border border-primary border-opacity-25 bg-light text-muted" style="width:64px;height:64px"><i class="bi bi-person fs-4"></i></span>
+                                            @endif
+                                        </div>
+                                        <div class="col min-w-0">
+                                            <div class="fw-semibold">{{ $ent->nome }}</div>
+                                            <div class="small text-muted">{{ $ent->rotuloMotoCurto() }}</div>
+                                            <div class="small font-monospace text-body-secondary mt-1">{{ $ent->whatsapp }}</div>
+                                        </div>
+                                        <div class="col-12 col-md-4 col-lg-3">
+                                            @if ($waEnt)
+                                                <div class="d-grid">
+                                                    <a href="{{ $waEnt }}" target="_blank" rel="noopener noreferrer" class="btn btn-success py-2">
+                                                        <span class="d-flex flex-column align-items-center gap-1 text-center">
+                                                            <span><i class="bi bi-whatsapp me-1"></i>Chamar no WhatsApp</span>
+                                                            <span class="small fw-normal text-wrap lh-sm opacity-90">{{ $ent->nome }}</span>
+                                                        </span>
+                                                    </a>
+                                                </div>
+                                            @else
+                                                <p class="small text-warning mb-0">Ajuste o WhatsApp em <a href="{{ route('empresa.entregadores.edit', $ent) }}">editar entregador</a>.</p>
+                                            @endif
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="min-w-0 flex-grow-1">
-                                    <div class="fw-semibold">{{ $ent->nome }}</div>
-                                    <div class="small text-muted mb-1">{{ $ent->rotuloMotoCurto() }}</div>
-                                    @if ($waEnt)
-                                        <a href="{{ $waEnt }}" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-sm"><i class="bi bi-whatsapp me-1"></i>Chamar no WhatsApp</a>
-                                    @else
-                                        <span class="small text-warning">Ajuste o WhatsApp do cadastro (DDD + número).</span>
-                                    @endif
-                                </div>
-                            </div>
-                        @endforeach
+                            @endforeach
+                        </div>
                     </div>
                 </div>
             @endif
