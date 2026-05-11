@@ -16,13 +16,36 @@ class FidelidadePublicController extends Controller
     public function show(string $slug): View
     {
         $empresa = $this->empresaPorSlug($slug);
+        $programa = $empresa->fidelidadePrograma;
+
+        $telefonePosCadastro = session('fidelidade_pos_cadastro');
+        $ocultarCadastro = $programa && $programa->ativo
+            && $telefonePosCadastro !== null
+            && is_string($telefonePosCadastro)
+            && trim($telefonePosCadastro) !== '';
+
+        $cartao = null;
+        $telefone_digitado = null;
+        if ($ocultarCadastro) {
+            $telefone_digitado = $telefonePosCadastro;
+            if ($programa && $programa->ativo) {
+                $norm = FidelidadeCartao::normalizarTelefone($telefone_digitado);
+                if (strlen($norm) >= 8) {
+                    $cartao = FidelidadeCartao::query()
+                        ->where('empresa_id', $empresa->id)
+                        ->where('telefone_normalizado', $norm)
+                        ->first();
+                }
+            }
+        }
 
         return view('publico.fidelidade', [
             'slug' => $slug,
             'empresa' => $empresa,
-            'programa' => $empresa->fidelidadePrograma,
-            'cartao' => null,
-            'telefone_digitado' => null,
+            'programa' => $programa,
+            'cartao' => $cartao,
+            'telefone_digitado' => $telefone_digitado,
+            'ocultarCadastro' => $ocultarCadastro,
         ]);
     }
 
@@ -54,6 +77,7 @@ class FidelidadePublicController extends Controller
             'programa' => $programa,
             'cartao' => $cartao,
             'telefone_digitado' => $data['telefone'],
+            'ocultarCadastro' => false,
         ]);
     }
 
@@ -152,7 +176,8 @@ class FidelidadePublicController extends Controller
 
         return redirect()
             ->route('publico.fidelidade', ['slug' => $slug])
-            ->with('status', 'Cartão cadastrado com sucesso! Use “Ver meu cartão” com o mesmo telefone para acompanhar os selos.');
+            ->with('status', 'Cartão cadastrado com sucesso! Abaixo você já vê os selos deste telefone.')
+            ->with('fidelidade_pos_cadastro', $data['cadastro_telefone']);
     }
 
     private function empresaPorSlug(string $slug): Empresa

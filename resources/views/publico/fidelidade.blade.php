@@ -28,26 +28,28 @@
                     @endif
                 </p>
 
-                <div class="border-bottom pb-4 mb-4">
-                    <h2 class="h6 fw-bold mb-3">Cadastrar ou atualizar meu cartão</h2>
-                    <p class="small text-muted mb-3">Informe o telefone (WhatsApp), CPF e e-mail. Os selos continuam sendo contados pela loja a cada compra.</p>
-                    <form action="{{ route('publico.fidelidade.cadastrar', ['slug' => $slug]) }}" method="post" class="mb-0">
-                        @csrf
-                        <label class="form-label small fw-semibold" for="cad-tel">Telefone / WhatsApp</label>
-                        <input type="tel" name="cadastro_telefone" id="cad-tel" value="{{ old('cadastro_telefone') }}"
-                               class="form-control mb-2 @error('cadastro_telefone') is-invalid @enderror" placeholder="(69) 99999-0000" autocomplete="tel" required maxlength="32">
-                        @error('cadastro_telefone')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                        <label class="form-label small fw-semibold" for="cad-cpf">CPF</label>
-                        <input type="text" name="cadastro_cpf" id="cad-cpf" value="{{ old('cadastro_cpf') }}"
-                               class="form-control mb-2 @error('cadastro_cpf') is-invalid @enderror" placeholder="000.000.000-00" inputmode="numeric" autocomplete="off" required maxlength="18">
-                        @error('cadastro_cpf')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                        <label class="form-label small fw-semibold" for="cad-email">E-mail</label>
-                        <input type="email" name="cadastro_email" id="cad-email" value="{{ old('cadastro_email') }}"
-                               class="form-control @error('cadastro_email') is-invalid @enderror" placeholder="seu@email.com" autocomplete="email" required maxlength="255">
-                        @error('cadastro_email')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                        <button type="submit" class="btn btn-success w-100 mt-3">Salvar cadastro</button>
-                    </form>
-                </div>
+                @if (! ($ocultarCadastro ?? false))
+                    <div class="border-bottom pb-4 mb-4">
+                        <h2 class="h6 fw-bold mb-3">Cadastrar ou atualizar meu cartão</h2>
+                        <p class="small text-muted mb-3">Informe o telefone (WhatsApp), CPF e e-mail. Os selos continuam sendo contados pela loja a cada compra.</p>
+                        <form action="{{ route('publico.fidelidade.cadastrar', ['slug' => $slug]) }}" method="post" class="mb-0">
+                            @csrf
+                            <label class="form-label small fw-semibold" for="cad-tel">Telefone / WhatsApp</label>
+                            <input type="tel" name="cadastro_telefone" id="cad-tel" value="{{ old('cadastro_telefone') }}"
+                                   class="form-control mb-2 @error('cadastro_telefone') is-invalid @enderror" placeholder="(69) 99999-0000" autocomplete="tel" required maxlength="32">
+                            @error('cadastro_telefone')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            <label class="form-label small fw-semibold" for="cad-cpf">CPF</label>
+                            <input type="text" name="cadastro_cpf" id="cad-cpf" value="{{ old('cadastro_cpf') }}"
+                                   class="form-control mb-2 @error('cadastro_cpf') is-invalid @enderror" placeholder="000.000.000-00" inputmode="numeric" autocomplete="off" required maxlength="18">
+                            @error('cadastro_cpf')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            <label class="form-label small fw-semibold" for="cad-email">E-mail</label>
+                            <input type="email" name="cadastro_email" id="cad-email" value="{{ old('cadastro_email') }}"
+                                   class="form-control @error('cadastro_email') is-invalid @enderror" placeholder="seu@email.com" autocomplete="email" required maxlength="255">
+                            @error('cadastro_email')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            <button type="submit" class="btn btn-success w-100 mt-3">Salvar cadastro</button>
+                        </form>
+                    </div>
+                @endif
 
                 <h2 class="h6 fw-bold mb-3">Ver meu cartão</h2>
                 <form action="{{ route('publico.fidelidade.consultar', ['slug' => $slug]) }}" method="post" class="mb-0">
@@ -103,7 +105,7 @@
 @endsection
 
 @push('scripts')
-    @if ($programa && $programa->ativo)
+    @if ($programa && $programa->ativo && ! ($ocultarCadastro ?? false))
         <script>
             (function () {
                 var el = document.getElementById('cad-cpf');
