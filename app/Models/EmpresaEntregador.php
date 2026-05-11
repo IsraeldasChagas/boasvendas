@@ -97,7 +97,11 @@ class EmpresaEntregador extends Model
     }
 
     /**
-     * Link wa.me para avisar o entregador sobre um pedido (texto com endereço e link da página do entregador, se houver).
+     * Abre só o contato do entregador no WhatsApp, sem texto automático do pedido
+     * (disponibilidade e detalhes da entrega ficam na conversa com ele).
+     *
+     * @param  \App\Models\Pedido  $pedido  Mantido na assinatura por compatibilidade com a view; não é usado na URL.
+     * @param  \App\Models\Empresa  $empresa  Idem.
      */
     public function urlWhatsAppPedido(Pedido $pedido, Empresa $empresa): ?string
     {
@@ -106,39 +110,6 @@ class EmpresaEntregador extends Model
             return null;
         }
 
-        $codigo = str_replace('*', '', trim((string) $pedido->codigo_publico));
-        if ($codigo === '') {
-            return null;
-        }
-
-        $nomeLoja = str_replace('*', '', trim((string) ($empresa->nome ?? 'Loja')));
-        $cliente = str_replace('*', '', trim((string) $pedido->cliente_nome));
-        $telCliente = trim((string) $pedido->cliente_telefone);
-        $endereco = str_replace('*', '', trim((string) $pedido->endereco));
-        $compl = trim((string) ($pedido->complemento ?? ''));
-
-        $msg = "📦 *Entrega* — pedido *{$codigo}*\n";
-        $msg .= "🏪 {$nomeLoja}\n\n";
-        $msg .= '👤 '.($cliente !== '' ? $cliente : 'Cliente')."\n";
-        if ($telCliente !== '') {
-            $msg .= "📞 {$telCliente}\n";
-        }
-        $msg .= "\n📍 {$endereco}";
-        if ($compl !== '') {
-            $msg .= "\n➕ {$compl}";
-        }
-
-        $token = $pedido->entregador_token;
-        $slug = trim((string) ($empresa->slug ?? ''));
-        if (is_string($token) && $token !== '' && $slug !== '') {
-            $link = route('publico.entregador.show', [
-                'slug' => $slug,
-                'codigo' => $pedido->codigo_publico,
-                'token' => $token,
-            ], absolute: true);
-            $msg .= "\n\n🔗 Página do entregador (itens e confirmação):\n".$link;
-        }
-
-        return 'https://wa.me/'.$digits.'?text='.rawurlencode($msg);
+        return 'https://wa.me/'.$digits;
     }
 }

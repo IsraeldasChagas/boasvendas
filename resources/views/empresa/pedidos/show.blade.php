@@ -120,7 +120,6 @@
                         <h3 class="h6 fw-bold mb-0"><i class="bi bi-person-badge text-primary me-1"></i>Seus entregadores — chame primeiro</h3>
                     </div>
                     <div class="p-4 pt-3">
-                        <p class="small text-muted border border-primary border-opacity-25 rounded px-3 py-2 mb-3 bg-primary-subtle bg-opacity-10">Ordem do cadastro (menor número primeiro). Um botão de <strong>WhatsApp por entregador</strong> para chamar antes de outro canal.</p>
                         <div class="d-flex flex-column gap-3">
                             @foreach ($entregadoresParaPedido as $ent)
                                 @php

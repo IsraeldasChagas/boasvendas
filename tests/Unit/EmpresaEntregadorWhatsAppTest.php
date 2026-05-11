@@ -11,30 +11,20 @@ use Tests\TestCase;
 class EmpresaEntregadorWhatsAppTest extends TestCase
 {
     #[Test]
-    public function monta_link_whatsapp_com_pedido_e_slug(): void
+    public function link_whatsapp_so_contato_sem_texto_do_pedido(): void
     {
-        $empresa = new Empresa([
-            'nome' => 'Loja Teste',
-            'slug' => 'loja-teste',
-        ]);
-
+        $empresa = new Empresa(['nome' => 'Loja Teste', 'slug' => 'loja-teste']);
         $pedido = new Pedido([
             'codigo_publico' => 'VF-001',
             'cliente_nome' => 'Maria',
-            'cliente_telefone' => '(11) 98888-7777',
             'endereco' => 'Rua das Flores, 10',
-            'complemento' => 'Apto 2',
         ]);
-        $pedido->entregador_token = 'abc123token';
 
-        $ent = new EmpresaEntregador([
-            'whatsapp' => '11977776666',
-        ]);
+        $ent = new EmpresaEntregador(['whatsapp' => '11977776666']);
 
         $url = $ent->urlWhatsAppPedido($pedido, $empresa);
         $this->assertNotNull($url);
-        $this->assertStringStartsWith('https://wa.me/5511977776666', $url);
-        $this->assertStringContainsString('VF-001', urldecode($url));
+        $this->assertSame('https://wa.me/5511977776666', $url);
     }
 
     #[Test]
