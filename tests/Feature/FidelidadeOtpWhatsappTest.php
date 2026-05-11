@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Empresa;
 use App\Models\FidelidadeCartao;
 use App\Models\FidelidadePrograma;
+use App\Services\FidelidadeOtpEntrega;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -20,6 +21,7 @@ class FidelidadeOtpWhatsappTest extends TestCase
 
         $response = $this->post(route('publico.fidelidade.solicitar-codigo', ['slug' => $empresa->slug]), [
             'telefone' => '(11) 98888-7777',
+            'canal' => FidelidadeOtpEntrega::PREF_AUTOMATICO,
         ]);
 
         $response->assertSessionHas('warning');
@@ -40,6 +42,7 @@ class FidelidadeOtpWhatsappTest extends TestCase
 
         $this->post(route('publico.fidelidade.solicitar-codigo', ['slug' => $empresa->slug]), [
             'telefone' => '11 98888-7777',
+            'canal' => FidelidadeOtpEntrega::PREF_AUTOMATICO,
         ])->assertRedirect(route('publico.fidelidade', ['slug' => $empresa->slug]))
             ->assertSessionHas('status');
 
@@ -80,6 +83,7 @@ class FidelidadeOtpWhatsappTest extends TestCase
 
         $this->post(route('publico.fidelidade.solicitar-codigo', ['slug' => $empresa->slug]), [
             'telefone' => '11911112222',
+            'canal' => FidelidadeOtpEntrega::PREF_AUTOMATICO,
         ]);
 
         $codigo = Cache::get('fidelidade_otp_codigo:'.$empresa->id.':11911112222');
@@ -112,6 +116,7 @@ class FidelidadeOtpWhatsappTest extends TestCase
 
         $this->post(route('publico.fidelidade.solicitar-codigo', ['slug' => $empresa->slug]), [
             'telefone' => '11977776666',
+            'canal' => FidelidadeOtpEntrega::PREF_WHATSAPP,
         ])->assertSessionHas('status');
 
         Http::assertSent(function ($request) {

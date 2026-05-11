@@ -23,7 +23,7 @@
     </div>
 
     <p class="text-muted small mb-4">
-        Defina quantas compras geram a recompensa e se será um produto ou valor em desconto. Na vitrine, o cliente informa o celular e recebe um código por <strong>WhatsApp</strong> (se o servidor tiver integração) ou por <strong>e-mail</strong> do cadastro do cartão, para ver os selos com segurança.
+        Defina quantas compras geram a recompensa e se será um produto ou valor em desconto. Na vitrine, o cliente informa o celular e <strong>escolhe</strong> receber o código por <strong>WhatsApp</strong>, só por <strong>e-mail</strong> do cartão, ou no modo <strong>automático</strong> (tenta WhatsApp e, se precisar, e-mail).
         Quando existir integração com pedidos online, os selos poderão ser lançados automaticamente; por enquanto você registra cada compra na tela de cartões.
     </p>
 

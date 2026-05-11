@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class FidelidadePublicController extends Controller
@@ -83,6 +84,15 @@ class FidelidadePublicController extends Controller
 
         $data = $request->validate([
             'telefone' => ['required', 'string', 'min:8', 'max:32'],
+            'canal' => [
+                'required',
+                'string',
+                Rule::in([
+                    FidelidadeOtpEntrega::PREF_WHATSAPP,
+                    FidelidadeOtpEntrega::PREF_EMAIL,
+                    FidelidadeOtpEntrega::PREF_AUTOMATICO,
+                ]),
+            ],
         ]);
 
         $norm = FidelidadeCartao::normalizarTelefone($data['telefone']);
@@ -117,7 +127,7 @@ class FidelidadePublicController extends Controller
         Cache::put($cacheKey, $codigo, now()->addMinutes(self::OTP_TTL_MINUTES));
         Cache::forget($this->cacheKeyFalhas($empresa->id, $norm));
 
-        $envio = $this->fidelidadeOtpEntrega->entregar($empresa, $norm, $codigo, self::OTP_TTL_MINUTES);
+        $envio = $this->fidelidadeOtpEntrega->entregar($empresa, $norm, $codigo, self::OTP_TTL_MINUTES, $data['canal']);
         if (! $envio['ok']) {
             Cache::forget($cacheKey);
             RateLimiter::clear($rateKey);
@@ -131,6 +141,7 @@ class FidelidadePublicController extends Controller
             'empresa_id' => $empresa->id,
             'tel_norm' => $norm,
             'telefone_input' => $data['telefone'],
+            'canal_solicitado' => $data['canal'],
             'canal' => $envio['canal'] ?? FidelidadeOtpEntrega::CANAL_EMAIL,
         ]);
 
@@ -182,7 +193,11 @@ class FidelidadePublicController extends Controller
         Cache::put($cacheKey, $codigo, now()->addMinutes(self::OTP_TTL_MINUTES));
         Cache::forget($this->cacheKeyFalhas($empresa->id, $norm));
 
-        $envio = $this->fidelidadeOtpEntrega->entregar($empresa, $norm, $codigo, self::OTP_TTL_MINUTES);
+        $preferencia = is_string($pending['canal_solicitado'] ?? null)
+            ? $pending['canal_solicitado']
+            : FidelidadeOtpEntrega::PREF_AUTOMATICO;
+
+        $envio = $this->fidelidadeOtpEntrega->entregar($empresa, $norm, $codigo, self::OTP_TTL_MINUTES, $preferencia);
         if (! $envio['ok']) {
             Cache::forget($cacheKey);
             RateLimiter::clear($rateKey);
@@ -415,7 +430,9 @@ class FidelidadePublicController extends Controller
     {
         return match ($envio['resultado'] ?? '') {
             FidelidadeOtpEntrega::FALHA_EMAIL => 'Não foi possível enviar o e-mail com o código. Verifique o envio de e-mails do site (MAIL_*) ou tente mais tarde.',
-            FidelidadeOtpEntrega::FALHA_SEM_DESTINO => 'Não foi possível enviar o código: não há e-mail cadastrado neste cartão e o WhatsApp automático não está disponível. Atualize seu cadastro com e-mail acima ou fale com a loja.',
+            FidelidadeOtpEntrega::FALHA_SEM_DESTINO => 'Não foi possível enviar o código: o WhatsApp não respondeu e não há e-mail válido neste cartão. Atualize o cadastro acima ou escolha outra forma de envio.',
+            FidelidadeOtpEntrega::FALHA_SEM_EMAIL => 'Este cartão não tem e-mail cadastrado. Informe o e-mail no cadastro acima ou escolha envio por WhatsApp.',
+            FidelidadeOtpEntrega::FALHA_WHATSAPP => 'Não foi possível enviar pelo WhatsApp (serviço não disponível ou recusou). Escolha "Automático" ou "E-mail", ou fale com a loja.',
             default => 'Não foi possível enviar o código. Tente mais tarde ou fale com a loja.',
         };
     }
