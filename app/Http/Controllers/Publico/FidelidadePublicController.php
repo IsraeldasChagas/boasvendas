@@ -29,35 +29,26 @@ class FidelidadePublicController extends Controller
         $empresa = $this->empresaPorSlug($slug);
         $programa = $empresa->fidelidadePrograma;
 
-        $telefonePosCadastro = session('fidelidade_pos_cadastro');
-        $ocultarCadastro = $programa && $programa->ativo
-            && $telefonePosCadastro !== null
-            && is_string($telefonePosCadastro)
-            && trim($telefonePosCadastro) !== '';
-
         $acesso = $this->fidelidadeAcessoValido($empresa->id);
         $cartao = null;
-        $telefone_digitado = null;
         $otpPending = session()->has('fidelidade_otp_pending');
 
-        if ($programa && $programa->ativo && ! $otpPending) {
-            if ($ocultarCadastro && $telefonePosCadastro) {
-                $telefone_digitado = $telefonePosCadastro;
-                $norm = FidelidadeCartao::normalizarTelefone($telefone_digitado);
-                if (strlen($norm) >= 8) {
-                    $cartao = FidelidadeCartao::query()
-                        ->where('empresa_id', $empresa->id)
-                        ->where('telefone_normalizado', $norm)
-                        ->first();
-                }
-            } elseif ($acesso !== null) {
-                $norm = $acesso['tel_norm'];
-                $telefone_digitado = strlen($norm) >= 4 ? '***'.substr($norm, -4) : $norm;
-                $cartao = FidelidadeCartao::query()
-                    ->where('empresa_id', $empresa->id)
-                    ->where('telefone_normalizado', $norm)
-                    ->first();
-            }
+        // Flash após cadastro: pré-preenche telefone no cadastro e em «Ver meus selos» (uma vez).
+        $telAposCadastro = session()->pull('fidelidade_pos_cadastro');
+        $telAposCadastro = is_string($telAposCadastro) ? trim($telAposCadastro) : '';
+        $cadastroTelefoneSugestao = $telAposCadastro !== '' ? $telAposCadastro : null;
+
+        $mostrarProgressoSelos = false;
+        $telefoneSelosMascara = null;
+
+        if ($programa && $programa->ativo && ! $otpPending && $acesso !== null) {
+            $norm = $acesso['tel_norm'];
+            $mostrarProgressoSelos = true;
+            $telefoneSelosMascara = strlen($norm) >= 4 ? '***'.substr($norm, -4) : $norm;
+            $cartao = FidelidadeCartao::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('telefone_normalizado', $norm)
+                ->first();
         }
 
         return view('publico.fidelidade', [
@@ -65,8 +56,9 @@ class FidelidadePublicController extends Controller
             'empresa' => $empresa,
             'programa' => $programa,
             'cartao' => $cartao,
-            'telefone_digitado' => $telefone_digitado,
-            'ocultarCadastro' => $ocultarCadastro,
+            'mostrar_progresso_selos' => $mostrarProgressoSelos,
+            'telefone_selos_mascara' => $telefoneSelosMascara,
+            'cadastro_telefone_sugestao' => $cadastroTelefoneSugestao,
             'fidelidade_otp_pending' => $otpPending,
         ]);
     }

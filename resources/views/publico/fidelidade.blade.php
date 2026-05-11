@@ -28,31 +28,29 @@
                     @endif
                 </p>
 
-                @if (! ($ocultarCadastro ?? false))
-                    <div class="border-bottom pb-4 mb-4">
-                        <h2 class="h6 fw-bold mb-3">Cadastrar ou atualizar meu cartão</h2>
-                        <p class="small text-muted mb-3">Informe o telefone (WhatsApp), CPF e e-mail. Os selos continuam sendo contados pela loja a cada compra.</p>
-                        <form action="{{ route('publico.fidelidade.cadastrar', ['slug' => $slug]) }}" method="post" class="mb-0">
-                            @csrf
-                            <label class="form-label small fw-semibold" for="cad-tel">Telefone / WhatsApp</label>
-                            <input type="tel" name="cadastro_telefone" id="cad-tel" value="{{ old('cadastro_telefone') }}"
-                                   class="form-control mb-2 @error('cadastro_telefone') is-invalid @enderror" placeholder="(69) 99999-0000" autocomplete="tel" required maxlength="32">
-                            @error('cadastro_telefone')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                            <label class="form-label small fw-semibold" for="cad-cpf">CPF</label>
-                            <input type="text" name="cadastro_cpf" id="cad-cpf" value="{{ old('cadastro_cpf') }}"
-                                   class="form-control mb-2 @error('cadastro_cpf') is-invalid @enderror" placeholder="000.000.000-00" inputmode="numeric" autocomplete="off" required maxlength="18">
-                            @error('cadastro_cpf')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                            <label class="form-label small fw-semibold" for="cad-email">E-mail</label>
-                            <input type="email" name="cadastro_email" id="cad-email" value="{{ old('cadastro_email') }}"
-                                   class="form-control @error('cadastro_email') is-invalid @enderror" placeholder="seu@email.com" autocomplete="email" required maxlength="255">
-                            @error('cadastro_email')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                            <button type="submit" class="btn btn-success w-100 mt-3">Salvar cadastro</button>
-                        </form>
-                    </div>
-                @endif
+                <div class="border-bottom pb-4 mb-4">
+                    <h2 class="h6 fw-bold mb-3">Cadastrar ou atualizar meu cartão</h2>
+                    <p class="small text-muted mb-3">Informe o telefone (WhatsApp), CPF e e-mail — use o <strong>mesmo telefone das suas compras</strong> na loja. Os selos são contados pela loja a cada compra.</p>
+                    <form action="{{ route('publico.fidelidade.cadastrar', ['slug' => $slug]) }}" method="post" class="mb-0">
+                        @csrf
+                        <label class="form-label small fw-semibold" for="cad-tel">Telefone / WhatsApp</label>
+                        <input type="tel" name="cadastro_telefone" id="cad-tel" value="{{ old('cadastro_telefone', $cadastro_telefone_sugestao ?? '') }}"
+                               class="form-control mb-2 @error('cadastro_telefone') is-invalid @enderror" placeholder="(69) 99999-0000" autocomplete="tel" required maxlength="32">
+                        @error('cadastro_telefone')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                        <label class="form-label small fw-semibold" for="cad-cpf">CPF</label>
+                        <input type="text" name="cadastro_cpf" id="cad-cpf" value="{{ old('cadastro_cpf') }}"
+                               class="form-control mb-2 @error('cadastro_cpf') is-invalid @enderror" placeholder="000.000.000-00" inputmode="numeric" autocomplete="off" required maxlength="18">
+                        @error('cadastro_cpf')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                        <label class="form-label small fw-semibold" for="cad-email">E-mail</label>
+                        <input type="email" name="cadastro_email" id="cad-email" value="{{ old('cadastro_email') }}"
+                               class="form-control @error('cadastro_email') is-invalid @enderror" placeholder="seu@email.com" autocomplete="email" required maxlength="255">
+                        @error('cadastro_email')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                        <button type="submit" class="btn btn-success w-100 mt-3">Salvar cadastro</button>
+                    </form>
+                </div>
 
                 <h2 class="h6 fw-bold mb-3">Ver meus selos</h2>
-                <p class="small text-muted mb-3">Digite o número do seu celular (o mesmo cadastrado na loja) e envie o código pelo <strong>WhatsApp</strong>. Depois informe o código aqui.</p>
+                <p class="small text-muted mb-3">Digite o <strong>mesmo celular da compra</strong> (o do cadastro acima), envie o código pelo <strong>WhatsApp</strong> e informe o código aqui.</p>
 
                 @if ($fidelidade_otp_pending ?? false)
                     @php
@@ -82,8 +80,8 @@
                 @else
                     <form action="{{ route('publico.fidelidade.solicitar-codigo', ['slug' => $slug]) }}" method="post" class="mb-0">
                         @csrf
-                        <label class="form-label small fw-semibold" for="tel-fid">Número do celular</label>
-                        <input type="tel" name="telefone" id="tel-fid" value="{{ old('telefone', $telefone_digitado) }}"
+                        <label class="form-label small fw-semibold" for="tel-fid">Celular (o mesmo da compra)</label>
+                        <input type="tel" name="telefone" id="tel-fid" value="{{ old('telefone', $cadastro_telefone_sugestao ?? '') }}"
                                class="form-control @error('telefone') is-invalid @enderror" placeholder="(11) 98888-7777" autocomplete="tel" required>
                         @error('telefone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         <button type="submit" class="btn btn-primary w-100 mt-3">Enviar código no WhatsApp</button>
@@ -91,7 +89,10 @@
                 @endif
             </div>
 
-            @if ($telefone_digitado !== null)
+            @if ($mostrar_progresso_selos ?? false)
+                @if ($telefone_selos_mascara ?? false)
+                    <p class="small text-muted mb-2">Mostrando selos do número <strong>{{ $telefone_selos_mascara }}</strong>.</p>
+                @endif
                 @if ($cartao)
                     @php
                         $meta = $programa->pedidos_meta;
@@ -134,7 +135,7 @@
 @endsection
 
 @push('scripts')
-    @if ($programa && $programa->ativo && ! ($ocultarCadastro ?? false))
+    @if ($programa && $programa->ativo)
         <script>
             (function () {
                 var el = document.getElementById('cad-cpf');
