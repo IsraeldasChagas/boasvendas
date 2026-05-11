@@ -139,8 +139,16 @@
                     @endif
                 </div>
                 @if ($empresa && count($chartHeights))
-                    <div class="vf-chart-fake">@foreach ($chartHeights as $h)<div class="bar" style="height:{{ max(4, $h) }}%"></div>@endforeach</div>
-                    <p class="small text-muted mb-0 mt-2">Total em R$ por dia (pedidos não cancelados). Barras na escala do dia de maior faturamento.</p>
+                    <div class="vf-chart-fake">
+                        @foreach ($chartHeights as $idx => $h)
+                            <div class="vf-chart-fake-col">
+                                <div class="vf-chart-fake-col-chart">
+                                    <div class="bar" style="height:{{ max(4, $h) }}%"></div>
+                                </div>
+                                <div class="vf-chart-fake-label">{{ $chartDiaLabels[$idx] ?? '' }}</div>
+                            </div>
+                        @endforeach
+                    </div>
                 @else
                     <p class="text-muted small mb-0">—</p>
                 @endif

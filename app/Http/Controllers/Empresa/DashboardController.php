@@ -19,6 +19,8 @@ class DashboardController extends Controller
         $ticketsAbertos = 0;
         $ticketsRecentes = collect();
         $chartHeights = [];
+        /** @var list<string> */
+        $chartDiaLabels = [];
         $pedidosPendentesConfirmacao = 0;
         $vendaDiaTotal = 0.0;
         $produtosDistintosVendidosDia = 0;
@@ -49,8 +51,10 @@ class DashboardController extends Controller
                 ->get();
 
             $vendasPorDia = [];
+            $diasSemanaAbrev = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
             for ($i = 6; $i >= 0; $i--) {
-                $dia = now()->subDays($i);
+                $dia = now()->copy()->subDays($i);
+                $chartDiaLabels[] = $diasSemanaAbrev[(int) $dia->format('w')].' '.$dia->format('d/m');
                 $vendasPorDia[] = (float) Pedido::query()
                     ->where('empresa_id', $empresa->id)
                     ->where('status', '!=', Pedido::STATUS_CANCELADO)
@@ -103,6 +107,7 @@ class DashboardController extends Controller
             'ticketsAbertos',
             'ticketsRecentes',
             'chartHeights',
+            'chartDiaLabels',
             'pedidosPendentesConfirmacao',
             'vendaDiaTotal',
             'produtosDistintosVendidosDia',

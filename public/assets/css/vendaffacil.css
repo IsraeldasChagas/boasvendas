@@ -750,17 +750,53 @@ body.vf-body {
 .vf-chart-fake {
   height: 220px;
   display: flex;
-  align-items: flex-end;
+  align-items: stretch;
   gap: 0.5rem;
   padding: 1rem 0 0;
 }
 
-.vf-chart-fake .bar {
+.vf-chart-fake > .bar {
   flex: 1;
+  align-self: flex-end;
   border-radius: 6px 6px 0 0;
   background: linear-gradient(180deg, var(--vf-primary) 0%, #38bdf8 100%);
   min-height: 8%;
   opacity: 0.85;
+}
+
+.vf-chart-fake-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: stretch;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.vf-chart-fake-col-chart {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.vf-chart-fake-col .bar {
+  flex: 0 0 auto;
+  width: 100%;
+  border-radius: 6px 6px 0 0;
+  background: linear-gradient(180deg, var(--vf-primary) 0%, #38bdf8 100%);
+  min-height: 8%;
+  opacity: 0.85;
+}
+
+.vf-chart-fake-label {
+  font-size: 0.6875rem;
+  line-height: 1.15;
+  text-align: center;
+  color: var(--vf-muted);
+  flex-shrink: 0;
 }
 
 .vf-table thead th {
