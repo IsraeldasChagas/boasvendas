@@ -133,16 +133,14 @@
         <div class="col-lg-8">
             <div class="vf-card p-3 mb-3">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h2 class="h6 fw-bold mb-0">Chamados ao suporte (últimos 7 dias)</h2>
+                    <h2 class="h6 fw-bold mb-0">Vendas (últimos 7 dias)</h2>
                     @if ($empresa)
                         <span class="vf-badge bg-primary-subtle text-primary">Dados reais</span>
                     @endif
                 </div>
                 @if ($empresa && count($chartHeights))
                     <div class="vf-chart-fake">@foreach ($chartHeights as $h)<div class="bar" style="height:{{ max(4, $h) }}%"></div>@endforeach</div>
-                    <p class="small text-muted mb-0 mt-2">Novos tickets por dia (escala relativa ao maior dia).</p>
-                @elseif ($empresa)
-                    <p class="text-muted small mb-0">Nenhum chamado registrado neste período.</p>
+                    <p class="small text-muted mb-0 mt-2">Total em R$ por dia (pedidos não cancelados). Barras na escala do dia de maior faturamento.</p>
                 @else
                     <p class="text-muted small mb-0">—</p>
                 @endif

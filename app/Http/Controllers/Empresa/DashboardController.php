@@ -48,16 +48,20 @@ class DashboardController extends Controller
                 ->limit(5)
                 ->get();
 
-            $counts = [];
+            $vendasPorDia = [];
             for ($i = 6; $i >= 0; $i--) {
-                $day = now()->subDays($i)->toDateString();
-                $counts[] = SuporteTicket::query()
+                $dia = now()->subDays($i);
+                $vendasPorDia[] = (float) Pedido::query()
                     ->where('empresa_id', $empresa->id)
-                    ->whereDate('created_at', $day)
-                    ->count();
+                    ->where('status', '!=', Pedido::STATUS_CANCELADO)
+                    ->whereBetween('created_at', [$dia->copy()->startOfDay(), $dia->copy()->endOfDay()])
+                    ->sum('total');
             }
-            $max = max($counts) ?: 1;
-            $chartHeights = array_map(fn (int $c): int => (int) round(($c / $max) * 100), $counts);
+            $maxVendaDia = max($vendasPorDia) ?: 1.0;
+            $chartHeights = array_map(
+                fn (float $v): int => (int) round(($v / $maxVendaDia) * 100),
+                $vendasPorDia
+            );
 
             $pedidosPendentesConfirmacao = Pedido::query()
                 ->where('empresa_id', $empresa->id)
