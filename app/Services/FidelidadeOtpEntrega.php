@@ -11,16 +11,10 @@ use Illuminate\Support\Facades\Schema;
 use Throwable;
 
 /**
- * Entrega o código OTP da fidelidade conforme a escolha do cliente: só WhatsApp, só e-mail, ou automático (WhatsApp e depois e-mail).
+ * Envia o código OTP: tenta WhatsApp (webhook); se não for possível, envia por e-mail do cartão.
  */
 class FidelidadeOtpEntrega
 {
-    public const PREF_WHATSAPP = 'whatsapp';
-
-    public const PREF_EMAIL = 'email';
-
-    public const PREF_AUTOMATICO = 'automatico';
-
     public const CANAL_WHATSAPP = 'whatsapp';
 
     public const CANAL_EMAIL = 'email';
@@ -29,10 +23,6 @@ class FidelidadeOtpEntrega
 
     public const FALHA_SEM_DESTINO = 'sem_destino';
 
-    public const FALHA_SEM_EMAIL = 'sem_email_cartao';
-
-    public const FALHA_WHATSAPP = 'whatsapp_falhou';
-
     public function __construct(
         private readonly FidelidadeOtpNotifier $whatsapp,
     ) {}
@@ -40,29 +30,22 @@ class FidelidadeOtpEntrega
     /**
      * @return array{ok: bool, canal?: string, resultado?: string, wa?: array}
      */
-    public function entregar(Empresa $empresa, string $telNorm, string $codigo, int $ttlMinutos, string $preferencia = self::PREF_AUTOMATICO): array
+    public function entregar(Empresa $empresa, string $telNorm, string $codigo, int $ttlMinutos): array
     {
         $nomeLoja = trim((string) ($empresa->nome ?? 'Loja'));
-
-        if ($preferencia === self::PREF_EMAIL) {
-            return $this->entregarSomenteEmail($empresa->id, $telNorm, $codigo, $ttlMinutos, $nomeLoja);
-        }
-
         $msgWa = '['.$nomeLoja.'] Seu código para ver o cartão fidelidade: '.$codigo.'. Válido por '.$ttlMinutos.' minutos. Não compartilhe com ninguém.';
+
         $wa = $this->whatsapp->tentarEnviarCodigoWhatsapp($telNorm, $msgWa);
         if ($wa['ok']) {
             return ['ok' => true, 'canal' => self::CANAL_WHATSAPP];
-        }
-
-        if ($preferencia === self::PREF_WHATSAPP) {
-            return ['ok' => false, 'resultado' => self::FALHA_WHATSAPP, 'wa' => $wa];
         }
 
         $emailResult = $this->entregarSomenteEmail($empresa->id, $telNorm, $codigo, $ttlMinutos, $nomeLoja);
         if ($emailResult['ok']) {
             return $emailResult;
         }
-        if (($emailResult['resultado'] ?? '') === self::FALHA_SEM_EMAIL) {
+
+        if (($emailResult['resultado'] ?? '') === self::FALHA_SEM_DESTINO) {
             return ['ok' => false, 'resultado' => self::FALHA_SEM_DESTINO, 'wa' => $wa];
         }
 
@@ -76,7 +59,7 @@ class FidelidadeOtpEntrega
     {
         $email = $this->emailDoCartao($empresaId, $telNorm);
         if ($email === null) {
-            return ['ok' => false, 'resultado' => self::FALHA_SEM_EMAIL];
+            return ['ok' => false, 'resultado' => self::FALHA_SEM_DESTINO];
         }
 
         $corpo = $this->corpoEmail($nomeLoja, $codigo, $ttlMinutos);

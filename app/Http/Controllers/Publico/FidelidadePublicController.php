@@ -12,7 +12,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class FidelidadePublicController extends Controller
@@ -84,15 +83,6 @@ class FidelidadePublicController extends Controller
 
         $data = $request->validate([
             'telefone' => ['required', 'string', 'min:8', 'max:32'],
-            'canal' => [
-                'required',
-                'string',
-                Rule::in([
-                    FidelidadeOtpEntrega::PREF_WHATSAPP,
-                    FidelidadeOtpEntrega::PREF_EMAIL,
-                    FidelidadeOtpEntrega::PREF_AUTOMATICO,
-                ]),
-            ],
         ]);
 
         $norm = FidelidadeCartao::normalizarTelefone($data['telefone']);
@@ -127,7 +117,7 @@ class FidelidadePublicController extends Controller
         Cache::put($cacheKey, $codigo, now()->addMinutes(self::OTP_TTL_MINUTES));
         Cache::forget($this->cacheKeyFalhas($empresa->id, $norm));
 
-        $envio = $this->fidelidadeOtpEntrega->entregar($empresa, $norm, $codigo, self::OTP_TTL_MINUTES, $data['canal']);
+        $envio = $this->fidelidadeOtpEntrega->entregar($empresa, $norm, $codigo, self::OTP_TTL_MINUTES);
         if (! $envio['ok']) {
             Cache::forget($cacheKey);
             RateLimiter::clear($rateKey);
@@ -141,19 +131,12 @@ class FidelidadePublicController extends Controller
             'empresa_id' => $empresa->id,
             'tel_norm' => $norm,
             'telefone_input' => $data['telefone'],
-            'canal_solicitado' => $data['canal'],
             'canal' => $envio['canal'] ?? FidelidadeOtpEntrega::CANAL_EMAIL,
         ]);
 
-        $status = match ($envio['canal'] ?? '') {
-            FidelidadeOtpEntrega::CANAL_WHATSAPP => 'Enviamos um código de 6 dígitos para o WhatsApp deste número. Digite-o abaixo.',
-            FidelidadeOtpEntrega::CANAL_EMAIL => 'Enviamos um código de 6 dígitos para o e-mail cadastrado no seu cartão. Confira a caixa de entrada e o spam.',
-            default => 'Enviamos o código. Digite-o abaixo.',
-        };
-
         return redirect()
             ->route('publico.fidelidade', ['slug' => $slug])
-            ->with('status', $status);
+            ->with('status', 'Enviamos um código de 6 dígitos para o WhatsApp deste número. Digite-o abaixo.');
     }
 
     public function reenviarCodigo(Request $request, string $slug): RedirectResponse
@@ -193,11 +176,7 @@ class FidelidadePublicController extends Controller
         Cache::put($cacheKey, $codigo, now()->addMinutes(self::OTP_TTL_MINUTES));
         Cache::forget($this->cacheKeyFalhas($empresa->id, $norm));
 
-        $preferencia = is_string($pending['canal_solicitado'] ?? null)
-            ? $pending['canal_solicitado']
-            : FidelidadeOtpEntrega::PREF_AUTOMATICO;
-
-        $envio = $this->fidelidadeOtpEntrega->entregar($empresa, $norm, $codigo, self::OTP_TTL_MINUTES, $preferencia);
+        $envio = $this->fidelidadeOtpEntrega->entregar($empresa, $norm, $codigo, self::OTP_TTL_MINUTES);
         if (! $envio['ok']) {
             Cache::forget($cacheKey);
             RateLimiter::clear($rateKey);
@@ -207,11 +186,7 @@ class FidelidadePublicController extends Controller
                 ->with('warning', $this->mensagemFalhaEntrega($envio));
         }
 
-        $status = match ($envio['canal'] ?? '') {
-            FidelidadeOtpEntrega::CANAL_WHATSAPP => 'Enviamos um novo código para o seu WhatsApp.',
-            FidelidadeOtpEntrega::CANAL_EMAIL => 'Enviamos um novo código para o e-mail cadastrado no seu cartão.',
-            default => 'Enviamos um novo código.',
-        };
+        $status = 'Enviamos um novo código para o seu WhatsApp.';
 
         $pending = session('fidelidade_otp_pending', []);
         if (is_array($pending)) {
@@ -260,7 +235,7 @@ class FidelidadePublicController extends Controller
         $codigoDigits = preg_replace('/\D+/', '', $data['codigo']);
         if (strlen($codigoDigits) !== 6) {
             return back()
-                ->withErrors(['codigo' => 'Informe os 6 dígitos do código recebido no WhatsApp ou no e-mail.'])
+                ->withErrors(['codigo' => 'Informe os 6 dígitos do código recebido no WhatsApp.'])
                 ->withInput();
         }
 
@@ -430,10 +405,8 @@ class FidelidadePublicController extends Controller
     {
         return match ($envio['resultado'] ?? '') {
             FidelidadeOtpEntrega::FALHA_EMAIL => 'Não foi possível enviar o e-mail com o código. Verifique o envio de e-mails do site (MAIL_*) ou tente mais tarde.',
-            FidelidadeOtpEntrega::FALHA_SEM_DESTINO => 'Não foi possível enviar o código: o WhatsApp não respondeu e não há e-mail válido neste cartão. Atualize o cadastro acima ou escolha outra forma de envio.',
-            FidelidadeOtpEntrega::FALHA_SEM_EMAIL => 'Este cartão não tem e-mail cadastrado. Informe o e-mail no cadastro acima ou escolha envio por WhatsApp.',
-            FidelidadeOtpEntrega::FALHA_WHATSAPP => 'Não foi possível enviar pelo WhatsApp (serviço não disponível ou recusou). Escolha "Automático" ou "E-mail", ou fale com a loja.',
-            default => 'Não foi possível enviar o código. Tente mais tarde ou fale com a loja.',
+            FidelidadeOtpEntrega::FALHA_SEM_DESTINO => 'Não foi possível enviar o código pelo WhatsApp e não há e-mail válido no cartão. Atualize o cadastro acima ou fale com a loja.',
+            default => 'Não foi possível enviar o código pelo WhatsApp. Tente mais tarde ou fale com a loja.',
         };
     }
 
