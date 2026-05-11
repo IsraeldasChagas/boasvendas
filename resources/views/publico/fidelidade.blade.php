@@ -34,7 +34,7 @@
                     <form action="{{ route('publico.fidelidade.cadastrar', ['slug' => $slug]) }}" method="post" class="mb-0">
                         @csrf
                         <label class="form-label small fw-semibold" for="cad-tel">Telefone / WhatsApp</label>
-                        <input type="tel" name="cadastro_telefone" id="cad-tel" value="{{ old('cadastro_telefone', $cadastro_telefone_sugestao ?? '') }}"
+                        <input type="tel" name="cadastro_telefone" id="cad-tel" value="{{ old('cadastro_telefone') }}"
                                class="form-control mb-2 @error('cadastro_telefone') is-invalid @enderror" placeholder="(69) 99999-0000" autocomplete="tel" required maxlength="32">
                         @error('cadastro_telefone')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         <label class="form-label small fw-semibold" for="cad-cpf">CPF</label>
@@ -50,7 +50,7 @@
                 </div>
 
                 <h2 class="h6 fw-bold mb-3">Ver meus selos</h2>
-                <p class="small text-muted mb-3">Digite o <strong>mesmo celular da compra</strong> (o do cadastro acima), envie o código pelo <strong>WhatsApp</strong> e informe o código aqui.</p>
+                <p class="small text-muted mb-3">Abaixo, digite seu celular e clique em <strong>Enviar código no WhatsApp</strong>. Quando receber o código, informe-o e confirme para ver seus selos.</p>
 
                 @if ($fidelidade_otp_pending ?? false)
                     @php
@@ -80,8 +80,8 @@
                 @else
                     <form action="{{ route('publico.fidelidade.solicitar-codigo', ['slug' => $slug]) }}" method="post" class="mb-0">
                         @csrf
-                        <label class="form-label small fw-semibold" for="tel-fid">Celular (o mesmo da compra)</label>
-                        <input type="tel" name="telefone" id="tel-fid" value="{{ old('telefone', $cadastro_telefone_sugestao ?? '') }}"
+                        <label class="form-label small fw-semibold" for="tel-fid">Seu celular</label>
+                        <input type="tel" name="telefone" id="tel-fid" value="{{ old('telefone') }}"
                                class="form-control @error('telefone') is-invalid @enderror" placeholder="(11) 98888-7777" autocomplete="tel" required>
                         @error('telefone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         <button type="submit" class="btn btn-primary w-100 mt-3">Enviar código no WhatsApp</button>

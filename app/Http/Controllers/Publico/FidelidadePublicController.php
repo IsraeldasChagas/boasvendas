@@ -33,11 +33,6 @@ class FidelidadePublicController extends Controller
         $cartao = null;
         $otpPending = session()->has('fidelidade_otp_pending');
 
-        // Flash após cadastro: pré-preenche telefone no cadastro e em «Ver meus selos» (uma vez).
-        $telAposCadastro = session()->pull('fidelidade_pos_cadastro');
-        $telAposCadastro = is_string($telAposCadastro) ? trim($telAposCadastro) : '';
-        $cadastroTelefoneSugestao = $telAposCadastro !== '' ? $telAposCadastro : null;
-
         $mostrarProgressoSelos = false;
         $telefoneSelosMascara = null;
 
@@ -58,7 +53,6 @@ class FidelidadePublicController extends Controller
             'cartao' => $cartao,
             'mostrar_progresso_selos' => $mostrarProgressoSelos,
             'telefone_selos_mascara' => $telefoneSelosMascara,
-            'cadastro_telefone_sugestao' => $cadastroTelefoneSugestao,
             'fidelidade_otp_pending' => $otpPending,
         ]);
     }
@@ -357,8 +351,7 @@ class FidelidadePublicController extends Controller
 
         return redirect()
             ->route('publico.fidelidade', ['slug' => $slug])
-            ->with('status', 'Cartão cadastrado com sucesso! Abaixo você já vê os selos deste telefone.')
-            ->with('fidelidade_pos_cadastro', $data['cadastro_telefone']);
+            ->with('status', 'Cartão cadastrado com sucesso! Abaixo você já vê os selos deste telefone.');
     }
 
     private function fidelidadeAcessoValido(int $empresaId): ?array
