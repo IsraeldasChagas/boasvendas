@@ -119,7 +119,21 @@
             @if ($pedido->cliente_email)
                 <p class="small text-muted mb-1">{{ $pedido->cliente_email }}</p>
             @endif
-            <p class="small mb-0">{{ $pedido->endereco }}@if ($pedido->complemento), {{ $pedido->complemento }}@endif</p>
+            @php
+                $linhaEndCliente = trim((string) ($pedido->endereco ?? ''));
+            @endphp
+            @if ($linhaEndCliente !== '')
+                <p class="small mb-0"><span class="text-muted">Endereço:</span> {{ $linhaEndCliente }}@if ($pedido->complemento), {{ $pedido->complemento }}@endif</p>
+            @else
+                @if ($pedido->cep_entrega)
+                    <p class="small mb-0"><span class="text-muted">CEP da entrega:</span> {{ substr($pedido->cep_entrega, 0, 5) }}-{{ substr($pedido->cep_entrega, 5) }}</p>
+                @else
+                    <p class="small text-muted mb-0">Endereço não informado neste registro.</p>
+                @endif
+                @if ($pedido->complemento)
+                    <p class="small mb-0 mt-1"><span class="text-muted">Complemento:</span> {{ $pedido->complemento }}</p>
+                @endif
+            @endif
             <p class="small mt-2 mb-0"><span class="text-muted">Pagamento:</span> {{ $pedido->descricaoPagamentoExibicao() }}</p>
             @if ($pedido->observacoes)
                 <p class="small mt-2 mb-0"><span class="text-muted">Obs.:</span> {{ $pedido->observacoes }}</p>

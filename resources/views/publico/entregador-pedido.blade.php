@@ -32,7 +32,17 @@
 
         <div class="vf-card p-3 mb-3">
             <h2 class="h6 fw-bold mb-2">Endereço</h2>
-            <p class="small mb-0">{{ $pedido->endereco }}@if ($pedido->complemento), {{ $pedido->complemento }}@endif</p>
+            @php
+                $linhaEnd = trim((string) ($pedido->endereco ?? ''));
+            @endphp
+            @if ($linhaEnd !== '')
+                <p class="small mb-0">{{ $linhaEnd }}@if ($pedido->complemento), {{ $pedido->complemento }}@endif</p>
+            @else
+                <p class="small text-warning mb-0">Linha de endereço não registrada neste pedido. Use o CEP abaixo e confira com o cliente.</p>
+                @if ($pedido->complemento)
+                    <p class="small mb-0 mt-1"><span class="text-muted">Complemento:</span> {{ $pedido->complemento }}</p>
+                @endif
+            @endif
             @if ($pedido->cep_entrega)
                 <p class="small text-muted mb-0 mt-1">CEP {{ substr($pedido->cep_entrega, 0, 5) }}-{{ substr($pedido->cep_entrega, 5) }}</p>
             @endif

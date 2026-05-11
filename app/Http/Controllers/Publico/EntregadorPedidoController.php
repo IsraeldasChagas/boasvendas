@@ -65,6 +65,9 @@ class EntregadorPedidoController extends Controller
     {
         $codigoNorm = strtoupper(trim($codigo));
         $codigoNorm = ltrim($codigoNorm, '#');
+        if (! str_starts_with($codigoNorm, 'BV-')) {
+            $codigoNorm = 'BV-'.$codigoNorm;
+        }
 
         $pedido = Pedido::query()
             ->whereHas('empresa', fn ($q) => $q->where('slug', $slug))

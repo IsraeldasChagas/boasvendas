@@ -533,6 +533,51 @@ class PublicoController extends Controller
     }
 
     /**
+     * Junta logradouro + número + bairro + cidade/UF (como no checkout) para gravar no pedido e exibir ao cliente/entregador.
+     *
+     * @param  array<string, mixed>  $data  Request validado (entrega_numero, entrega_bairro, etc.)
+     */
+    private function montarEnderecoEntregaCheckout(string $logradouro, array $data): string
+    {
+        $parts = [];
+        $log = trim($logradouro);
+        if ($log !== '') {
+            $parts[] = $log;
+        }
+        $n = trim((string) ($data['entrega_numero'] ?? ''));
+        if ($n !== '') {
+            $parts[] = 'nº '.$n;
+        }
+        $b = trim((string) ($data['entrega_bairro'] ?? ''));
+        if ($b !== '') {
+            $parts[] = $b;
+        }
+        $cidade = trim((string) ($data['entrega_cidade'] ?? ''));
+        $uf = strtoupper(trim((string) ($data['entrega_estado'] ?? '')));
+        if ($cidade !== '' && $uf !== '') {
+            $parts[] = $cidade.' — '.$uf;
+        } elseif ($cidade !== '') {
+            $parts[] = $cidade;
+        } elseif ($uf !== '') {
+            $parts[] = $uf;
+        }
+
+        return implode(', ', $parts);
+    }
+
+    /** Código público do pedido (BV-…) para busca na URL. */
+    private function normalizarCodigoPublicoPedido(string $codigo): string
+    {
+        $c = strtoupper(trim($codigo));
+        $c = ltrim($c, '#');
+        if (! str_starts_with($c, 'BV-')) {
+            $c = 'BV-'.$c;
+        }
+
+        return $c;
+    }
+
+    /**
      * @return array{taxa: float, rotulo: string, entrega_bloqueada?: bool}
      */
     private function calcularTaxaResumo(Empresa $empresa, string $modo, ?string $cepSoDigitos, ?float $subtotalPedido = null): array
@@ -683,15 +728,20 @@ class PublicoController extends Controller
                 'taxa' => $padrao,
                 'rotulo' => 'Informe o CEP para calcular o frete (OpenStreetMap / OSRM)',
                 'entrega_bloqueada' => false,
+                'frete_calc_ok' => true,
+                'frete_calc_mensagem' => '',
             ];
         }
 
         $r = app(DeliveryFreteService::class)->calcular($empresa, array_merge($cliente, ['cep' => $cepDigits]), $subtotalPedido);
+        $ok = (bool) ($r['success'] ?? false);
 
         return [
             'taxa' => round((float) ($r['taxa_entrega'] ?? $padrao), 2),
             'rotulo' => (string) ($r['rotulo'] ?? 'Frete por rota'),
             'entrega_bloqueada' => (bool) ($r['entrega_bloqueada'] ?? false),
+            'frete_calc_ok' => $ok,
+            'frete_calc_mensagem' => (string) ($r['message'] ?? ''),
         ];
     }
 
@@ -1311,11 +1361,15 @@ class PublicoController extends Controller
                     ->withInput()
                     ->withErrors(['endereco' => 'Informe o endereço de entrega.']);
             }
+            $enderecoPedido = $this->montarEnderecoEntregaCheckout($enderecoTrim, $data);
+            if (mb_strlen($enderecoPedido) > 255) {
+                $enderecoPedido = mb_substr($enderecoPedido, 0, 255, 'UTF-8');
+            }
             if ($empresa->lojaFreteModoEfetivo() === Empresa::LOJA_FRETE_PADRAO_UNICO) {
                 $taxaVal = $empresa->lojaTaxaEntregaPadraoEfetiva();
             } elseif (Empresa::lojaFreteModoUsaKmRodoviario($empresa->lojaFreteModoEfetivo())) {
                 if ($empresa->lojaFreteModoEfetivo() === Empresa::LOJA_FRETE_GOOGLE_DISTANCIA) {
-                    $destino = $this->formatoDestinoFreteGoogleEnderecoCompleto($enderecoTrim, $cepNorm);
+                    $destino = $this->formatoDestinoFreteGoogleEnderecoCompleto($enderecoPedido, $cepNorm);
                     $rKm = $this->taxaFreteGoogleDistancia($empresa, $destino);
                 } else {
                     $rKm = $this->taxaFreteOsrmPorCliente($empresa, [
@@ -1326,6 +1380,17 @@ class PublicoController extends Controller
                         'cidade' => trim((string) ($data['entrega_cidade'] ?? '')),
                         'estado' => strtoupper(trim((string) ($data['entrega_estado'] ?? ''))),
                     ], $subtotalVal);
+                    if (! ($rKm['frete_calc_ok'] ?? true)) {
+                        $msg = trim((string) ($rKm['frete_calc_mensagem'] ?? ''));
+
+                        return back()
+                            ->withInput()
+                            ->withErrors([
+                                'endereco' => $msg !== ''
+                                    ? $msg
+                                    : 'Não foi possível calcular a entrega para este endereço. Confira CEP, rua e cidade.',
+                            ]);
+                    }
                 }
                 if ($rKm['entrega_bloqueada']) {
                     return back()
@@ -1341,7 +1406,6 @@ class PublicoController extends Controller
             } else {
                 $taxaVal = $empresa->lojaTaxaEntregaPadraoEfetiva();
             }
-            $enderecoPedido = $enderecoTrim;
         }
 
         if ($tipoEntrega !== Pedido::TIPO_ENTREGA_BALCAO) {
@@ -1471,9 +1535,11 @@ class PublicoController extends Controller
     {
         $empresa = $this->empresaLojaAtiva($slug);
 
+        $codigoNorm = $this->normalizarCodigoPublicoPedido($codigo);
+
         $pedido = Pedido::query()
             ->where('empresa_id', $empresa->id)
-            ->where('codigo_publico', $codigo)
+            ->where('codigo_publico', $codigoNorm)
             ->with('itens')
             ->first();
 
