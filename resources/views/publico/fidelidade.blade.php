@@ -50,7 +50,6 @@
                 </div>
 
                 <h2 class="h6 fw-bold mb-3">Ver meus selos</h2>
-                <p class="small text-muted mb-3">Abaixo, digite seu celular e clique em <strong>Enviar código no WhatsApp</strong>. Quando receber o código, informe-o e confirme para ver seus selos.</p>
 
                 @if ($fidelidade_otp_pending ?? false)
                     @php
@@ -58,9 +57,9 @@
                         $telPend = is_array($pend) ? (string) ($pend['tel_norm'] ?? '') : '';
                         $suf = strlen($telPend) >= 4 ? substr($telPend, -4) : '****';
                     @endphp
+                    <p class="small text-muted mb-3">Digite abaixo o <strong>código de 6 dígitos</strong> que enviamos ao <strong>WhatsApp</strong> do número que termina em <strong>***{{ $suf }}</strong>. Se não for esse número, use <strong>Usar outro telefone</strong>.</p>
                     <form action="{{ route('publico.fidelidade.verificar-codigo', ['slug' => $slug]) }}" method="post" class="mb-3">
                         @csrf
-                        <p class="small mb-2">Código enviado para o <strong>WhatsApp</strong> deste número (terminado em <strong>***{{ $suf }}</strong>).</p>
                         <label class="form-label small fw-semibold" for="fid-codigo">Código de 6 dígitos</label>
                         <input type="text" name="codigo" id="fid-codigo" value="{{ old('codigo') }}" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code"
                                class="form-control @error('codigo') is-invalid @enderror" placeholder="000000" required>
@@ -78,6 +77,7 @@
                         </form>
                     </div>
                 @else
+                    <p class="small text-muted mb-3">Digite seu <strong>celular</strong> (o mesmo do cadastro e das compras) e clique em <strong>Enviar código no WhatsApp</strong>. Depois informe o código para ver seus selos.</p>
                     <form action="{{ route('publico.fidelidade.solicitar-codigo', ['slug' => $slug]) }}" method="post" class="mb-0">
                         @csrf
                         <label class="form-label small fw-semibold" for="tel-fid">Seu celular</label>

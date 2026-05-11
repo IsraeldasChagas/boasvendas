@@ -31,7 +31,7 @@ class FidelidadePublicController extends Controller
 
         $acesso = $this->fidelidadeAcessoValido($empresa->id);
         $cartao = null;
-        $otpPending = session()->has('fidelidade_otp_pending');
+        $otpPending = $this->otpPendenteValidoParaEmpresa($empresa->id);
 
         $mostrarProgressoSelos = false;
         $telefoneSelosMascara = null;
@@ -371,6 +371,31 @@ class FidelidadePublicController extends Controller
         }
 
         return $v;
+    }
+
+    /**
+     * Só considera OTP pendente se for desta loja e ainda existir código no cache (evita tela “código” sem campo de telefone após expirar ou trocar de loja).
+     */
+    private function otpPendenteValidoParaEmpresa(int $empresaId): bool
+    {
+        $pending = session('fidelidade_otp_pending');
+        if (! is_array($pending) || (int) ($pending['empresa_id'] ?? 0) !== $empresaId) {
+            return false;
+        }
+        $telNorm = $pending['tel_norm'] ?? null;
+        if (! is_string($telNorm) || strlen($telNorm) < 8) {
+            session()->forget('fidelidade_otp_pending');
+
+            return false;
+        }
+        $codigo = Cache::get($this->cacheKeyOtp($empresaId, $telNorm));
+        if (! is_string($codigo) || strlen($codigo) !== 6) {
+            session()->forget('fidelidade_otp_pending');
+
+            return false;
+        }
+
+        return true;
     }
 
     private function cacheKeyOtp(int $empresaId, string $telNorm): string
