@@ -66,6 +66,31 @@ class FidelidadeOtpWhatsappTest extends TestCase
             ->assertSee('selo', false);
     }
 
+    public function test_verificar_codigo_aceita_digitos_com_espaco(): void
+    {
+        $empresa = $this->criarLojaComProgramaAtivo();
+        FidelidadeCartao::query()->create([
+            'empresa_id' => $empresa->id,
+            'telefone_normalizado' => '11911112222',
+            'cpf_normalizado' => '52998224725',
+            'email' => 'esp@exemplo.com',
+            'selos' => 1,
+            'total_resgates' => 0,
+        ]);
+
+        $this->post(route('publico.fidelidade.solicitar-codigo', ['slug' => $empresa->slug]), [
+            'telefone' => '11911112222',
+        ]);
+
+        $codigo = Cache::get('fidelidade_otp_codigo:'.$empresa->id.':11911112222');
+        $this->assertIsString($codigo);
+
+        $this->post(route('publico.fidelidade.verificar-codigo', ['slug' => $empresa->slug]), [
+            'codigo' => substr($codigo, 0, 3).' '.substr($codigo, 3, 3),
+        ])->assertRedirect(route('publico.fidelidade', ['slug' => $empresa->slug]))
+            ->assertSessionHas('status');
+    }
+
     public function test_com_webhook_configurado_chama_http(): void
     {
         config(['services.fidelidade_otp.notify_url' => 'https://example.test/notify']);

@@ -28,9 +28,18 @@ class FidelidadeCartao extends Model
         ];
     }
 
+    /**
+     * Apenas dígitos; remove zeros à esquerda do tronco (ex.: 011 9xxxx → 119xxxx)
+     * para bater com cadastro e com APIs de WhatsApp em formato internacional.
+     */
     public static function normalizarTelefone(?string $raw): string
     {
-        return preg_replace('/\D+/', '', (string) $raw);
+        $d = preg_replace('/\D+/', '', (string) $raw);
+        while (strlen($d) > 11 && str_starts_with($d, '0')) {
+            $d = substr($d, 1);
+        }
+
+        return $d;
     }
 
     /** Onze dígitos ou null. */

@@ -7,6 +7,12 @@ use Tests\TestCase;
 
 class FidelidadeCartaoCpfTest extends TestCase
 {
+    public function test_normalizar_telefone_remove_zero_tronco(): void
+    {
+        $this->assertSame('11999887766', FidelidadeCartao::normalizarTelefone('011 99988-7766'));
+        $this->assertSame('11999887766', FidelidadeCartao::normalizarTelefone('(11) 99988-7766'));
+    }
+
     public function test_normalizar_cpf(): void
     {
         $this->assertSame('52998224725', FidelidadeCartao::normalizarCpf('529.982.247-25'));

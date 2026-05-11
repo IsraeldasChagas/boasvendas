@@ -120,13 +120,13 @@ class FidelidadePublicController extends Controller
         $nomeLoja = trim((string) ($empresa->nome ?? 'Loja'));
         $mensagem = '['.$nomeLoja.'] Seu código para ver o cartão fidelidade: '.$codigo.'. Válido por '.self::OTP_TTL_MINUTES.' minutos. Não compartilhe com ninguém.';
 
-        $enviou = $this->fidelidadeOtpNotifier->enviarCodigoWhatsapp($norm, $mensagem);
-        if (! $enviou) {
+        $envio = $this->fidelidadeOtpNotifier->tentarEnviarCodigoWhatsapp($norm, $mensagem);
+        if (! $envio['ok']) {
             Cache::forget($cacheKey);
             RateLimiter::clear($rateKey);
 
             return back()
-                ->withErrors(['telefone' => 'Não foi possível enviar o código pelo WhatsApp. Tente mais tarde ou fale com a loja.'])
+                ->withErrors(['telefone' => $this->mensagemFalhaEnvioOtp($envio)])
                 ->withInput();
         }
 
@@ -181,14 +181,14 @@ class FidelidadePublicController extends Controller
         $nomeLoja = trim((string) ($empresa->nome ?? 'Loja'));
         $mensagem = '['.$nomeLoja.'] Seu código para ver o cartão fidelidade: '.$codigo.'. Válido por '.self::OTP_TTL_MINUTES.' minutos. Não compartilhe com ninguém.';
 
-        $enviou = $this->fidelidadeOtpNotifier->enviarCodigoWhatsapp($norm, $mensagem);
-        if (! $enviou) {
+        $envio = $this->fidelidadeOtpNotifier->tentarEnviarCodigoWhatsapp($norm, $mensagem);
+        if (! $envio['ok']) {
             Cache::forget($cacheKey);
             RateLimiter::clear($rateKey);
 
             return redirect()
                 ->route('publico.fidelidade', ['slug' => $slug])
-                ->with('warning', 'Não foi possível reenviar o código. Tente mais tarde ou fale com a loja.');
+                ->with('warning', $this->mensagemFalhaEnvioOtp($envio));
         }
 
         return redirect()
@@ -226,8 +226,15 @@ class FidelidadePublicController extends Controller
         }
 
         $data = $request->validate([
-            'codigo' => ['required', 'string', 'size:6', 'regex:/^[0-9]+$/'],
+            'codigo' => ['required', 'string', 'max:32'],
         ]);
+
+        $codigoDigits = preg_replace('/\D+/', '', $data['codigo']);
+        if (strlen($codigoDigits) !== 6) {
+            return back()
+                ->withErrors(['codigo' => 'Informe os 6 dígitos do código recebido no WhatsApp.'])
+                ->withInput();
+        }
 
         $telNorm = $pending['tel_norm'];
         $cacheKey = $this->cacheKeyOtp($empresa->id, $telNorm);
@@ -240,7 +247,7 @@ class FidelidadePublicController extends Controller
         }
 
         $esperado = Cache::get($cacheKey);
-        if (! is_string($esperado) || ! hash_equals($esperado, $data['codigo'])) {
+        if (! is_string($esperado) || ! hash_equals($esperado, $codigoDigits)) {
             $falhas = (int) Cache::get($falhasKey, 0) + 1;
             Cache::put($falhasKey, $falhas, now()->addMinutes(self::OTP_TTL_MINUTES));
 
@@ -386,6 +393,30 @@ class FidelidadePublicController extends Controller
     private function cacheKeyFalhas(int $empresaId, string $telNorm): string
     {
         return 'fidelidade_otp_falhas:'.$empresaId.':'.$telNorm;
+    }
+
+    /**
+     * @param  array{ok: bool, resultado: string, http_status?: int}  $envio
+     */
+    private function mensagemFalhaEnvioOtp(array $envio): string
+    {
+        return match ($envio['resultado'] ?? '') {
+            FidelidadeOtpNotifier::RESULTADO_SEM_WEBHOOK => 'O envio do código por WhatsApp ainda não está ativo neste site: falta configurar o serviço no servidor (variável FIDELIDADE_OTP_NOTIFY_URL). Fale com quem administra o sistema.',
+            FidelidadeOtpNotifier::RESULTADO_TELEFONE_INVALIDO => 'Não foi possível usar este telefone no envio automático. Confira DDD e número (ex.: 69 98463-9070).',
+            FidelidadeOtpNotifier::RESULTADO_REDE => 'Não conseguimos contatar o serviço de WhatsApp (falha de rede). Tente de novo em alguns minutos.',
+            FidelidadeOtpNotifier::RESULTADO_HTTP => $this->mensagemFalhaHttpOtp($envio),
+            default => 'Não foi possível enviar o código pelo WhatsApp. Tente mais tarde ou fale com a loja.',
+        };
+    }
+
+    /**
+     * @param  array{http_status?: int}  $envio
+     */
+    private function mensagemFalhaHttpOtp(array $envio): string
+    {
+        $det = isset($envio['http_status']) ? ' (código HTTP '.$envio['http_status'].')' : '';
+
+        return 'O serviço de WhatsApp recusou o envio'.$det.'. Quem administra o site deve conferir a URL, a chave de API e os nomes dos campos no JSON (ex.: number e text na Evolution API).';
     }
 
     private function empresaPorSlug(string $slug): Empresa

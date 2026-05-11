@@ -71,8 +71,13 @@ return [
     'fidelidade_otp' => [
         'notify_url' => trim((string) env('FIDELIDADE_OTP_NOTIFY_URL', '')),
         'notify_bearer' => trim((string) env('FIDELIDADE_OTP_NOTIFY_BEARER', '')),
+        /** bearer (Authorization: Bearer), apikey (header customizado, ex. Evolution), none */
+        'notify_auth_type' => strtolower(trim((string) env('FIDELIDADE_OTP_NOTIFY_AUTH_TYPE', 'bearer'))) ?: 'bearer',
+        'notify_apikey_header' => trim((string) env('FIDELIDADE_OTP_NOTIFY_APIKEY_HEADER', 'apikey')) ?: 'apikey',
         'json_phone_key' => trim((string) env('FIDELIDADE_OTP_JSON_PHONE_KEY', 'phone')) ?: 'phone',
         'json_message_key' => trim((string) env('FIDELIDADE_OTP_JSON_MESSAGE_KEY', 'message')) ?: 'message',
+        /** Em produção sem URL: se true, grava OTP e segue o fluxo (apenas log; não envia WhatsApp real). */
+        'simulate_without_url' => filter_var(env('FIDELIDADE_OTP_SIMULATE_WITHOUT_URL', false), FILTER_VALIDATE_BOOL),
     ],
 
 ];
