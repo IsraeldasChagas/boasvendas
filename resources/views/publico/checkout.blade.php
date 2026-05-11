@@ -93,6 +93,21 @@
                                 <input type="email" class="form-control @error('cliente_email') is-invalid @enderror" id="cliente_email" name="cliente_email" value="{{ old('cliente_email') }}" maxlength="255">
                                 @error('cliente_email')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
+                            @if ($empresa->fidelidadePrograma && $empresa->fidelidadePrograma->ativo)
+                                <div class="col-12">
+                                    <hr class="my-2">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" id="vf-fidelidade-abrir" value="1" @checked(old('fidelidade_quero') === '1')>
+                                        <label class="form-check-label small" for="vf-fidelidade-abrir">Sim, quero o <strong>{{ $empresa->fidelidadePrograma->nome_exibicao }}</strong> <span class="text-muted">(1 selo nesta compra)</span></label>
+                                    </div>
+                                    <p class="small text-muted mb-2">Ao marcar, abrimos uma janela para você confirmar o telefone e o CPF do cartão.</p>
+                                    <input type="hidden" name="fidelidade_quero" id="vf-fidelidade-quero" value="{{ old('fidelidade_quero', '0') }}">
+                                    <input type="hidden" name="fidelidade_telefone" id="vf-fidelidade-tel-hidden" value="{{ old('fidelidade_telefone') }}">
+                                    <input type="hidden" name="fidelidade_cpf" id="vf-fidelidade-cpf-hidden" value="{{ old('fidelidade_cpf') }}">
+                                    @error('fidelidade_telefone')<div class="text-danger small">{{ $message }}</div>@enderror
+                                    @error('fidelidade_cpf')<div class="text-danger small">{{ $message }}</div>@enderror
+                                </div>
+                            @endif
                         </div>
                     </div>
                     <div class="vf-card p-3 mb-3">
@@ -208,6 +223,34 @@
                 </div>
             </div>
         </form>
+
+        @if ($empresa->fidelidadePrograma && $empresa->fidelidadePrograma->ativo)
+            <div class="modal fade" id="vfModalFidelidadeCheckout" tabindex="-1" aria-labelledby="vfModalFidelidadeCheckoutLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow-lg">
+                        <div class="modal-header border-0 pb-0">
+                            <h2 class="modal-title h5 fw-bold" id="vfModalFidelidadeCheckoutLabel">{{ $empresa->fidelidadePrograma->nome_exibicao }}</h2>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                        </div>
+                        <div class="modal-body pt-2">
+                            <p class="small text-muted mb-3">Confirme o telefone do pedido e informe seu CPF para ativar o cartão nesta loja.</p>
+                            <div class="mb-3">
+                                <label class="form-label small" for="vf-fidelidade-tel-modal">Telefone / WhatsApp</label>
+                                <input type="tel" class="form-control" id="vf-fidelidade-tel-modal" maxlength="32" autocomplete="tel">
+                            </div>
+                            <div class="mb-0">
+                                <label class="form-label small" for="vf-fidelidade-cpf-modal">CPF</label>
+                                <input type="text" class="form-control" id="vf-fidelidade-cpf-modal" maxlength="14" placeholder="000.000.000-00" inputmode="numeric" autocomplete="off">
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0 pt-0">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" id="vf-fidelidade-cancelar">Cancelar</button>
+                            <button type="button" class="btn btn-primary" id="vf-fidelidade-confirmar">Confirmar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
     </div>
     @push('scripts')
         <script>
@@ -442,5 +485,99 @@
                 syncEntregaFields();
             })();
         </script>
+        @if ($empresa->fidelidadePrograma && $empresa->fidelidadePrograma->ativo)
+            <script>
+                (function () {
+                    var chk = document.getElementById('vf-fidelidade-abrir');
+                    var hiddenQuero = document.getElementById('vf-fidelidade-quero');
+                    var hiddenTel = document.getElementById('vf-fidelidade-tel-hidden');
+                    var hiddenCpf = document.getElementById('vf-fidelidade-cpf-hidden');
+                    var telPedido = document.getElementById('cliente_telefone');
+                    var telModal = document.getElementById('vf-fidelidade-tel-modal');
+                    var cpfModal = document.getElementById('vf-fidelidade-cpf-modal');
+                    var modalEl = document.getElementById('vfModalFidelidadeCheckout');
+                    var btnCancel = document.getElementById('vf-fidelidade-cancelar');
+                    var btnOk = document.getElementById('vf-fidelidade-confirmar');
+                    if (!chk || !hiddenQuero || !hiddenTel || !hiddenCpf || !telModal || !cpfModal || !modalEl || typeof bootstrap === 'undefined') return;
+                    var modal = new bootstrap.Modal(modalEl);
+                    function digits(s) {
+                        return String(s || '').replace(/\D+/g, '');
+                    }
+                    function fmtCpf(d) {
+                        d = digits(d).slice(0, 11);
+                        if (d.length <= 3) return d;
+                        if (d.length <= 6) return d.slice(0, 3) + '.' + d.slice(3);
+                        if (d.length <= 9) return d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6);
+                        return d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6, 9) + '-' + d.slice(9);
+                    }
+                    cpfModal.addEventListener('input', function () {
+                        cpfModal.value = fmtCpf(cpfModal.value);
+                    });
+                    function abrirModalPreenchido() {
+                        telModal.value = hiddenTel.value || (telPedido ? telPedido.value : '') || '';
+                        cpfModal.value = hiddenCpf.value ? fmtCpf(hiddenCpf.value) : '';
+                        modal.show();
+                    }
+                    chk.addEventListener('change', function () {
+                        if (chk.checked) {
+                            abrirModalPreenchido();
+                        } else {
+                            hiddenQuero.value = '0';
+                            hiddenTel.value = '';
+                            hiddenCpf.value = '';
+                        }
+                    });
+                    modalEl.addEventListener('hidden.bs.modal', function () {
+                        if (hiddenQuero.value !== '1') {
+                            chk.checked = false;
+                        }
+                    });
+                    if (btnCancel) {
+                        btnCancel.addEventListener('click', function () {
+                            hiddenQuero.value = '0';
+                            hiddenTel.value = '';
+                            hiddenCpf.value = '';
+                            chk.checked = false;
+                        });
+                    }
+                    if (btnOk) {
+                        btnOk.addEventListener('click', function () {
+                            var t = digits(telModal.value);
+                            var c = digits(cpfModal.value);
+                            var tp = digits(telPedido ? telPedido.value : '');
+                            if (t.length < 8) {
+                                window.alert('Informe um telefone válido.');
+                                return;
+                            }
+                            if (t !== tp) {
+                                window.alert('O telefone deve ser o mesmo informado no pedido.');
+                                return;
+                            }
+                            if (c.length !== 11) {
+                                window.alert('Informe um CPF com 11 dígitos.');
+                                return;
+                            }
+                            hiddenQuero.value = '1';
+                            hiddenTel.value = telModal.value.trim();
+                            hiddenCpf.value = c;
+                            modal.hide();
+                        });
+                    }
+                    var formCheckout = document.querySelector('form[action*="checkout.finalizar"]');
+                    if (formCheckout) {
+                        formCheckout.addEventListener('submit', function (e) {
+                            if (chk.checked && hiddenQuero.value !== '1') {
+                                e.preventDefault();
+                                window.alert('Confirme telefone e CPF na janela do cartão fidelidade.');
+                                abrirModalPreenchido();
+                            }
+                        });
+                    }
+                    if (hiddenQuero.value === '1') {
+                        chk.checked = true;
+                    }
+                })();
+            </script>
+        @endif
     @endpush
 @endsection

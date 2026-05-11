@@ -5,20 +5,23 @@ namespace App\Http\Controllers\Publico;
 use App\Http\Controllers\Controller;
 use App\Models\Adicional;
 use App\Models\Categoria;
+use App\Models\Cliente;
 use App\Models\Empresa;
 use App\Models\EmpresaEntregaFaixaCep;
 use App\Models\EmpresaSlug;
+use App\Models\FidelidadeCartao;
 use App\Models\Pedido;
 use App\Models\PedidoItem;
 use App\Models\Produto;
 use App\Models\ProdutoIngrediente;
+use App\Services\DeliveryFreteService;
 use App\Support\Cep;
 use App\Support\GoogleMapsDistanceMatrix;
-use App\Services\DeliveryFreteService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -819,7 +822,7 @@ class PublicoController extends Controller
             ->get();
 
         $bannerCategoria = null;
-        /** @var \Illuminate\Support\Collection<int, array{url: string, nome: string, produto_id: int}> $bannerSlides */
+        /** @var Collection<int, array{url: string, nome: string, produto_id: int}> $bannerSlides */
         $bannerSlides = collect();
         if (Empresa::schemaTemColunaLojaBannerCategoria()) {
             $empresa->loadMissing('lojaBannerCategoria');
@@ -1278,6 +1281,8 @@ class PublicoController extends Controller
         $checkoutOsrm = $empresa->lojaFreteModoEfetivo() === Empresa::LOJA_FRETE_OSRM_DISTANCIA;
         $calcularEntregaApiUrl = route('api.calcular-entrega');
 
+        $empresa->loadMissing('fidelidadePrograma');
+
         return view('publico.checkout', compact(
             'slug',
             'empresa',
@@ -1317,7 +1322,10 @@ class PublicoController extends Controller
             $tiposEntrega = [Pedido::TIPO_ENTREGA_ENTREGA];
         }
 
-        $data = $request->validate([
+        $empresa->loadMissing('fidelidadePrograma');
+        $programaFid = $empresa->fidelidadePrograma;
+
+        $rules = [
             'tipo_entrega' => ['required', Rule::in($tiposEntrega)],
             'cep_entrega' => ['nullable', 'string', 'max:16'],
             'cliente_nome' => ['required', 'string', 'max:120'],
@@ -1333,7 +1341,52 @@ class PublicoController extends Controller
             'pagamento_dinheiro_modo' => ['nullable', 'string', Rule::in(['exato', 'com_troco'])],
             'pagamento_troco_para' => ['nullable', 'numeric', 'min:0'],
             'observacoes' => ['nullable', 'string', 'max:220'],
-        ]);
+        ];
+        if ($programaFid && $programaFid->ativo) {
+            $rules['fidelidade_quero'] = ['nullable', 'in:0,1'];
+            $rules['fidelidade_telefone'] = ['nullable', 'string', 'max:32'];
+            $rules['fidelidade_cpf'] = ['nullable', 'string', 'max:18'];
+        }
+
+        $data = $request->validate($rules);
+
+        $fidelidadeQuero = $programaFid && $programaFid->ativo && (($data['fidelidade_quero'] ?? '0') === '1');
+        $telFidNorm = null;
+        $cpfFidNorm = null;
+        if ($fidelidadeQuero) {
+            $telFidNorm = FidelidadeCartao::normalizarTelefone($data['fidelidade_telefone'] ?? '');
+            if (strlen($telFidNorm) < 8) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['fidelidade_telefone' => 'Informe o telefone do cartão fidelidade.']);
+            }
+            $telPedido = FidelidadeCartao::normalizarTelefone($data['cliente_telefone']);
+            if ($telFidNorm !== $telPedido) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['fidelidade_telefone' => 'O telefone do cartão deve ser o mesmo do pedido.']);
+            }
+            $cpfFidNorm = FidelidadeCartao::normalizarCpf($data['fidelidade_cpf'] ?? '');
+            if ($cpfFidNorm === null || ! FidelidadeCartao::cpfValido($cpfFidNorm)) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['fidelidade_cpf' => 'Informe um CPF válido.']);
+            }
+            $existente = FidelidadeCartao::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('telefone_normalizado', $telFidNorm)
+                ->first();
+            if (
+                Schema::hasColumn('fidelidade_cartoes', 'cpf_normalizado')
+                && $existente
+                && $existente->cpf_normalizado
+                && $existente->cpf_normalizado !== $cpfFidNorm
+            ) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['fidelidade_cpf' => 'Este telefone já possui cartão fidelidade com outro CPF.']);
+            }
+        }
 
         $tipoEntrega = $data['tipo_entrega'];
         $cepNorm = null;
@@ -1509,6 +1562,10 @@ class PublicoController extends Controller
             'modo' => $tipoEntrega,
             'cep' => $cepNorm !== null ? $cepNorm : '',
         ]]);
+
+        if ($fidelidadeQuero && $telFidNorm !== null && $cpfFidNorm !== null) {
+            $this->registrarCartaoFidelidadePosPedido($empresa, $telFidNorm, $cpfFidNorm);
+        }
 
         return redirect()
             ->route('publico.pedido.show', ['slug' => $slug, 'codigo' => $pedido->codigo_publico])
@@ -1720,6 +1777,50 @@ class PublicoController extends Controller
         return redirect()
             ->route('site.home')
             ->with('warning', 'Abra a loja pelo link do seu restaurante e use o carrinho no menu superior.');
+    }
+
+    private function registrarCartaoFidelidadePosPedido(Empresa $empresa, string $telefoneNormalizado, string $cpf11): void
+    {
+        $programa = $empresa->fidelidadePrograma;
+        if (! $programa || ! $programa->ativo) {
+            return;
+        }
+
+        $clienteId = null;
+        $clientes = Cliente::query()
+            ->where('empresa_id', $empresa->id)
+            ->whereNotNull('telefone')
+            ->get(['id', 'telefone']);
+        foreach ($clientes as $c) {
+            if (FidelidadeCartao::normalizarTelefone($c->telefone) === $telefoneNormalizado) {
+                $clienteId = (int) $c->id;
+                break;
+            }
+        }
+
+        $attrs = ['cliente_id' => $clienteId];
+        if (Schema::hasColumn('fidelidade_cartoes', 'cpf_normalizado')) {
+            $attrs['cpf_normalizado'] = $cpf11;
+        }
+
+        $cartao = FidelidadeCartao::query()->firstOrCreate(
+            [
+                'empresa_id' => $empresa->id,
+                'telefone_normalizado' => $telefoneNormalizado,
+            ],
+            $attrs
+        );
+
+        if (Schema::hasColumn('fidelidade_cartoes', 'cpf_normalizado')) {
+            if (! $cartao->cpf_normalizado) {
+                $cartao->forceFill(['cpf_normalizado' => $cpf11])->save();
+            }
+        }
+        if ($clienteId && ! $cartao->cliente_id) {
+            $cartao->update(['cliente_id' => $clienteId]);
+        }
+
+        $cartao->increment('selos');
     }
 
     public function legadoCheckout(): RedirectResponse

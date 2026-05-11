@@ -42,7 +42,7 @@
                     @error('telefone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     <button type="submit" class="btn btn-primary w-100 mt-3" @disabled(! $programa || ! $programa->ativo)>Adicionar selo</button>
                 </form>
-                <p class="small text-muted mt-3 mb-0">Quando os pedidos da vitrine forem integrados, isso poderá ocorrer automaticamente ao concluir o pedido.</p>
+                <p class="small text-muted mt-3 mb-0">Na vitrine, o cliente pode ativar o cartão no checkout; aqui você ainda pode lançar selos manualmente.</p>
             </div>
         </div>
         <div class="col-lg-7">
@@ -60,6 +60,7 @@
                         <thead>
                             <tr>
                                 <th>Telefone</th>
+                                <th>CPF</th>
                                 <th>Selos</th>
                                 <th>Resgates</th>
                                 <th class="text-end">Ações</th>
@@ -69,6 +70,7 @@
                             @forelse ($cartoes as $c)
                                 <tr>
                                     <td class="small font-monospace">{{ $c->telefoneMascarado() }}</td>
+                                    <td class="small font-monospace">{{ $c->cpfMascarado() }}</td>
                                     <td>
                                         <span class="fw-semibold">{{ $c->selos }}</span>
                                         @if ($programa)
@@ -89,7 +91,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="text-center text-muted py-4">Nenhum cartão encontrado. Adicione o primeiro selo ao lado.</td>
+                                    <td colspan="5" class="text-center text-muted py-4">Nenhum cartão encontrado. Adicione o primeiro selo ao lado.</td>
                                 </tr>
                             @endforelse
                         </tbody>
