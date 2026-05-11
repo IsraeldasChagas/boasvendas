@@ -537,58 +537,59 @@ class PublicoController extends Controller
      */
     private function calcularTaxaResumo(Empresa $empresa, string $modo, ?string $cepSoDigitos, ?float $subtotalPedido = null): array
     {
-        if ($modo === Pedido::TIPO_ENTREGA_BALCAO && $this->lojaPermiteRetiradaBalcao($empresa)) {
-            return ['taxa' => 0.0, 'rotulo' => 'Retirada no balcão'];
-        }
+        $res = null;
 
-        if ($empresa->lojaFreteModoEfetivo() === Empresa::LOJA_FRETE_PADRAO_UNICO) {
-            return [
+        if ($modo === Pedido::TIPO_ENTREGA_BALCAO && $this->lojaPermiteRetiradaBalcao($empresa)) {
+            $res = ['taxa' => 0.0, 'rotulo' => 'Retirada no balcão'];
+        } elseif ($empresa->lojaFreteModoEfetivo() === Empresa::LOJA_FRETE_PADRAO_UNICO) {
+            $res = [
                 'taxa' => round($empresa->lojaTaxaEntregaPadraoEfetiva(), 2),
                 'rotulo' => 'Taxa fixa da loja (modo sem faixas)',
             ];
-        }
-
-        if ($empresa->lojaFreteModoEfetivo() === Empresa::LOJA_FRETE_GOOGLE_DISTANCIA) {
+        } elseif ($empresa->lojaFreteModoEfetivo() === Empresa::LOJA_FRETE_GOOGLE_DISTANCIA) {
             $cep8 = Cep::normalizar8($cepSoDigitos);
             $destino = ($cep8 !== null && $cepSoDigitos !== null && $cepSoDigitos !== '')
                 ? $this->formatoDestinoFreteGoogleCep($cep8)
                 : '';
 
-            return $this->taxaFreteGoogleDistancia($empresa, $destino);
-        }
-
-        if ($empresa->lojaFreteModoEfetivo() === Empresa::LOJA_FRETE_OSRM_DISTANCIA) {
+            $res = $this->taxaFreteGoogleDistancia($empresa, $destino);
+        } elseif ($empresa->lojaFreteModoEfetivo() === Empresa::LOJA_FRETE_OSRM_DISTANCIA) {
             $cep8 = Cep::normalizar8($cepSoDigitos);
             if ($cep8 === null || $cepSoDigitos === null || $cepSoDigitos === '') {
-                return [
+                $res = [
                     'taxa' => round($empresa->lojaTaxaEntregaPadraoEfetiva(), 2),
                     'rotulo' => 'Informe o CEP para calcular o frete (OpenStreetMap / OSRM)',
                     'entrega_bloqueada' => false,
                 ];
+            } else {
+                $res = $this->taxaFreteOsrmPorCliente($empresa, ['cep' => $cep8], $subtotalPedido);
             }
-
-            return $this->taxaFreteOsrmPorCliente($empresa, ['cep' => $cep8], $subtotalPedido);
-        }
-
-        $cep8 = Cep::normalizar8($cepSoDigitos);
-        if ($cep8 === null || $cepSoDigitos === null || $cepSoDigitos === '') {
-            return [
-                'taxa' => round($empresa->lojaTaxaEntregaPadraoEfetiva(), 2),
-                'rotulo' => 'Taxa padrão (informe o CEP para usar faixa)',
-            ];
-        }
-
-        if (Schema::hasTable('empresa_entrega_faixas_cep')) {
-            $porFaixa = EmpresaEntregaFaixaCep::taxaParaCep((int) $empresa->id, $cep8);
-            if ($porFaixa !== null) {
-                return ['taxa' => round($porFaixa, 2), 'rotulo' => 'Faixa de CEP'];
+        } else {
+            $cep8 = Cep::normalizar8($cepSoDigitos);
+            if ($cep8 === null || $cepSoDigitos === null || $cepSoDigitos === '') {
+                $res = [
+                    'taxa' => round($empresa->lojaTaxaEntregaPadraoEfetiva(), 2),
+                    'rotulo' => 'Taxa padrão (informe o CEP para usar faixa)',
+                ];
+            } elseif (Schema::hasTable('empresa_entrega_faixas_cep')) {
+                $porFaixa = EmpresaEntregaFaixaCep::taxaParaCep((int) $empresa->id, $cep8);
+                if ($porFaixa !== null) {
+                    $res = ['taxa' => round($porFaixa, 2), 'rotulo' => 'Faixa de CEP'];
+                } else {
+                    $res = [
+                        'taxa' => round($empresa->lojaTaxaEntregaPadraoEfetiva(), 2),
+                        'rotulo' => 'Taxa padrão da loja',
+                    ];
+                }
+            } else {
+                $res = [
+                    'taxa' => round($empresa->lojaTaxaEntregaPadraoEfetiva(), 2),
+                    'rotulo' => 'Taxa padrão da loja',
+                ];
             }
         }
 
-        return [
-            'taxa' => round($empresa->lojaTaxaEntregaPadraoEfetiva(), 2),
-            'rotulo' => 'Taxa padrão da loja',
-        ];
+        return $empresa->aplicarAcrescimoChuvaNoResumoFrete($res);
     }
 
     private function formatoDestinoFreteGoogleCep(string $cep8): string
@@ -1341,6 +1342,14 @@ class PublicoController extends Controller
                 $taxaVal = $empresa->lojaTaxaEntregaPadraoEfetiva();
             }
             $enderecoPedido = $enderecoTrim;
+        }
+
+        if ($tipoEntrega !== Pedido::TIPO_ENTREGA_BALCAO) {
+            $taxaVal = (float) ($empresa->aplicarAcrescimoChuvaNoResumoFrete([
+                'taxa' => (float) $taxaVal,
+                'rotulo' => '',
+                'entrega_bloqueada' => false,
+            ])['taxa']);
         }
 
         $taxaVal = round((float) $taxaVal, 2);

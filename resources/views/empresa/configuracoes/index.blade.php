@@ -351,6 +351,27 @@
                                     @error('loja_permite_retirada_balcao')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
                             @endif
+                            @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_entrega_chuva_ligado'))
+                                <div class="col-12 mt-2 pt-3 border-top border-primary border-opacity-25">
+                                    <span class="form-label fw-semibold d-block mb-2">Chuva — acréscimo no frete de entrega</span>
+                                    <div class="form-check mb-2">
+                                        <input type="hidden" name="loja_entrega_chuva_ligado" value="0">
+                                        <input type="checkbox" class="form-check-input" name="loja_entrega_chuva_ligado" id="loja_entrega_chuva_ligado" value="1" @checked(old('loja_entrega_chuva_ligado', $empresa->loja_entrega_chuva_ligado ? '1' : '0') === '1')>
+                                        <label class="form-check-label small" for="loja_entrega_chuva_ligado">Marcar quando estiver chovendo (aplica acréscimo percentual na taxa de entrega)</label>
+                                    </div>
+                                    <div class="row g-2">
+                                        <div class="col-md-4">
+                                            <label class="form-label small" for="loja_entrega_chuva_percentual">Acréscimo (%)</label>
+                                            <div class="input-group input-group-sm">
+                                                <input type="number" step="0.01" min="0" max="100" class="form-control @error('loja_entrega_chuva_percentual') is-invalid @enderror" id="loja_entrega_chuva_percentual" name="loja_entrega_chuva_percentual" value="{{ old('loja_entrega_chuva_percentual', $empresa->loja_entrega_chuva_percentual) }}" placeholder="Ex.: 15">
+                                                <span class="input-group-text">%</span>
+                                            </div>
+                                            @error('loja_entrega_chuva_percentual')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                                            <p class="small text-muted mb-0 mt-1">Percentual sobre o valor do frete já calculado (faixa, fixo, Google ou OSRM). Não altera retirada no balcão nem frete R$ 0.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                         @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_frete_modo'))
                             <div class="mb-3">

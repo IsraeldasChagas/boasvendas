@@ -53,6 +53,8 @@ class Empresa extends Model
         'loja_entrega_km_incluso',
         'loja_entrega_valor_km_extra',
         'loja_entrega_gratis_acima_pedido',
+        'loja_entrega_chuva_ligado',
+        'loja_entrega_chuva_percentual',
         'loja_pix_instrucoes',
         'loja_pix_chave_tipo',
         'loja_pix_chave_valor',
@@ -81,6 +83,8 @@ class Empresa extends Model
             'loja_entrega_km_incluso' => 'decimal:2',
             'loja_entrega_valor_km_extra' => 'decimal:2',
             'loja_entrega_gratis_acima_pedido' => 'decimal:2',
+            'loja_entrega_chuva_ligado' => 'boolean',
+            'loja_entrega_chuva_percentual' => 'decimal:2',
             'loja_permite_retirada_balcao' => 'boolean',
             'loja_confirmar_pedidos' => 'boolean',
             'loja_impressao_pedido_habilitada' => 'boolean',
@@ -409,6 +413,59 @@ class Empresa extends Model
         }
 
         return round((float) $v, 2);
+    }
+
+    /** Percentual de acréscimo por chuva (0–100). Zero se coluna ausente ou não configurado. */
+    public function lojaEntregaChuvaPercentualEfetivo(): float
+    {
+        if (! Schema::hasColumn('empresas', 'loja_entrega_chuva_percentual')) {
+            return 0.0;
+        }
+        $v = $this->loja_entrega_chuva_percentual;
+        if ($v === null || (float) $v <= 0) {
+            return 0.0;
+        }
+
+        return min(100.0, round((float) $v, 2));
+    }
+
+    /**
+     * Multiplica a taxa por (1 + percentual/100) quando "chuva" estiver ligada nas configurações.
+     *
+     * @param  array{taxa?: float, taxa_entrega?: float, rotulo?: string, entrega_bloqueada?: bool}  $resumo
+     * @return array<string, mixed>
+     */
+    public function aplicarAcrescimoChuvaNoResumoFrete(array $resumo): array
+    {
+        if (! Schema::hasColumn('empresas', 'loja_entrega_chuva_ligado')) {
+            return $resumo;
+        }
+        if (! empty($resumo['entrega_bloqueada'])) {
+            return $resumo;
+        }
+        $keyTaxa = array_key_exists('taxa_entrega', $resumo) ? 'taxa_entrega' : (array_key_exists('taxa', $resumo) ? 'taxa' : null);
+        if ($keyTaxa === null) {
+            return $resumo;
+        }
+        $taxa = round((float) $resumo[$keyTaxa], 2);
+        if ($taxa <= 0) {
+            return $resumo;
+        }
+        if (! (bool) ($this->loja_entrega_chuva_ligado ?? false)) {
+            return $resumo;
+        }
+        $pct = $this->lojaEntregaChuvaPercentualEfetivo();
+        if ($pct <= 0) {
+            return $resumo;
+        }
+        $nova = round($taxa * (1 + $pct / 100), 2);
+        $resumo[$keyTaxa] = $nova;
+        $rot = (string) ($resumo['rotulo'] ?? '');
+        $pctFmt = fmod($pct, 1.0) < 0.001 ? (string) (int) round($pct) : number_format($pct, 2, ',', '.');
+        $suf = ' · +'.$pctFmt.'% (chuva)';
+        $resumo['rotulo'] = $rot !== '' ? ($rot.$suf) : ltrim($suf, ' ·');
+
+        return $resumo;
     }
 
     /** Modos que calculam km rodoviário (Google ou OSRM). */

@@ -128,6 +128,10 @@ class ConfiguracaoController extends Controller
             $rules['loja_entrega_valor_km_extra'] = ['nullable', 'numeric', 'min:0', 'max:99999999.99'];
             $rules['loja_entrega_gratis_acima_pedido'] = ['nullable', 'numeric', 'min:0', 'max:99999999.99'];
         }
+        if (Schema::hasColumn('empresas', 'loja_entrega_chuva_ligado')) {
+            $rules['loja_entrega_chuva_ligado'] = ['nullable', 'in:0,1'];
+            $rules['loja_entrega_chuva_percentual'] = ['nullable', 'numeric', 'min:0', 'max:100'];
+        }
         if (Schema::hasColumn('empresas', 'loja_frete_google_taxa_minima')) {
             $rules['loja_frete_google_taxa_minima'] = ['nullable', 'numeric', 'min:0', 'max:99999999.99'];
         }
@@ -301,6 +305,13 @@ class ConfiguracaoController extends Controller
                 $data['loja_entrega_valor_km_extra'],
                 $data['loja_entrega_gratis_acima_pedido']
             );
+        }
+        if (Schema::hasColumn('empresas', 'loja_entrega_chuva_ligado')) {
+            $data['loja_entrega_chuva_ligado'] = $request->boolean('loja_entrega_chuva_ligado');
+            $vp = $data['loja_entrega_chuva_percentual'] ?? null;
+            $data['loja_entrega_chuva_percentual'] = ($vp === null || $vp === '') ? null : round((float) $vp, 2);
+        } else {
+            unset($data['loja_entrega_chuva_ligado'], $data['loja_entrega_chuva_percentual']);
         }
 
         if (Empresa::schemaTemColunaLojaBannerCategoria()) {

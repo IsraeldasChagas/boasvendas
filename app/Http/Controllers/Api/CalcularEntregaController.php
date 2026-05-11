@@ -59,6 +59,7 @@ class CalcularEntregaController extends Controller
             'cidade' => $data['cidade'] ?? '',
             'estado' => $data['estado'] ?? '',
         ], $sub);
+        $r = $empresa->aplicarAcrescimoChuvaNoResumoFrete($r);
 
         if (! ($r['success'] ?? false)) {
             return response()->json([
