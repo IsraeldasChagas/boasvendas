@@ -20,6 +20,41 @@
         </div>
     @endif
 
+    @if ($empresa)
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-xl-4">
+                <div class="vf-card vf-card-stat">
+                    <div>
+                        <div class="small text-muted">Vendas hoje (total)</div>
+                        <div class="h4 mb-0 fw-bold text-success">R$ {{ number_format($vendaDiaTotal ?? 0, 2, ',', '.') }}</div>
+                        <div class="small text-muted mt-1">Pedidos de hoje (exc. cancelados)</div>
+                    </div>
+                    <div class="icon-wrap bg-success-subtle text-success"><i class="bi bi-currency-dollar"></i></div>
+                </div>
+            </div>
+            <div class="col-6 col-xl-4">
+                <div class="vf-card vf-card-stat">
+                    <div>
+                        <div class="small text-muted">Produtos vendidos hoje</div>
+                        <div class="h4 mb-0 fw-bold">{{ (int) ($produtosDistintosVendidosDia ?? 0) }}</div>
+                        <div class="small text-muted mt-1">Tipos distintos no cardápio</div>
+                    </div>
+                    <div class="icon-wrap bg-primary-subtle text-primary"><i class="bi bi-box-seam"></i></div>
+                </div>
+            </div>
+            <div class="col-12 col-xl-4">
+                <div class="vf-card vf-card-stat">
+                    <div>
+                        <div class="small text-muted">Total de unidades vendidas hoje</div>
+                        <div class="h4 mb-0 fw-bold">{{ (int) ($unidadesVendidasDia ?? 0) }}</div>
+                        <div class="small text-muted mt-1">Soma das quantidades nos itens</div>
+                    </div>
+                    <div class="icon-wrap bg-info-subtle text-info"><i class="bi bi-stack"></i></div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <div class="row g-3 mb-4">
         @if ($empresa)
             @php
