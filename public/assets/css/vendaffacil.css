@@ -797,6 +797,22 @@ body.vf-body {
   text-align: center;
   color: var(--vf-muted);
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  align-items: center;
+}
+
+.vf-chart-fake-valor {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--vf-text, #0f172a);
+  white-space: nowrap;
+}
+
+.vf-chart-fake-dia {
+  font-size: 0.65rem;
+  color: var(--vf-muted);
 }
 
 .vf-table thead th {

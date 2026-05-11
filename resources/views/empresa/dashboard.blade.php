@@ -143,9 +143,12 @@
                         @foreach ($chartHeights as $idx => $h)
                             <div class="vf-chart-fake-col">
                                 <div class="vf-chart-fake-col-chart">
-                                    <div class="bar" style="height:{{ max(4, $h) }}%"></div>
+                                    <div class="bar" style="height:{{ max(4, $h) }}%" title="R$ {{ number_format((float) ($chartVendasValores[$idx] ?? 0), 2, ',', '.') }}"></div>
                                 </div>
-                                <div class="vf-chart-fake-label">{{ $chartDiaLabels[$idx] ?? '' }}</div>
+                                <div class="vf-chart-fake-label">
+                                    <span class="vf-chart-fake-valor">R$ {{ number_format((float) ($chartVendasValores[$idx] ?? 0), 2, ',', '.') }}</span>
+                                    <span class="vf-chart-fake-dia">{{ $chartDiaLabels[$idx] ?? '' }}</span>
+                                </div>
                             </div>
                         @endforeach
                     </div>

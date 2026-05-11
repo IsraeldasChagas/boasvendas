@@ -21,6 +21,8 @@ class DashboardController extends Controller
         $chartHeights = [];
         /** @var list<string> */
         $chartDiaLabels = [];
+        /** @var list<float> */
+        $chartVendasValores = [];
         $pedidosPendentesConfirmacao = 0;
         $vendaDiaTotal = 0.0;
         $produtosDistintosVendidosDia = 0;
@@ -66,6 +68,7 @@ class DashboardController extends Controller
                 fn (float $v): int => (int) round(($v / $maxVendaDia) * 100),
                 $vendasPorDia
             );
+            $chartVendasValores = $vendasPorDia;
 
             $pedidosPendentesConfirmacao = Pedido::query()
                 ->where('empresa_id', $empresa->id)
@@ -108,6 +111,7 @@ class DashboardController extends Controller
             'ticketsRecentes',
             'chartHeights',
             'chartDiaLabels',
+            'chartVendasValores',
             'pedidosPendentesConfirmacao',
             'vendaDiaTotal',
             'produtosDistintosVendidosDia',
