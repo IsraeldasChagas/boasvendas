@@ -56,10 +56,21 @@
                         $pend = session('fidelidade_otp_pending', []);
                         $telPend = is_array($pend) ? (string) ($pend['tel_norm'] ?? '') : '';
                         $suf = strlen($telPend) >= 4 ? substr($telPend, -4) : '****';
+                        $canalOtp = is_array($pend) ? (string) ($pend['canal'] ?? '') : '';
+                        $otpPorEmail = $canalOtp === \App\Services\FidelidadeOtpEntrega::CANAL_EMAIL;
                     @endphp
-                    <p class="small text-muted mb-3">Digite abaixo o <strong>código de 6 dígitos</strong> que enviamos ao <strong>WhatsApp</strong> do número que termina em <strong>***{{ $suf }}</strong>. Se não for esse número, use <strong>Usar outro telefone</strong>.</p>
+                    @if ($otpPorEmail)
+                        <p class="small text-muted mb-3">O envio pelo <strong>WhatsApp</strong> não está disponível no momento; enviamos o código de <strong>6 dígitos</strong> para o <strong>e-mail do seu cadastro</strong> nesta loja (confira spam/lixeira). Digite o código abaixo.</p>
+                    @else
+                        <p class="small text-muted mb-3">Digite abaixo o <strong>código de 6 dígitos</strong> que enviamos ao <strong>WhatsApp</strong> do número que termina em <strong>***{{ $suf }}</strong>. Se não for esse número, use <strong>Usar outro telefone</strong>.</p>
+                    @endif
                     <form action="{{ route('publico.fidelidade.verificar-codigo', ['slug' => $slug]) }}" method="post" class="mb-3">
                         @csrf
+                        @if ($otpPorEmail)
+                            <p class="small mb-2 text-muted">Código enviado por <strong>e-mail</strong> (cartão cadastrado com o telefone ***{{ $suf }}).</p>
+                        @else
+                            <p class="small mb-2 text-muted">Código enviado ao <strong>WhatsApp</strong> (número com final ***{{ $suf }}).</p>
+                        @endif
                         <label class="form-label small fw-semibold" for="fid-codigo">Código de 6 dígitos</label>
                         <input type="text" name="codigo" id="fid-codigo" value="{{ old('codigo') }}" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code"
                                class="form-control @error('codigo') is-invalid @enderror" placeholder="000000" required>
@@ -69,7 +80,7 @@
                     <div class="d-flex flex-column gap-2">
                         <form action="{{ route('publico.fidelidade.reenviar-codigo', ['slug' => $slug]) }}" method="post" class="mb-0">
                             @csrf
-                            <button type="submit" class="btn btn-outline-secondary btn-sm w-100">Reenviar código no WhatsApp</button>
+                            <button type="submit" class="btn btn-outline-secondary btn-sm w-100">{{ $otpPorEmail ? 'Reenviar código por e-mail' : 'Reenviar código no WhatsApp' }}</button>
                         </form>
                         <form action="{{ route('publico.fidelidade.cancelar-otp', ['slug' => $slug]) }}" method="post" class="mb-0">
                             @csrf

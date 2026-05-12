@@ -122,7 +122,10 @@ class FidelidadePublicController extends Controller
 
         return redirect()
             ->route('publico.fidelidade', ['slug' => $slug])
-            ->with('status', 'Enviamos um código de 6 dígitos pelo WhatsApp. Digite-o abaixo para ver seus selos.');
+            ->with('status', $this->mensagemSucessoCodigoEnviado(
+                (string) ($envio['canal'] ?? FidelidadeOtpEntrega::CANAL_EMAIL),
+                false,
+            ));
     }
 
     public function reenviarCodigo(Request $request, string $slug): RedirectResponse
@@ -172,11 +175,12 @@ class FidelidadePublicController extends Controller
                 ->with('warning', $this->mensagemFalhaEntrega($envio));
         }
 
-        $status = 'Enviamos um novo código pelo WhatsApp. Digite-o para ver seus selos.';
+        $canal = (string) ($envio['canal'] ?? FidelidadeOtpEntrega::CANAL_EMAIL);
+        $status = $this->mensagemSucessoCodigoEnviado($canal, true);
 
         $pending = session('fidelidade_otp_pending', []);
         if (is_array($pending)) {
-            $pending['canal'] = $envio['canal'] ?? FidelidadeOtpEntrega::CANAL_EMAIL;
+            $pending['canal'] = $canal;
             $request->session()->put('fidelidade_otp_pending', $pending);
         }
 
@@ -218,10 +222,18 @@ class FidelidadePublicController extends Controller
             'codigo' => ['required', 'string', 'max:32'],
         ]);
 
+        $canalEntrega = is_array($pending) && ($pending['canal'] ?? '') === FidelidadeOtpEntrega::CANAL_EMAIL
+            ? FidelidadeOtpEntrega::CANAL_EMAIL
+            : FidelidadeOtpEntrega::CANAL_WHATSAPP;
+
         $codigoDigits = preg_replace('/\D+/', '', $data['codigo']);
         if (strlen($codigoDigits) !== 6) {
+            $msgCodigo = $canalEntrega === FidelidadeOtpEntrega::CANAL_EMAIL
+                ? 'Informe os 6 dígitos do código recebido por e-mail (confira spam).'
+                : 'Informe os 6 dígitos do código recebido no WhatsApp.';
+
             return back()
-                ->withErrors(['codigo' => 'Informe os 6 dígitos do código recebido no WhatsApp.'])
+                ->withErrors(['codigo' => $msgCodigo])
                 ->withInput();
         }
 
@@ -418,6 +430,19 @@ class FidelidadePublicController extends Controller
             FidelidadeOtpEntrega::FALHA_SEM_DESTINO => 'Não foi possível enviar o código pelo WhatsApp e não há e-mail válido no cartão. Atualize o cadastro acima ou fale com a loja.',
             default => 'Não foi possível enviar o código pelo WhatsApp. Tente mais tarde ou fale com a loja.',
         };
+    }
+
+    private function mensagemSucessoCodigoEnviado(string $canal, bool $reenvio): string
+    {
+        if ($canal === FidelidadeOtpEntrega::CANAL_EMAIL) {
+            return $reenvio
+                ? 'Enviamos um novo código para o e-mail cadastrado no seu cartão (confira caixa de entrada e spam). Digite-o abaixo para ver seus selos.'
+                : 'Enviamos o código de 6 dígitos para o e-mail cadastrado no seu cartão (confira caixa de entrada e spam). Digite-o abaixo para ver seus selos.';
+        }
+
+        return $reenvio
+            ? 'Enviamos um novo código no WhatsApp deste número. Digite-o para ver seus selos.'
+            : 'Enviamos o código de 6 dígitos no WhatsApp deste número. Digite-o abaixo para ver seus selos.';
     }
 
     private function empresaPorSlug(string $slug): Empresa

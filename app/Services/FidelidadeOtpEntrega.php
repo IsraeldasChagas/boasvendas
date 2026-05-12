@@ -40,6 +40,12 @@ class FidelidadeOtpEntrega
             return ['ok' => true, 'canal' => self::CANAL_WHATSAPP];
         }
 
+        Log::notice('[fidelidade-otp] WhatsApp não enviado; tentando e-mail do cartão', [
+            'empresa_id' => $empresa->id,
+            'wa_resultado' => $wa['resultado'] ?? null,
+            'tel_sufixo' => strlen($telNorm) >= 4 ? substr($telNorm, -4) : null,
+        ]);
+
         $emailResult = $this->entregarSomenteEmail($empresa->id, $telNorm, $codigo, $ttlMinutos, $nomeLoja);
         if ($emailResult['ok']) {
             return $emailResult;
