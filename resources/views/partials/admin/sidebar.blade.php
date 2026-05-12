@@ -10,8 +10,11 @@
         <a class="nav-link {{ request()->routeIs('admin.usuarios.*') ? 'active' : '' }}" href="{{ route('admin.usuarios.index') }}">
             <i class="bi bi-people"></i> Usuários
         </a>
-        <a class="nav-link {{ request()->routeIs('admin.empresas.*') ? 'active' : '' }}" href="{{ route('admin.empresas.index') }}">
+        <a class="nav-link {{ request()->routeIs('admin.empresas.*') && ! request()->routeIs('admin.empresas.vitrine-banner-sync.*') ? 'active' : '' }}" href="{{ route('admin.empresas.index') }}">
             <i class="bi bi-buildings"></i> Empresas
+        </a>
+        <a class="nav-link {{ request()->routeIs('admin.empresas.vitrine-banner-sync.*') ? 'active' : '' }}" href="{{ route('admin.empresas.vitrine-banner-sync.create') }}">
+            <i class="bi bi-images"></i> Vitrine · banner
         </a>
         <a class="nav-link {{ request()->routeIs('admin.planos.*') ? 'active' : '' }}" href="{{ route('admin.planos.index') }}">
             <i class="bi bi-tags"></i> Planos

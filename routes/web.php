@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ModuloController as AdminModuloController;
 use App\Http\Controllers\Admin\PlanoController as AdminPlanoController;
 use App\Http\Controllers\Admin\SuporteController as AdminSuporteController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\VitrineBannerSyncController as AdminVitrineBannerSyncController;
 use App\Http\Controllers\Api\CalcularEntregaController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Empresa\AdicionalController;
@@ -313,6 +314,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/empresas', [AdminEmpresaController::class, 'index'])->name('empresas.index');
     Route::get('/empresas/criar', [AdminEmpresaController::class, 'create'])->name('empresas.create');
     Route::post('/empresas', [AdminEmpresaController::class, 'store'])->name('empresas.store');
+    Route::get('/empresas/vitrine-banner/sincronizar', [AdminVitrineBannerSyncController::class, 'create'])->name('empresas.vitrine-banner-sync.create');
+    Route::post('/empresas/vitrine-banner/sincronizar', [AdminVitrineBannerSyncController::class, 'store'])
+        ->middleware('throttle:20,1')
+        ->name('empresas.vitrine-banner-sync.store');
     Route::get('/empresas/{empresa}/editar', [AdminEmpresaController::class, 'edit'])->name('empresas.edit');
     Route::get('/empresas/{empresa}', [AdminEmpresaController::class, 'show'])->name('empresas.show');
     Route::put('/empresas/{empresa}', [AdminEmpresaController::class, 'update'])->name('empresas.update');

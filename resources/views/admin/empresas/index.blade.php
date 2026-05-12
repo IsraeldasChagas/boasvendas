@@ -38,7 +38,10 @@
         </div>
     </form>
 
-    <div class="d-flex justify-content-end mb-3">
+    <div class="d-flex justify-content-end gap-2 mb-3">
+        <a href="{{ route('admin.empresas.vitrine-banner-sync.create') }}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-images me-1"></i>Sincronizar vitrine (banner)
+        </a>
         <a href="{{ route('admin.empresas.create') }}" class="btn btn-success btn-sm">
             <i class="bi bi-plus-lg me-1"></i>Nova empresa
         </a>
