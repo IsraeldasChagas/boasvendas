@@ -1098,10 +1098,22 @@ a.vf-store-brand--outra-unidade:hover {
   pointer-events: none;
 }
 
-/* Banner de categoria no topo do cardápio público — altura limitada (mesmo ritmo dos cards de produto: caixa + imagem cover) */
+/* Banner no topo do cardápio público — mobile/tablet: faixa mais baixa; desktop: mais altura para proporção melhor com telas largas */
 .vf-loja-banner-media {
   width: 100%;
   height: clamp(168px, 26vw, 240px);
+}
+
+@media (min-width: 1200px) {
+  .vf-loja-banner-media {
+    height: clamp(240px, 22vw, 420px);
+  }
+}
+
+@media (min-width: 1536px) {
+  .vf-loja-banner-media {
+    height: clamp(280px, 19vw, 480px);
+  }
 }
 
 .vf-loja-banner-img {
