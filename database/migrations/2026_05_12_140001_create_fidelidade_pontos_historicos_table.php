@@ -18,7 +18,8 @@ return new class extends Migration
             $table->string('descricao', 500)->nullable();
             $table->timestamps();
 
-            $table->index(['empresa_id', 'cartao_fidelidade_id']);
+            // Nome curto: MySQL limita identificadores a 64 caracteres (o padrão do Laravel estourava).
+            $table->index(['empresa_id', 'cartao_fidelidade_id'], 'fd_pts_hist_emp_cart_idx');
         });
     }
 
