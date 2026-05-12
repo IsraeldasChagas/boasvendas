@@ -184,7 +184,7 @@
                                                 <div class="col-6 col-md-4 col-lg-3">
                                                     <div class="border rounded overflow-hidden position-relative bg-light ratio ratio-16x9">
                                                         @if ($bimg->urlPublica())
-                                                            <img src="{{ $bimg->urlPublica() }}" alt="" class="object-fit-cover w-100 h-100">
+                                                            <img src="{{ $bimg->urlPublica() }}" alt="" class="object-fit-contain w-100 h-100">
                                                         @else
                                                             <div class="d-flex align-items-center justify-content-center small text-muted">Arquivo ausente</div>
                                                         @endif

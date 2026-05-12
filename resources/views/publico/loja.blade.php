@@ -37,7 +37,9 @@
                             @foreach ($bannerSlides as $idx => $slide)
                                 @php $tipoSlide = $slide['tipo'] ?? 'produto'; @endphp
                                 <div class="carousel-item {{ $idx === 0 ? 'active' : '' }}">
-                                    <img src="{{ $slide['url'] }}" alt="{{ $tipoSlide === 'upload' ? $empresa->nome : ($slide['nome'] ?: 'Produto') }}" class="vf-loja-banner-img d-block w-100" loading="{{ $idx === 0 ? 'eager' : 'lazy' }}" decoding="async">
+                                    <div class="vf-loja-banner-slide-frame">
+                                        <img src="{{ $slide['url'] }}" alt="{{ $tipoSlide === 'upload' ? $empresa->nome : ($slide['nome'] ?: 'Produto') }}" class="vf-loja-banner-img d-block w-100" loading="{{ $idx === 0 ? 'eager' : 'lazy' }}" decoding="async">
+                                    </div>
                                     @if ($tipoSlide === 'produto' && ($bannerCategoria ?? null))
                                         <div class="position-absolute top-0 start-0 end-0 vf-loja-banner-scrim vf-loja-banner-scrim--category px-3 py-2 text-white text-start">
                                             <span class="h5 fw-bold mb-0 d-block">{{ $bannerCategoria->nome }}</span>
