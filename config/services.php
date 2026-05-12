@@ -65,8 +65,8 @@ return [
     |--------------------------------------------------------------------------
     | OTP fidelidade (código no WhatsApp do cliente)
     |--------------------------------------------------------------------------
-    | POST JSON para URL configurada: { "phone": "5511999999999", "message": "..." }
-    | Chaves customizáveis (ex.: provedores que usam "to" / "body").
+    | POST JSON (padrão Evolution v2): { "number": "5511999999999", "text": "..." }
+    | Chaves e auth via .env (webhooks genéricos podem usar phone/message + bearer).
     */
     'fidelidade_otp' => [
         'notify_url' => trim((string) env('FIDELIDADE_OTP_NOTIFY_URL', '')),
@@ -74,8 +74,13 @@ return [
         /** bearer (Authorization: Bearer), apikey (header customizado, ex. Evolution), none */
         'notify_auth_type' => strtolower(trim((string) env('FIDELIDADE_OTP_NOTIFY_AUTH_TYPE', 'bearer'))) ?: 'bearer',
         'notify_apikey_header' => trim((string) env('FIDELIDADE_OTP_NOTIFY_APIKEY_HEADER', 'apikey')) ?: 'apikey',
-        'json_phone_key' => trim((string) env('FIDELIDADE_OTP_JSON_PHONE_KEY', 'phone')) ?: 'phone',
-        'json_message_key' => trim((string) env('FIDELIDADE_OTP_JSON_MESSAGE_KEY', 'message')) ?: 'message',
+        /** Evolution API v2: number + text (igual preventivos / sas-estoque). Webhooks genéricos: phone + message. */
+        'json_phone_key' => trim((string) env('FIDELIDADE_OTP_JSON_PHONE_KEY', 'number')) ?: 'number',
+        'json_message_key' => trim((string) env('FIDELIDADE_OTP_JSON_MESSAGE_KEY', 'text')) ?: 'text',
+        /** JSON opcional mesclado ao corpo (ex.: {"linkPreview":false}). */
+        'json_extra' => trim((string) env('FIDELIDADE_OTP_JSON_EXTRA', '')),
+        /** false = aceita certificado SSL inválido (só homologação / Evolution self-hosted). */
+        'verify_ssl' => filter_var(env('FIDELIDADE_OTP_VERIFY_SSL', true), FILTER_VALIDATE_BOOL),
         /** Em produção sem URL: se true, grava OTP e segue o fluxo (apenas log; não envia WhatsApp real). */
         'simulate_without_url' => filter_var(env('FIDELIDADE_OTP_SIMULATE_WITHOUT_URL', false), FILTER_VALIDATE_BOOL),
     ],

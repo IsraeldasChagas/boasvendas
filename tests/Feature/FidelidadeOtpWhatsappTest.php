@@ -93,8 +93,13 @@ class FidelidadeOtpWhatsappTest extends TestCase
 
     public function test_com_webhook_configurado_chama_http(): void
     {
-        config(['services.fidelidade_otp.notify_url' => 'https://example.test/notify']);
-        config(['services.fidelidade_otp.notify_bearer' => 'secret']);
+        config([
+            'services.fidelidade_otp.notify_url' => 'https://example.test/notify',
+            'services.fidelidade_otp.notify_bearer' => 'secret',
+            'services.fidelidade_otp.notify_auth_type' => 'bearer',
+            'services.fidelidade_otp.json_phone_key' => 'phone',
+            'services.fidelidade_otp.json_message_key' => 'message',
+        ]);
 
         Http::fake([
             'https://example.test/notify' => Http::response(['ok' => true], 200),

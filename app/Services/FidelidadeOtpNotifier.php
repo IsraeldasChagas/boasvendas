@@ -8,7 +8,11 @@ use Throwable;
 
 /**
  * Envia o código de verificação da fidelidade via webhook HTTP (WhatsApp Business API,
- * Evolution API, Z-API, n8n/Make, etc.).
+ * Evolution API v2, Z-API, n8n/Make, etc.).
+ *
+ * Padrão alinhado à Evolution API v2 (ex.: preventivos / sas-estoque): POST JSON com
+ * {@see config('services.fidelidade_otp.json_phone_key')} (number) e
+ * {@see config('services.fidelidade_otp.json_message_key')} (text), autenticação tipicamente header "apikey".
  */
 class FidelidadeOtpNotifier
 {
@@ -21,6 +25,8 @@ class FidelidadeOtpNotifier
     public const RESULTADO_REDE = 'rede';
 
     public const RESULTADO_HTTP = 'http_nao_sucesso';
+
+    public const RESULTADO_RESPOSTA_ERRO = 'resposta_indica_erro';
 
     /**
      * @return array{ok: bool, resultado: string, http_status?: int}
@@ -55,17 +61,18 @@ class FidelidadeOtpNotifier
             return ['ok' => false, 'resultado' => self::RESULTADO_SEM_WEBHOOK];
         }
 
-        $phoneKey = (string) config('services.fidelidade_otp.json_phone_key', 'phone');
-        $messageKey = (string) config('services.fidelidade_otp.json_message_key', 'message');
-        $payload = [
+        $phoneKey = (string) config('services.fidelidade_otp.json_phone_key', 'number');
+        $messageKey = (string) config('services.fidelidade_otp.json_message_key', 'text');
+        $payload = array_merge($this->jsonExtraDecodificado(), [
             $phoneKey => $internacional,
             $messageKey => $mensagemTexto,
-        ];
+        ]);
 
         $token = trim((string) config('services.fidelidade_otp.notify_bearer'));
         $authType = strtolower((string) config('services.fidelidade_otp.notify_auth_type', 'bearer'));
 
-        $request = Http::timeout(25)->acceptJson();
+        $verifySsl = (bool) config('services.fidelidade_otp.verify_ssl', true);
+        $request = Http::timeout(25)->acceptJson()->withOptions(['verify' => $verifySsl]);
         if ($token !== '') {
             if ($authType === 'apikey') {
                 $header = (string) config('services.fidelidade_otp.notify_apikey_header', 'apikey');
@@ -87,8 +94,8 @@ class FidelidadeOtpNotifier
             return ['ok' => false, 'resultado' => self::RESULTADO_REDE];
         }
 
+        $status = $response->status();
         if (! $response->successful()) {
-            $status = $response->status();
             Log::warning('[fidelidade-otp] Webhook retornou erro', [
                 'status' => $status,
                 'body' => mb_substr($response->body(), 0, 2000),
@@ -97,7 +104,61 @@ class FidelidadeOtpNotifier
             return ['ok' => false, 'resultado' => self::RESULTADO_HTTP, 'http_status' => $status];
         }
 
+        if ($this->corpoJsonIndicaErro($response->body())) {
+            Log::warning('[fidelidade-otp] Webhook HTTP 2xx mas corpo indica falha', [
+                'status' => $status,
+                'body' => mb_substr($response->body(), 0, 2000),
+            ]);
+
+            return ['ok' => false, 'resultado' => self::RESULTADO_RESPOSTA_ERRO, 'http_status' => $status];
+        }
+
+        Log::info('[fidelidade-otp] Webhook WhatsApp OK', [
+            'status' => $status,
+            'tel_sufixo' => strlen($internacional) >= 4 ? substr($internacional, -4) : null,
+            'body_preview' => mb_substr($response->body(), 0, 500),
+        ]);
+
         return ['ok' => true, 'resultado' => self::RESULTADO_OK];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function jsonExtraDecodificado(): array
+    {
+        $raw = trim((string) config('services.fidelidade_otp.json_extra', ''));
+        if ($raw === '') {
+            return [];
+        }
+        $decoded = json_decode($raw, true);
+        if (! is_array($decoded)) {
+            Log::warning('[fidelidade-otp] FIDELIDADE_OTP_JSON_EXTRA ignorado (JSON inválido).');
+
+            return [];
+        }
+
+        return $decoded;
+    }
+
+    private function corpoJsonIndicaErro(string $body): bool
+    {
+        $trim = trim($body);
+        if ($trim === '' || (! str_starts_with($trim, '{') && ! str_starts_with($trim, '['))) {
+            return false;
+        }
+        $data = json_decode($body, true);
+        if (! is_array($data)) {
+            return false;
+        }
+        if (array_key_exists('error', $data) && $data['error'] === true) {
+            return true;
+        }
+        if (isset($data['status']) && is_string($data['status']) && strtoupper((string) $data['status']) === 'ERROR') {
+            return true;
+        }
+
+        return false;
     }
 
     /** Dígitos com código do país 55, ou null se inválido. */
