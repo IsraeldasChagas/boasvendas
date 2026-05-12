@@ -8,6 +8,23 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (! Schema::hasTable('fidelidade_pontos_historicos')) {
+            $this->createTable();
+
+            return;
+        }
+
+        // Tabela criada em migração anterior que falhou no índice (nome > 64 chars): só completar o índice.
+        $this->ensureEmpresaCartaoCompositeIndex();
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('fidelidade_pontos_historicos');
+    }
+
+    protected function createTable(): void
+    {
         Schema::create('fidelidade_pontos_historicos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('empresa_id')->constrained('empresas')->cascadeOnDelete();
@@ -23,8 +40,16 @@ return new class extends Migration
         });
     }
 
-    public function down(): void
+    protected function ensureEmpresaCartaoCompositeIndex(): void
     {
-        Schema::dropIfExists('fidelidade_pontos_historicos');
+        foreach (Schema::getIndexes('fidelidade_pontos_historicos') as $index) {
+            if (($index['name'] ?? '') === 'fd_pts_hist_emp_cart_idx') {
+                return;
+            }
+        }
+
+        Schema::table('fidelidade_pontos_historicos', function (Blueprint $table) {
+            $table->index(['empresa_id', 'cartao_fidelidade_id'], 'fd_pts_hist_emp_cart_idx');
+        });
     }
 };
