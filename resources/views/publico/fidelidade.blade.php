@@ -152,6 +152,12 @@
                         Ainda não há selos neste telefone. Após sua primeira compra contabilizada pela loja, seus selos aparecerão aqui.
                     </div>
                 @endif
+                <div class="mt-3">
+                    <form action="{{ route('publico.fidelidade.sair', ['slug' => $slug]) }}" method="post" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">Sair e consultar outro número</button>
+                    </form>
+                </div>
             @endif
 
             <a href="{{ route('publico.loja', ['slug' => $slug]) }}" class="btn btn-link ps-0">← Continuar comprando</a>

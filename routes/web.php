@@ -74,6 +74,9 @@ Route::post('/loja/{slug}/fidelidade/reenviar-codigo', [FidelidadePublicControll
 Route::post('/loja/{slug}/fidelidade/cancelar-otp', [FidelidadePublicController::class, 'cancelarOtp'])
     ->middleware('throttle:20,1')
     ->name('publico.fidelidade.cancelar-otp');
+Route::post('/loja/{slug}/fidelidade/sair', [FidelidadePublicController::class, 'sair'])
+    ->middleware('throttle:20,1')
+    ->name('publico.fidelidade.sair');
 Route::post('/loja/{slug}/fidelidade/verificar-codigo', [FidelidadePublicController::class, 'verificarCodigo'])
     ->middleware('throttle:30,1')
     ->name('publico.fidelidade.verificar-codigo');

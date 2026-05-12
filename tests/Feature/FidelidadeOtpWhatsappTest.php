@@ -67,6 +67,47 @@ class FidelidadeOtpWhatsappTest extends TestCase
             ->assertSee('selo', false);
     }
 
+    public function test_sair_limpa_sessao_e_permite_consultar_outro_numero(): void
+    {
+        $empresa = $this->criarLojaComProgramaAtivo();
+        FidelidadeCartao::query()->create([
+            'empresa_id' => $empresa->id,
+            'telefone_normalizado' => '11988887777',
+            'cpf_normalizado' => '52998224725',
+            'email' => 'a@exemplo.com',
+            'selos' => 1,
+            'total_resgates' => 0,
+        ]);
+        FidelidadeCartao::query()->create([
+            'empresa_id' => $empresa->id,
+            'telefone_normalizado' => '11955554444',
+            'cpf_normalizado' => '52998224725',
+            'email' => 'b@exemplo.com',
+            'selos' => 2,
+            'total_resgates' => 0,
+        ]);
+
+        $this->post(route('publico.fidelidade.solicitar-codigo', ['slug' => $empresa->slug]), [
+            'telefone' => '11988887777',
+        ]);
+        $codigo1 = Cache::get('fidelidade_otp_codigo:'.$empresa->id.':11988887777');
+        $this->assertIsString($codigo1);
+        $this->post(route('publico.fidelidade.verificar-codigo', ['slug' => $empresa->slug]), [
+            'codigo' => $codigo1,
+        ]);
+        $this->assertTrue(session()->has('fidelidade_acesso'));
+
+        $this->post(route('publico.fidelidade.sair', ['slug' => $empresa->slug]))
+            ->assertRedirect(route('publico.fidelidade', ['slug' => $empresa->slug]))
+            ->assertSessionHas('status');
+
+        $this->assertFalse(session()->has('fidelidade_acesso'));
+
+        $this->post(route('publico.fidelidade.solicitar-codigo', ['slug' => $empresa->slug]), [
+            'telefone' => '11955554444',
+        ])->assertSessionHas('status');
+    }
+
     public function test_verificar_codigo_aceita_digitos_com_espaco(): void
     {
         $empresa = $this->criarLojaComProgramaAtivo();

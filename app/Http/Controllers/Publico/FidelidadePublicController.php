@@ -200,6 +200,28 @@ class FidelidadePublicController extends Controller
             ->route('publico.fidelidade', ['slug' => $slug]);
     }
 
+    /**
+     * Encerra a consulta do cartão nesta loja (volta à tela de solicitar código / outro número).
+     */
+    public function sair(Request $request, string $slug): RedirectResponse
+    {
+        $empresa = $this->empresaPorSlug($slug);
+
+        $acesso = $request->session()->get('fidelidade_acesso');
+        if (is_array($acesso) && (int) ($acesso['empresa_id'] ?? 0) === (int) $empresa->id) {
+            $request->session()->forget('fidelidade_acesso');
+        }
+
+        $pending = $request->session()->get('fidelidade_otp_pending');
+        if (is_array($pending) && (int) ($pending['empresa_id'] ?? 0) === (int) $empresa->id) {
+            $request->session()->forget('fidelidade_otp_pending');
+        }
+
+        return redirect()
+            ->route('publico.fidelidade', ['slug' => $slug])
+            ->with('status', 'Você saiu da consulta. Informe outro telefone para ver outro cartão.');
+    }
+
     public function verificarCodigo(Request $request, string $slug): RedirectResponse
     {
         $empresa = $this->empresaPorSlug($slug);
