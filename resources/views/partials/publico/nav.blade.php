@@ -19,14 +19,19 @@
     <div class="container py-2">
         <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
             <div class="d-flex align-items-center gap-2 gap-sm-3 min-width-0 flex-grow-1 flex-wrap">
-                <a href="{{ route('publico.loja', ['slug' => $slugNav]) }}" class="vf-store-brand-link text-decoration-none text-dark fw-bold d-flex align-items-center gap-2 gap-md-3 min-width-0">
+                <a href="{{ route('publico.loja', ['slug' => $slugNav]) }}"
+                   class="vf-store-brand-link vf-store-brand--unidade-atual text-decoration-none text-dark fw-bold d-flex align-items-center gap-2 gap-md-3 min-width-0"
+                   title="Você está nesta unidade — cardápio e pedidos desta loja.">
                     @if ($empresa && $empresa->urlLogo())
                         <img src="{{ $empresa->urlLogo() }}" alt="" width="66" height="66" class="vf-store-brand-logo rounded bg-white border flex-shrink-0" style="object-fit: contain;">
                     @else
                         <i class="bi bi-shop text-primary vf-store-brand-logo-placeholder flex-shrink-0"></i>
                     @endif
-                    <span class="vf-store-brand-text d-flex flex-column justify-content-center align-items-start gap-1 gap-md-2 min-width-0">
-                        <span class="vf-store-name">{{ $nomeLoja }}</span>
+                        <span class="vf-store-brand-text d-flex flex-column justify-content-center align-items-start gap-1 gap-md-2 min-width-0">
+                            <span class="vf-store-name d-inline-flex align-items-center gap-1 flex-wrap">
+                                {{ $nomeLoja }}
+                                <span class="badge rounded-pill bg-primary-subtle text-primary border border-primary-subtle small fw-normal d-none d-sm-inline">Aqui</span>
+                            </span>
                         @if ($empresa)
                             @if ($empresa->loja_aberta ?? true)
                                 <span class="badge rounded-pill bg-success vf-loja-status-badge align-self-start">Aberta</span>
@@ -42,9 +47,14 @@
                     @endphp
                     <span class="align-self-stretch border-start d-none d-sm-block mx-1 opacity-25" style="width: 1px; min-height: 3.5rem;" aria-hidden="true"></span>
                     @if ($filialHref !== '')
-                        <a href="{{ $filialHref }}" target="_blank" rel="noopener noreferrer" class="vf-store-brand-link text-decoration-none text-dark fw-bold d-flex align-items-center gap-2 gap-md-3 min-width-0">
+                        <a href="{{ $filialHref }}" target="_blank" rel="noopener noreferrer"
+                           class="vf-store-brand-link vf-store-brand--outra-unidade text-decoration-none text-dark fw-bold d-flex align-items-center gap-2 gap-md-3 min-width-0 px-1 rounded-2"
+                           title="Outra unidade — abre em nova aba para o site ou cardápio da filial.">
                     @else
-                        <div class="vf-store-brand-link text-dark fw-bold d-flex align-items-center gap-2 gap-md-3 min-width-0" role="group" aria-label="Filial">
+                        <div class="vf-store-brand-link vf-store-brand--outra-unidade text-dark fw-bold d-flex align-items-center gap-2 gap-md-3 min-width-0 px-1 rounded-2"
+                             role="group"
+                             aria-label="Outra unidade"
+                             title="Outra unidade da rede (identificação).">
                     @endif
                             @if ($empresa->urlLogoFilial())
                                 <img src="{{ $empresa->urlLogoFilial() }}" alt="" width="66" height="66" class="vf-store-brand-logo rounded bg-white border flex-shrink-0" style="object-fit: contain;">
@@ -52,7 +62,10 @@
                                 <i class="bi bi-shop-window text-primary vf-store-brand-logo-placeholder flex-shrink-0" aria-hidden="true"></i>
                             @endif
                             <span class="vf-store-brand-text d-flex flex-column justify-content-center align-items-start gap-1 gap-md-2 min-width-0">
-                                <span class="vf-store-name text-truncate w-100">{{ $empresa->loja_filial_nome }}</span>
+                                <span class="vf-store-name text-truncate w-100 d-inline-flex align-items-center gap-1">
+                                    {{ $empresa->loja_filial_nome }}
+                                    <span class="badge rounded-pill bg-secondary-subtle text-secondary border small fw-normal d-none d-sm-inline">Outra</span>
+                                </span>
                                 @if ($empresa->loja_aberta ?? true)
                                     <span class="badge rounded-pill bg-success vf-loja-status-badge align-self-start">Aberta</span>
                                 @else
