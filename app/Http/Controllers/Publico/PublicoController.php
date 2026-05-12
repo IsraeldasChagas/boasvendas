@@ -1771,6 +1771,21 @@ class PublicoController extends Controller
         ]);
     }
 
+    /**
+     * Serve a logo da filial (topo da vitrine), se existir no disco.
+     */
+    public function empresaLogoFilial(Empresa $empresa): BinaryFileResponse
+    {
+        $full = $empresa->resolveLogoFilialAbsolutePath();
+        if ($full === null || ! is_file($full)) {
+            abort(404);
+        }
+
+        return response()->file($full, [
+            'Cache-Control' => 'public, max-age=604800',
+        ]);
+    }
+
     public function legadoCarrinho(): RedirectResponse
     {
         return redirect()

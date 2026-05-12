@@ -55,6 +55,11 @@
             <strong>Instagram e Facebook:</strong> rode <code class="user-select-all">php artisan migrate</code> no servidor para criar as colunas no banco; até lá os links podem não ser gravados.
         </div>
     @endif
+    @if (! \Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_filial_nome'))
+        <div class="alert alert-info small mb-3" role="alert">
+            <strong>Filial no topo da vitrine:</strong> após rodar <code class="user-select-all">php artisan migrate</code>, aparecerá aqui o bloco para nome, link e logo da filial ao lado da marca na loja pública.
+        </div>
+    @endif
 
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <h1 class="h5 fw-bold mb-0">Configurações</h1>
@@ -229,6 +234,42 @@
                                 </div>
                             </div>
                         </div>
+                        @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_filial_nome'))
+                            <div class="col-12 border-top pt-3 mt-1">
+                                <p class="small fw-semibold mb-2"><i class="bi bi-diagram-2 me-1 text-primary"></i>Filial no topo da vitrine (opcional)</p>
+                                <p class="small text-muted mb-3">Aparece ao lado da marca na loja pública: logo menor, nome e link (ex.: outra unidade ou cardápio externo). Deixe o nome em branco para ocultar.</p>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="loja_filial_nome">Nome da filial</label>
+                                        <input type="text" class="form-control form-control-sm @error('loja_filial_nome') is-invalid @enderror" id="loja_filial_nome" name="loja_filial_nome" value="{{ old('loja_filial_nome', $empresa->loja_filial_nome) }}" maxlength="120" placeholder="Ex.: Sabor Paraense — Centro">
+                                        @error('loja_filial_nome')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label" for="loja_filial_link_url">Link da filial</label>
+                                        <input type="text" class="form-control form-control-sm @error('loja_filial_link_url') is-invalid @enderror" id="loja_filial_link_url" name="loja_filial_link_url" value="{{ old('loja_filial_link_url', $empresa->loja_filial_link_url) }}" maxlength="500" placeholder="https://…">
+                                        @error('loja_filial_link_url')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                        <p class="small text-muted mb-0 mt-1">Opcional: ao clicar, abre em nova aba. Sem link, só exibe nome e logo.</p>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label" for="loja_filial_logo">Logo da filial</label>
+                                        <div class="d-flex flex-wrap align-items-center gap-3">
+                                            <div class="border rounded bg-white d-flex align-items-center justify-content-center" style="width: 72px; height: 72px; overflow: hidden;">
+                                                @if ($empresa->urlLogoFilial())
+                                                    <img src="{{ $empresa->urlLogoFilial() }}" alt="Logo da filial" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                                                @else
+                                                    <span class="text-muted small">Sem logo</span>
+                                                @endif
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <input type="file" class="form-control form-control-sm @error('loja_filial_logo') is-invalid @enderror" id="loja_filial_logo" name="loja_filial_logo" accept="image/png,image/jpeg,image/webp">
+                                                @error('loja_filial_logo')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                                <p class="small text-muted mb-0 mt-1">JPG, PNG ou WebP. Máx: 2MB. Limpe o <strong>Nome da filial</strong> e salve para remover filial e logo.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
                         @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'cep'))
                             <div class="col-md-4">
                                 <label class="form-label" for="cep">CEP da loja</label>

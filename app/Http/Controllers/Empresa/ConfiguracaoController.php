@@ -96,6 +96,12 @@ class ConfiguracaoController extends Controller
         $rules['instagram_url'] = ['nullable', 'string', 'max:500'];
         $rules['facebook_url'] = ['nullable', 'string', 'max:500'];
 
+        if (Schema::hasColumn('empresas', 'loja_filial_nome')) {
+            $rules['loja_filial_nome'] = ['nullable', 'string', 'max:120'];
+            $rules['loja_filial_link_url'] = ['nullable', 'string', 'max:500'];
+            $rules['loja_filial_logo'] = ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'];
+        }
+
         $rules = array_merge($rules, [
             'loja_pix_instrucoes' => ['nullable', 'string', 'max:4000'],
             'loja_pix_chave_tipo' => ['nullable', 'string', Rule::in(array_keys(Empresa::pixChaveTiposRotulos()))],
@@ -338,6 +344,33 @@ class ConfiguracaoController extends Controller
             ]);
         }
 
+        if (Schema::hasColumn('empresas', 'loja_filial_nome')) {
+            $nomeF = trim((string) ($data['loja_filial_nome'] ?? ''));
+            if ($nomeF === '') {
+                $data['loja_filial_nome'] = null;
+                $data['loja_filial_link_url'] = null;
+                if ($empresa->loja_filial_logo) {
+                    $this->removerLogoFilialDoDisco($empresa);
+                }
+                $data['loja_filial_logo'] = null;
+            } else {
+                $data['loja_filial_nome'] = $nomeF;
+                $data['loja_filial_link_url'] = $this->normalizarUrlOpcional(
+                    $request->input('loja_filial_link_url'),
+                    'loja_filial_link_url'
+                );
+                $filialLogo = $request->file('loja_filial_logo');
+                if ($filialLogo instanceof UploadedFile) {
+                    $this->removerLogoFilialDoDisco($empresa);
+                    $data['loja_filial_logo'] = $this->armazenarLogoFilial($filialLogo, $empresa);
+                } else {
+                    unset($data['loja_filial_logo']);
+                }
+            }
+        } else {
+            unset($data['loja_filial_nome'], $data['loja_filial_link_url'], $data['loja_filial_logo']);
+        }
+
         $logo = $request->file('logo');
         if ($logo instanceof UploadedFile) {
             $data['logo'] = $this->armazenarLogo($logo, $empresa);
@@ -360,16 +393,25 @@ class ConfiguracaoController extends Controller
                     || str_contains($msg, 'facebook_url')
                     || str_contains($msg, 'loja_aberta')
                     || str_contains($msg, 'loja_banner_categoria_id')
+                    || str_contains($msg, 'loja_filial')
                 )
             ) {
-                unset($data['instagram_url'], $data['facebook_url'], $data['loja_aberta'], $data['loja_banner_categoria_id']);
+                unset(
+                    $data['instagram_url'],
+                    $data['facebook_url'],
+                    $data['loja_aberta'],
+                    $data['loja_banner_categoria_id'],
+                    $data['loja_filial_nome'],
+                    $data['loja_filial_logo'],
+                    $data['loja_filial_link_url']
+                );
                 $empresa->update($data);
 
                 return redirect()
                     ->route('empresa.configuracoes.index')
                     ->with(
                         'warning',
-                        'Os demais dados foram salvos. Rode php artisan migrate no servidor para criar colunas novas (Instagram/Facebook/status da loja/banner) e salve de novo.'
+                        'Os demais dados foram salvos. Rode php artisan migrate no servidor para criar colunas novas (Instagram/Facebook/status da loja/banner/filial no topo) e salve de novo.'
                     );
             }
 
@@ -410,6 +452,33 @@ class ConfiguracaoController extends Controller
         $dir = 'empresas/'.$empresa->id;
 
         return $file->storeAs($dir, $nome, 'uploads');
+    }
+
+    private function armazenarLogoFilial(UploadedFile $file, Empresa $empresa): string
+    {
+        $ext = strtolower($file->getClientOriginalExtension() ?: 'png');
+        $ext = preg_match('/^[a-z0-9]{2,4}$/', $ext) ? $ext : 'png';
+        $nome = Str::uuid()->toString().'.'.$ext;
+        $dir = 'empresas/'.$empresa->id.'/filial';
+
+        return $file->storeAs($dir, $nome, 'uploads');
+    }
+
+    private function removerLogoFilialDoDisco(Empresa $empresa): void
+    {
+        if (! $empresa->loja_filial_logo) {
+            return;
+        }
+
+        $path = ltrim(str_replace('\\', '/', (string) $empresa->loja_filial_logo), '/');
+
+        if (Storage::disk('uploads')->exists($path)) {
+            Storage::disk('uploads')->delete($path);
+
+            return;
+        }
+
+        Storage::disk('public')->delete($empresa->loja_filial_logo);
     }
 
     private function removerLogoAnteriorDoDisco(Empresa $empresa): void

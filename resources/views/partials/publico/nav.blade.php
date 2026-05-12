@@ -18,7 +18,7 @@
 <header class="vf-publico-header sticky-top shadow-sm">
     <div class="container py-2">
         <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap">
-            <div class="d-flex align-items-center gap-2 min-width-0 flex-grow-1">
+            <div class="d-flex align-items-center gap-2 gap-sm-3 min-width-0 flex-grow-1 flex-wrap">
                 <a href="{{ route('publico.loja', ['slug' => $slugNav]) }}" class="vf-store-brand-link text-decoration-none text-dark fw-bold d-flex align-items-center gap-2 gap-md-3 min-width-0">
                     @if ($empresa && $empresa->urlLogo())
                         <img src="{{ $empresa->urlLogo() }}" alt="" width="66" height="66" class="vf-store-brand-logo rounded bg-white border flex-shrink-0" style="object-fit: contain;">
@@ -36,6 +36,31 @@
                         @endif
                     </span>
                 </a>
+                @if ($empresa && $empresa->exibirFilialTopo())
+                    @php
+                        $filialHref = trim((string) ($empresa->loja_filial_link_url ?? ''));
+                    @endphp
+                    <span class="align-self-stretch border-start d-none d-sm-block mx-1 my-2 opacity-25" style="width: 1px;" aria-hidden="true"></span>
+                    @if ($filialHref !== '')
+                        <a href="{{ $filialHref }}" target="_blank" rel="noopener noreferrer" class="vf-store-brand-filial d-flex align-items-center gap-2 text-decoration-none text-dark min-width-0 py-1">
+                            @if ($empresa->urlLogoFilial())
+                                <img src="{{ $empresa->urlLogoFilial() }}" alt="" width="48" height="48" class="rounded bg-white border flex-shrink-0" style="object-fit: contain;">
+                            @else
+                                <i class="bi bi-shop-window text-primary fs-3 flex-shrink-0" aria-hidden="true"></i>
+                            @endif
+                            <span class="small fw-semibold text-truncate" style="max-width: 10rem;">{{ $empresa->loja_filial_nome }}</span>
+                        </a>
+                    @else
+                        <div class="vf-store-brand-filial d-flex align-items-center gap-2 text-dark min-width-0 py-1" role="group" aria-label="Filial">
+                            @if ($empresa->urlLogoFilial())
+                                <img src="{{ $empresa->urlLogoFilial() }}" alt="" width="48" height="48" class="rounded bg-white border flex-shrink-0" style="object-fit: contain;">
+                            @else
+                                <i class="bi bi-shop-window text-primary fs-3 flex-shrink-0" aria-hidden="true"></i>
+                            @endif
+                            <span class="small fw-semibold text-truncate" style="max-width: 10rem;">{{ $empresa->loja_filial_nome }}</span>
+                        </div>
+                    @endif
+                @endif
             </div>
             <div class="d-flex align-items-center gap-2 flex-shrink-0">
                 @if ($temContatoTopo)

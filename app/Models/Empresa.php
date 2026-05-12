@@ -34,6 +34,9 @@ class Empresa extends Model
         'slug',
         'loja_banner_categoria_id',
         'logo',
+        'loja_filial_nome',
+        'loja_filial_logo',
+        'loja_filial_link_url',
         'endereco',
         'cep',
         'whatsapp',
@@ -710,5 +713,70 @@ class Empresa extends Model
         $v = $this->updated_at?->getTimestamp() ?? time();
 
         return route('publico.empresa_logo', ['empresa' => $this->getKey()], absolute: false).'?v='.$v;
+    }
+
+    /** Exibe bloco da filial ao lado da marca na vitrine (nome obrigatório). */
+    public function exibirFilialTopo(): bool
+    {
+        if (! Schema::hasColumn('empresas', 'loja_filial_nome')) {
+            return false;
+        }
+
+        return trim((string) ($this->loja_filial_nome ?? '')) !== '';
+    }
+
+    /**
+     * Caminho absoluto da logo da filial (mesma lógica da logo principal).
+     */
+    public function resolveLogoFilialAbsolutePath(): ?string
+    {
+        if (! Schema::hasColumn('empresas', 'loja_filial_logo')) {
+            return null;
+        }
+        if ($this->loja_filial_logo === null || $this->loja_filial_logo === '') {
+            return null;
+        }
+
+        $rel = ltrim(str_replace('\\', '/', (string) $this->loja_filial_logo), '/');
+        if ($rel === '' || Str::contains($rel, '..')) {
+            return null;
+        }
+
+        $candidates = [
+            public_path('uploads/'.$rel),
+            public_path($rel),
+        ];
+
+        if (Str::startsWith($rel, 'uploads/')) {
+            $candidates[] = public_path($rel);
+            $candidates[] = public_path('uploads/'.ltrim(Str::after($rel, 'uploads/'), '/'));
+        }
+
+        foreach (array_unique(array_filter($candidates)) as $full) {
+            if (@is_file($full)) {
+                return $full;
+            }
+        }
+
+        $storage = storage_path('app/public/'.$rel);
+        if (@is_file($storage)) {
+            return $storage;
+        }
+
+        return null;
+    }
+
+    public function urlLogoFilial(): ?string
+    {
+        if (! $this->exibirFilialTopo()) {
+            return null;
+        }
+        if ($this->resolveLogoFilialAbsolutePath() === null) {
+            return null;
+        }
+
+        $v = $this->updated_at?->getTimestamp() ?? time();
+
+        return route('publico.empresa_logo_filial', ['empresa' => $this->getKey()], absolute: false).'?v='.$v;
     }
 }

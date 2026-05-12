@@ -63,6 +63,9 @@ Route::get('/media/produto-ingrediente/{produtoIngrediente}', [PublicoController
 Route::get('/media/empresa/{empresa}', [PublicoController::class, 'empresaLogo'])
     ->whereNumber('empresa')
     ->name('publico.empresa_logo');
+Route::get('/media/empresa/{empresa}/logo-filial', [PublicoController::class, 'empresaLogoFilial'])
+    ->whereNumber('empresa')
+    ->name('publico.empresa_logo_filial');
 
 Route::get('/loja/{slug}/fidelidade', [FidelidadePublicController::class, 'show'])->name('publico.fidelidade');
 Route::post('/loja/{slug}/fidelidade/solicitar-codigo', [FidelidadePublicController::class, 'solicitarCodigo'])
