@@ -1115,20 +1115,21 @@ a.vf-store-brand--outra-unidade:hover {
   box-sizing: border-box;
 }
 
-/* Carrossel do cardápio: altura mín/máx responsiva (pedido de layout) */
+/* Carrossel: altura compacta original (clamp); imagem com contain encaixa dentro sem cortar */
 .vf-loja-banner-carousel.vf-loja-banner-media {
+  --vf-loja-banner-h: clamp(168px, 26vw, 240px);
   display: flex;
   flex-direction: column;
   width: 100%;
   max-width: 100%;
-  max-height: 700px;
   overflow: hidden;
 }
 
 .vf-loja-banner-carousel .carousel-inner {
   flex: 1 1 auto;
   min-height: 0;
-  max-height: 700px;
+  height: var(--vf-loja-banner-h, clamp(168px, 26vw, 240px));
+  max-height: var(--vf-loja-banner-h, clamp(168px, 26vw, 240px));
   overflow: hidden;
   border-radius: inherit;
   isolation: isolate;
@@ -1147,29 +1148,17 @@ a.vf-store-brand--outra-unidade:hover {
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 220px;
-  max-height: 700px;
+  height: var(--vf-loja-banner-h, clamp(168px, 26vw, 240px));
+  max-height: var(--vf-loja-banner-h, clamp(168px, 26vw, 240px));
   overflow: hidden;
   background-color: #eef2f7;
 }
 
-@media (min-width: 768px) {
-  .vf-loja-banner-slide-frame {
-    min-height: 420px;
-  }
-}
-
-@media (min-width: 1200px) {
-  .vf-loja-banner-slide-frame {
-    min-height: 520px;
-  }
-}
-
 .vf-loja-banner-slide-frame .vf-loja-banner-img {
-  width: 100%;
-  height: auto;
   max-width: 100%;
-  max-height: 700px;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
   object-position: center center;
   display: block;
