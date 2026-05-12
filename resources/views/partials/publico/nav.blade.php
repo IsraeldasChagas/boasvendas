@@ -62,7 +62,10 @@
                                 <i class="bi bi-shop-window text-primary vf-store-brand-logo-placeholder flex-shrink-0" aria-hidden="true"></i>
                             @endif
                             <span class="vf-store-brand-text d-flex flex-column justify-content-center align-items-start gap-1 gap-md-2 min-width-0">
-                                <span class="vf-store-name text-truncate w-100">{{ $empresa->loja_filial_nome }}</span>
+                                <span class="vf-store-name w-100 d-inline-flex align-items-center gap-1 flex-wrap min-width-0">
+                                    <span class="text-truncate">{{ $empresa->loja_filial_nome }}</span>
+                                    <span class="badge rounded-pill bg-secondary-subtle text-secondary border small fw-normal flex-shrink-0">Ver</span>
+                                </span>
                                 @if ($empresa->loja_aberta ?? true)
                                     <span class="badge rounded-pill bg-success vf-loja-status-badge align-self-start">Aberta</span>
                                 @else
