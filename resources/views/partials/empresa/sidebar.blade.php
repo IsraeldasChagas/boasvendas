@@ -61,7 +61,7 @@
     @php
         $fidItens = [
             'fidelidade_programa' => ['active' => request()->routeIs('empresa.fidelidade.programa', 'empresa.fidelidade.programa.*'), 'url' => route('empresa.fidelidade.programa'), 'icon' => 'bi-award', 'label' => 'Programa'],
-            'fidelidade_cartoes' => ['active' => request()->routeIs('empresa.fidelidade.cartoes', 'empresa.fidelidade.cartoes.*'), 'url' => route('empresa.fidelidade.cartoes'), 'icon' => 'bi-ticket-perforated', 'label' => 'Cartões'],
+            'fidelidade_cartoes' => ['active' => request()->routeIs('empresa.fidelidade.cartoes', 'empresa.fidelidade.cartoes.*'), 'url' => route('empresa.fidelidade.cartoes'), 'icon' => 'bi-ticket-perforated', 'label' => 'Cartão Fidelidade'],
         ];
         $temAlgumFid = false;
         $fidAtivo = false;

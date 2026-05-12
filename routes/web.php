@@ -14,6 +14,7 @@ use App\Http\Controllers\Empresa\CaixaController;
 use App\Http\Controllers\Empresa\CategoriaController;
 use App\Http\Controllers\Empresa\ChamadoController as EmpresaChamadoController;
 use App\Http\Controllers\Empresa\ClienteController;
+use App\Http\Controllers\Empresa\ClienteFidelidadeCartaoController;
 use App\Http\Controllers\Empresa\ConfiguracaoController;
 use App\Http\Controllers\Empresa\DashboardController as EmpresaDashboardController;
 use App\Http\Controllers\Empresa\EmpresaEntregadorController;
@@ -186,11 +187,16 @@ Route::middleware(['auth', 'empresa.painel', 'empresa.menu'])->prefix('empresa')
     Route::get('/clientes/{cliente}/editar', [ClienteController::class, 'edit'])->name('clientes.edit');
     Route::put('/clientes/{cliente}', [ClienteController::class, 'update'])->name('clientes.update');
     Route::delete('/clientes/{cliente}', [ClienteController::class, 'destroy'])->name('clientes.destroy');
+    Route::get('/clientes/{cliente}/cartao-fidelidade', [ClienteFidelidadeCartaoController::class, 'show'])->name('clientes.cartao-fidelidade.show');
+    Route::post('/clientes/{cliente}/cartao-fidelidade/gerar', [ClienteFidelidadeCartaoController::class, 'gerar'])->name('clientes.cartao-fidelidade.gerar');
 
     Route::get('/fidelidade', [FidelidadeController::class, 'programa'])->name('fidelidade.programa');
     Route::put('/fidelidade', [FidelidadeController::class, 'programaUpdate'])->name('fidelidade.programa.update');
     Route::get('/fidelidade/cartoes', [FidelidadeController::class, 'cartoes'])->name('fidelidade.cartoes');
     Route::post('/fidelidade/cartoes/selo', [FidelidadeController::class, 'adicionarSelo'])->name('fidelidade.cartoes.selo');
+    Route::get('/fidelidade/cartoes/{fidelidadeCartao}/historico', [FidelidadeController::class, 'cartoesHistorico'])->name('fidelidade.cartoes.historico');
+    Route::post('/fidelidade/cartoes/{fidelidadeCartao}/pontos', [FidelidadeController::class, 'cartoesUpdatePontos'])->name('fidelidade.cartoes.pontos');
+    Route::post('/fidelidade/cartoes/{fidelidadeCartao}/toggle-status', [FidelidadeController::class, 'cartoesToggleStatus'])->name('fidelidade.cartoes.toggle-status');
     Route::post('/fidelidade/cartoes/{fidelidadeCartao}/resgatar', [FidelidadeController::class, 'resgatar'])->name('fidelidade.cartoes.resgatar');
 
     Route::get('/entregas', [EntregaController::class, 'index'])->name('entregas.index');

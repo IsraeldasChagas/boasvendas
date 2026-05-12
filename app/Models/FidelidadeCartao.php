@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Schema;
 
 class FidelidadeCartao extends Model
@@ -16,14 +17,22 @@ class FidelidadeCartao extends Model
         'cpf_normalizado',
         'email',
         'cliente_id',
+        'codigo_fidelidade',
         'selos',
+        'pontos',
         'total_resgates',
+        'status',
     ];
+
+    public const STATUS_ATIVO = 'ativo';
+
+    public const STATUS_INATIVO = 'inativo';
 
     protected function casts(): array
     {
         return [
             'selos' => 'integer',
+            'pontos' => 'integer',
             'total_resgates' => 'integer',
         ];
     }
@@ -105,6 +114,45 @@ class FidelidadeCartao extends Model
     public function cliente(): BelongsTo
     {
         return $this->belongsTo(Cliente::class, 'cliente_id');
+    }
+
+    public function historicosPontos(): HasMany
+    {
+        return $this->hasMany(FidelidadePontosHistorico::class, 'cartao_fidelidade_id')->orderByDesc('id');
+    }
+
+    public function registrarHistorico(string $tipo, int $deltaPontos, ?string $descricao = null): void
+    {
+        if (! $this->exists || ! Schema::hasTable('fidelidade_pontos_historicos')) {
+            return;
+        }
+
+        FidelidadePontosHistorico::query()->create([
+            'empresa_id' => $this->empresa_id,
+            'cliente_id' => $this->cliente_id,
+            'cartao_fidelidade_id' => $this->id,
+            'tipo_movimento' => $tipo,
+            'pontos' => $deltaPontos,
+            'descricao' => $descricao,
+        ]);
+    }
+
+    /** Código único estilo VF-2026-4587 */
+    public static function gerarCodigoUnico(): string
+    {
+        for ($i = 0; $i < 50; $i++) {
+            $code = 'VF-'.date('Y').'-'.str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT);
+            if (! static::query()->where('codigo_fidelidade', $code)->exists()) {
+                return $code;
+            }
+        }
+
+        return 'VF-'.date('Y').'-'.strtoupper(substr(bin2hex(random_bytes(4)), 0, 8));
+    }
+
+    public function estaAtivo(): bool
+    {
+        return ($this->status ?? self::STATUS_ATIVO) === self::STATUS_ATIVO;
     }
 
     public function telefoneMascarado(): string

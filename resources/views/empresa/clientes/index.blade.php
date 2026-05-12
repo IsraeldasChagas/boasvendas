@@ -75,6 +75,7 @@
                             <td class="small text-muted">—</td>
                             <td class="text-end small text-muted">—</td>
                             <td class="text-end">
+                                <a href="{{ route('empresa.clientes.cartao-fidelidade.show', $c) }}" class="btn btn-sm btn-outline-primary me-1">Cartão fidelidade</a>
                                 <a href="{{ route('empresa.clientes.edit', $c) }}" class="btn btn-sm btn-outline-secondary">Editar</a>
                             </td>
                         </tr>

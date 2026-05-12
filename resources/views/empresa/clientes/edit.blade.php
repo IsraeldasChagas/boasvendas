@@ -9,7 +9,12 @@
     ]])
 
     <div class="vf-card p-4" style="max-width: 40rem;">
-        <h2 class="h5 fw-bold mb-4">Editar cliente</h2>
+        <h2 class="h5 fw-bold mb-3">Editar cliente</h2>
+        <div class="d-flex flex-wrap gap-2 mb-4">
+            <a href="{{ route('empresa.clientes.cartao-fidelidade.show', $cliente) }}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-whatsapp me-1"></i>Cartão fidelidade
+            </a>
+        </div>
         <form action="{{ route('empresa.clientes.update', $cliente) }}" method="post">
             @csrf
             @method('PUT')

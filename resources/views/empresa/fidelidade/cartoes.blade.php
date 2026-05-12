@@ -1,11 +1,11 @@
 @extends('layouts.empresa')
 
-@section('title', 'Fidelidade — cartões')
+@section('title', 'Cartão Fidelidade')
 
 @section('content')
     @include('partials.components.breadcrumb', ['items' => [
         ['label' => 'Fidelidade', 'url' => route('empresa.fidelidade.programa')],
-        ['label' => 'Cartões', 'url' => route('empresa.fidelidade.cartoes')],
+        ['label' => 'Cartão Fidelidade', 'url' => route('empresa.fidelidade.cartoes')],
     ]])
 
     @if (session('status'))
@@ -22,7 +22,7 @@
     @endif
 
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-        <h2 class="h5 fw-bold mb-0">Cartões e selos</h2>
+        <h2 class="h5 fw-bold mb-0">Cartão Fidelidade</h2>
         <a href="{{ route('empresa.fidelidade.programa') }}" class="btn btn-outline-secondary btn-sm">Configurar programa</a>
     </div>
 
@@ -47,53 +47,102 @@
         </div>
         <div class="col-lg-7">
             <form action="{{ route('empresa.fidelidade.cartoes') }}" method="get" class="vf-filter-bar mb-3">
-                <label class="form-label small text-muted mb-1" for="q-cart">Buscar por telefone</label>
-                <div class="input-group input-group-sm">
-                    <input type="search" class="form-control" id="q-cart" name="q" value="{{ $q }}" placeholder="DDD + número">
-                    <button class="btn btn-outline-secondary" type="submit">Buscar</button>
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-5">
+                        <label class="form-label small text-muted mb-1" for="q-cart">Buscar (cliente, telefone ou código)</label>
+                        <input type="search" class="form-control form-control-sm" id="q-cart" name="q" value="{{ $q }}" placeholder="Nome, DDD, VF-…">
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <label class="form-label small text-muted mb-1" for="status-cart">Status do cartão</label>
+                        <select class="form-select form-select-sm" id="status-cart" name="status">
+                            <option value="" @selected(($statusCartao ?? '') === '')>Todos</option>
+                            <option value="{{ \App\Models\FidelidadeCartao::STATUS_ATIVO }}" @selected(($statusCartao ?? '') === \App\Models\FidelidadeCartao::STATUS_ATIVO)>Ativo</option>
+                            <option value="{{ \App\Models\FidelidadeCartao::STATUS_INATIVO }}" @selected(($statusCartao ?? '') === \App\Models\FidelidadeCartao::STATUS_INATIVO)>Inativo</option>
+                        </select>
+                    </div>
+                    <div class="col-md-auto d-flex gap-2">
+                        <button class="btn btn-outline-secondary btn-sm" type="submit">Filtrar</button>
+                        <a href="{{ route('empresa.fidelidade.cartoes') }}" class="btn btn-outline-secondary btn-sm">Limpar</a>
+                    </div>
                 </div>
             </form>
 
             <div class="vf-card p-0 overflow-hidden">
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0 vf-table">
+                    <table class="table table-hover mb-0 vf-table align-middle">
                         <thead>
                             <tr>
+                                <th>Cliente</th>
                                 <th>Telefone</th>
-                                <th>CPF</th>
-                                <th>E-mail</th>
+                                <th>Código</th>
                                 <th>Selos</th>
-                                <th>Resgates</th>
+                                <th>Pontos</th>
+                                <th>Status</th>
                                 <th class="text-end">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse ($cartoes as $c)
+                                @php
+                                    $waUrl = $c->cliente
+                                        ? \App\Support\FidelidadeCartaoWhatsappLink::urlMensagemCartao($c->cliente, $c)
+                                        : \App\Support\FidelidadeCartaoWhatsappLink::urlMensagemCartaoPorTelefone($c);
+                                @endphp
                                 <tr>
+                                    <td class="small">
+                                        @if ($c->cliente)
+                                            <span class="fw-medium">{{ $c->cliente->nome }}</span>
+                                        @else
+                                            <span class="text-muted">—</span>
+                                        @endif
+                                    </td>
                                     <td class="small font-monospace">{{ $c->telefoneMascarado() }}</td>
-                                    <td class="small font-monospace">{{ $c->cpfMascarado() }}</td>
-                                    <td class="small">{{ $c->emailMascarado() }}</td>
+                                    <td class="small font-monospace">{{ $c->codigo_fidelidade ?: '—' }}</td>
                                     <td>
                                         <span class="fw-semibold">{{ $c->selos }}</span>
                                         @if ($programa)
                                             <span class="text-muted small">/ {{ $programa->pedidos_meta }}</span>
                                         @endif
                                     </td>
-                                    <td>{{ $c->total_resgates }}</td>
-                                    <td class="text-end">
-                                        @if ($programa && $programa->ativo && $c->podeResgatar($programa))
-                                            <form action="{{ route('empresa.fidelidade.cartoes.resgatar', $c) }}" method="post" class="d-inline" onsubmit="return confirm('Confirmar que a recompensa foi entregue ao cliente? Os selos da meta serão debitados.');">
-                                                @csrf
-                                                <button type="submit" class="btn btn-sm btn-success">Registrar resgate</button>
-                                            </form>
+                                    <td class="fw-semibold">{{ $c->pontos ?? 0 }}</td>
+                                    <td>
+                                        @if (($c->status ?? \App\Models\FidelidadeCartao::STATUS_ATIVO) === \App\Models\FidelidadeCartao::STATUS_ATIVO)
+                                            <span class="vf-badge bg-success-subtle text-success">Ativo</span>
                                         @else
-                                            <span class="text-muted small">—</span>
+                                            <span class="vf-badge bg-secondary-subtle text-secondary">Inativo</span>
                                         @endif
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="d-flex flex-wrap gap-1 justify-content-end">
+                                            @if ($waUrl)
+                                                <a href="{{ $waUrl }}" class="btn btn-sm btn-success" target="_blank" rel="noopener">WhatsApp</a>
+                                            @else
+                                                <span class="btn btn-sm btn-outline-secondary disabled">WhatsApp</span>
+                                            @endif
+                                            <a href="{{ route('empresa.fidelidade.cartoes.historico', $c) }}" class="btn btn-sm btn-outline-secondary">Histórico</a>
+                                            <form action="{{ route('empresa.fidelidade.cartoes.pontos', $c) }}" method="post" class="d-flex gap-1 align-items-center">
+                                                @csrf
+                                                <input type="number" name="pontos" class="form-control form-control-sm" style="width:4.5rem" min="0" max="999999" value="{{ (int) ($c->pontos ?? 0) }}" title="Pontos">
+                                                <button type="submit" class="btn btn-sm btn-outline-primary">Pontos</button>
+                                            </form>
+                                            <form action="{{ route('empresa.fidelidade.cartoes.toggle-status', $c) }}" method="post" class="d-inline">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                                    {{ ($c->status ?? \App\Models\FidelidadeCartao::STATUS_ATIVO) === \App\Models\FidelidadeCartao::STATUS_ATIVO ? 'Inativar' : 'Ativar' }}
+                                                </button>
+                                            </form>
+                                            @if ($programa && $programa->ativo && $c->podeResgatar($programa))
+                                                <form action="{{ route('empresa.fidelidade.cartoes.resgatar', $c) }}" method="post" class="d-inline" onsubmit="return confirm('Confirmar que a recompensa foi entregue ao cliente? Os selos da meta serão debitados.');">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-success">Resgate</button>
+                                                </form>
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="text-center text-muted py-4">Nenhum cartão encontrado. Adicione o primeiro selo ao lado.</td>
+                                    <td colspan="7" class="text-center text-muted py-4">Nenhum cartão encontrado.</td>
                                 </tr>
                             @endforelse
                         </tbody>

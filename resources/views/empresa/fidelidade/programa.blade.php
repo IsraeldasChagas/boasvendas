@@ -18,7 +18,7 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <h2 class="h5 fw-bold mb-0">Programa de fidelidade</h2>
         <a href="{{ route('empresa.fidelidade.cartoes') }}" class="btn btn-outline-primary btn-sm">
-            <i class="bi bi-postcard me-1"></i>Cartões e selos
+            <i class="bi bi-postcard me-1"></i>Cartão Fidelidade
         </a>
     </div>
 

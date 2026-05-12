@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Empresa;
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
 use App\Models\FidelidadeCartao;
+use App\Models\FidelidadePontosHistorico;
 use App\Models\FidelidadePrograma;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -95,17 +96,94 @@ class FidelidadeController extends Controller
         $programa = $empresa->fidelidadePrograma;
         $q = $request->string('q')->trim()->value();
         $qNorm = FidelidadeCartao::normalizarTelefone($q);
+        $statusCartao = $request->string('status')->trim()->value();
 
         $cartoes = FidelidadeCartao::query()
+            ->with('cliente')
             ->where('empresa_id', $empresa->id)
-            ->when($qNorm !== '', function ($sub) use ($qNorm) {
-                $sub->where('telefone_normalizado', 'like', '%'.$qNorm.'%');
+            ->when($q !== '', function ($sub) use ($q, $qNorm) {
+                $sub->where(function ($w) use ($q, $qNorm) {
+                    $w->where('codigo_fidelidade', 'like', '%'.$q.'%');
+                    if ($qNorm !== '') {
+                        $w->orWhere('telefone_normalizado', 'like', '%'.$qNorm.'%');
+                    }
+                    $w->orWhereHas('cliente', function ($c) use ($q) {
+                        $c->where('nome', 'like', '%'.$q.'%');
+                    });
+                });
+            })
+            ->when(in_array($statusCartao, [FidelidadeCartao::STATUS_ATIVO, FidelidadeCartao::STATUS_INATIVO], true), function ($sub) use ($statusCartao) {
+                $sub->where('status', $statusCartao);
             })
             ->orderByDesc('updated_at')
-            ->limit(80)
+            ->limit(120)
             ->get();
 
-        return view('empresa.fidelidade.cartoes', compact('empresa', 'programa', 'cartoes', 'q'));
+        return view('empresa.fidelidade.cartoes', compact('empresa', 'programa', 'cartoes', 'q', 'statusCartao'));
+    }
+
+    public function cartoesHistorico(Request $request, FidelidadeCartao $fidelidadeCartao): View|RedirectResponse
+    {
+        $empresa = $request->user()->empresa;
+        if (! $empresa || (int) $fidelidadeCartao->empresa_id !== (int) $empresa->id) {
+            abort(403);
+        }
+
+        $historicos = $fidelidadeCartao->historicosPontos()->limit(200)->get();
+
+        return view('empresa.fidelidade.cartoes-historico', compact('empresa', 'fidelidadeCartao', 'historicos'));
+    }
+
+    public function cartoesUpdatePontos(Request $request, FidelidadeCartao $fidelidadeCartao): RedirectResponse
+    {
+        $empresa = $request->user()->empresa;
+        if (! $empresa || (int) $fidelidadeCartao->empresa_id !== (int) $empresa->id) {
+            abort(403);
+        }
+
+        $data = $request->validate([
+            'pontos' => ['required', 'integer', 'min:0', 'max:999999'],
+        ]);
+
+        $novo = (int) $data['pontos'];
+        $antigo = (int) $fidelidadeCartao->pontos;
+        $delta = $novo - $antigo;
+        if ($delta !== 0) {
+            $fidelidadeCartao->pontos = $novo;
+            $fidelidadeCartao->save();
+            $fidelidadeCartao->registrarHistorico(
+                FidelidadePontosHistorico::TIPO_AJUSTE,
+                $delta,
+                'Ajuste manual de pontos (de '.$antigo.' para '.$novo.').'
+            );
+        }
+
+        return redirect()
+            ->route('empresa.fidelidade.cartoes', ['q' => $fidelidadeCartao->telefone_normalizado])
+            ->with('status', 'Pontos atualizados.');
+    }
+
+    public function cartoesToggleStatus(Request $request, FidelidadeCartao $fidelidadeCartao): RedirectResponse
+    {
+        $empresa = $request->user()->empresa;
+        if (! $empresa || (int) $fidelidadeCartao->empresa_id !== (int) $empresa->id) {
+            abort(403);
+        }
+
+        $novo = $fidelidadeCartao->estaAtivo()
+            ? FidelidadeCartao::STATUS_INATIVO
+            : FidelidadeCartao::STATUS_ATIVO;
+        $fidelidadeCartao->status = $novo;
+        $fidelidadeCartao->save();
+        $fidelidadeCartao->registrarHistorico(
+            FidelidadePontosHistorico::TIPO_STATUS,
+            0,
+            $novo === FidelidadeCartao::STATUS_ATIVO ? 'Cartão ativado' : 'Cartão inativado'
+        );
+
+        return redirect()
+            ->route('empresa.fidelidade.cartoes', ['q' => $fidelidadeCartao->telefone_normalizado])
+            ->with('status', $novo === FidelidadeCartao::STATUS_ATIVO ? 'Cartão ativado.' : 'Cartão inativado.');
     }
 
     public function adicionarSelo(Request $request): RedirectResponse
@@ -138,7 +216,11 @@ class FidelidadeController extends Controller
                 'empresa_id' => $empresa->id,
                 'telefone_normalizado' => $norm,
             ],
-            ['cliente_id' => $clienteId]
+            [
+                'cliente_id' => $clienteId,
+                'status' => FidelidadeCartao::STATUS_ATIVO,
+                'pontos' => 0,
+            ]
         );
 
         if ($clienteId && ! $cartao->cliente_id) {
@@ -146,6 +228,9 @@ class FidelidadeController extends Controller
         }
 
         $cartao->increment('selos');
+        $cartao->increment('pontos');
+        $cartao->refresh();
+        $cartao->registrarHistorico(FidelidadePontosHistorico::TIPO_SELO, 1, 'Selo por compra (loja)');
 
         return redirect()
             ->route('empresa.fidelidade.cartoes', ['q' => $norm])
@@ -168,9 +253,16 @@ class FidelidadeController extends Controller
             return back()->with('warning', 'Este cartão ainda não atingiu a meta de selos.');
         }
 
-        $fidelidadeCartao->selos -= $programa->pedidos_meta;
+        $meta = (int) $programa->pedidos_meta;
+        $fidelidadeCartao->selos -= $meta;
+        $fidelidadeCartao->pontos = max(0, (int) $fidelidadeCartao->pontos - $meta);
         $fidelidadeCartao->total_resgates += 1;
         $fidelidadeCartao->save();
+        $fidelidadeCartao->registrarHistorico(
+            FidelidadePontosHistorico::TIPO_RESGATE,
+            -$meta,
+            'Resgate de recompensa (meta de '.$meta.' selos)'
+        );
 
         return redirect()
             ->route('empresa.fidelidade.cartoes', ['q' => $fidelidadeCartao->telefone_normalizado])
