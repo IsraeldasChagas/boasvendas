@@ -8,6 +8,7 @@ use App\Models\Categoria;
 use App\Models\Cliente;
 use App\Models\Empresa;
 use App\Models\EmpresaEntregaFaixaCep;
+use App\Models\EmpresaLojaBannerImagem;
 use App\Models\EmpresaSlug;
 use App\Models\FidelidadeCartao;
 use App\Models\Pedido;
@@ -822,8 +823,28 @@ class PublicoController extends Controller
             ->get();
 
         $bannerCategoria = null;
-        /** @var Collection<int, array{url: string, nome: string, produto_id: int}> $bannerSlides */
+        /** @var Collection<int, array{url: string, nome: string, produto_id: int|null, tipo: string}> $bannerSlides */
         $bannerSlides = collect();
+
+        if (Schema::hasTable('empresa_loja_banner_imagens')) {
+            $imgs = EmpresaLojaBannerImagem::query()
+                ->where('empresa_id', $empresa->id)
+                ->orderBy('ordem')
+                ->orderBy('id')
+                ->get();
+            foreach ($imgs as $row) {
+                $u = $row->urlPublica();
+                if ($u !== null && $u !== '') {
+                    $bannerSlides->push([
+                        'url' => $u,
+                        'nome' => '',
+                        'produto_id' => null,
+                        'tipo' => 'upload',
+                    ]);
+                }
+            }
+        }
+
         if (Empresa::schemaTemColunaLojaBannerCategoria()) {
             $empresa->loadMissing('lojaBannerCategoria');
             $bc = $empresa->lojaBannerCategoria;
@@ -846,11 +867,14 @@ class PublicoController extends Controller
                             'url' => $u,
                             'nome' => $prodBanner->nome,
                             'produto_id' => (int) $prodBanner->id,
+                            'tipo' => 'produto',
                         ]);
                     }
                 }
             }
         }
+
+        $mostrarBanner = $bannerCategoria !== null || $bannerSlides->isNotEmpty();
 
         return view('publico.loja', compact(
             'slug',
@@ -858,7 +882,8 @@ class PublicoController extends Controller
             'produtos',
             'categorias',
             'bannerCategoria',
-            'bannerSlides'
+            'bannerSlides',
+            'mostrarBanner'
         ));
     }
 
@@ -1777,6 +1802,27 @@ class PublicoController extends Controller
     public function empresaLogoFilial(Empresa $empresa): BinaryFileResponse
     {
         $full = $empresa->resolveLogoFilialAbsolutePath();
+        if ($full === null || ! is_file($full)) {
+            abort(404);
+        }
+
+        return response()->file($full, [
+            'Cache-Control' => 'public, max-age=604800',
+        ]);
+    }
+
+    public function empresaLojaBannerImagem(Empresa $empresa, int $bannerImagem): BinaryFileResponse
+    {
+        if (! Schema::hasTable('empresa_loja_banner_imagens')) {
+            abort(404);
+        }
+
+        $img = EmpresaLojaBannerImagem::query()
+            ->where('empresa_id', $empresa->id)
+            ->where('id', $bannerImagem)
+            ->firstOrFail();
+
+        $full = $img->resolveAbsolutePath();
         if ($full === null || ! is_file($full)) {
             abort(404);
         }

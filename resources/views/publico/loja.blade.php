@@ -15,11 +15,11 @@
             </div>
         @endif
 
-        @if ($bannerCategoria ?? null)
+        @if ($mostrarBanner ?? false)
             <div class="vf-loja-banner vf-loja-banner-card mb-3">
                 @if (($bannerSlides ?? collect())->isNotEmpty())
                     @php
-                        $carouselId = 'vfLojaBannerCat'.$bannerCategoria->id;
+                        $carouselId = 'vfLojaBannerEmp'.$empresa->id;
                         $slideCount = $bannerSlides->count();
                         $showArrows = $slideCount > 1;
                     @endphp
@@ -35,16 +35,27 @@
                         @endif>
                         <div class="carousel-inner">
                             @foreach ($bannerSlides as $idx => $slide)
+                                @php $tipoSlide = $slide['tipo'] ?? 'produto'; @endphp
                                 <div class="carousel-item {{ $idx === 0 ? 'active' : '' }}">
-                                    <img src="{{ $slide['url'] }}" alt="{{ $slide['nome'] }}" class="vf-loja-banner-img d-block w-100" loading="{{ $idx === 0 ? 'eager' : 'lazy' }}" decoding="async">
-                                    <div class="position-absolute top-0 start-0 end-0 vf-loja-banner-scrim vf-loja-banner-scrim--category px-3 py-2 text-white text-start">
-                                        <span class="h5 fw-bold mb-0 d-block">{{ $bannerCategoria->nome }}</span>
-                                    </div>
+                                    <img src="{{ $slide['url'] }}" alt="{{ $tipoSlide === 'upload' ? $empresa->nome : ($slide['nome'] ?: 'Produto') }}" class="vf-loja-banner-img d-block w-100" loading="{{ $idx === 0 ? 'eager' : 'lazy' }}" decoding="async">
+                                    @if ($tipoSlide === 'produto' && ($bannerCategoria ?? null))
+                                        <div class="position-absolute top-0 start-0 end-0 vf-loja-banner-scrim vf-loja-banner-scrim--category px-3 py-2 text-white text-start">
+                                            <span class="h5 fw-bold mb-0 d-block">{{ $bannerCategoria->nome }}</span>
+                                        </div>
+                                    @endif
                                     <div class="position-absolute bottom-0 start-0 end-0 vf-loja-banner-scrim vf-loja-banner-scrim--carousel px-3 py-3 text-white text-start">
-                                        @if ($slideCount > 1)
-                                            <span class="small d-block opacity-90 text-truncate">{{ $slide['nome'] }}</span>
+                                        @if ($tipoSlide === 'produto' && ($bannerCategoria ?? null))
+                                            @if ($slideCount > 1)
+                                                <span class="small d-block opacity-90 text-truncate">{{ $slide['nome'] }}</span>
+                                            @endif
+                                            <a href="{{ route('publico.loja', ['slug' => $slug, 'categoria_id' => $bannerCategoria->id]) }}" class="small fw-semibold text-white text-decoration-underline {{ $slideCount > 1 ? 'mt-1' : '' }} d-inline-block">Ver todos os produtos desta categoria</a>
+                                        @else
+                                            @if ($bannerCategoria ?? null)
+                                                <a href="{{ route('publico.loja', ['slug' => $slug, 'categoria_id' => $bannerCategoria->id]) }}" class="small fw-semibold text-white text-decoration-underline d-inline-block">Ver {{ $bannerCategoria->nome }}</a>
+                                            @else
+                                                <a href="{{ route('publico.loja', ['slug' => $slug]) }}" class="small fw-semibold text-white text-decoration-underline d-inline-block">Ver cardápio</a>
+                                            @endif
                                         @endif
-                                        <a href="{{ route('publico.loja', ['slug' => $slug, 'categoria_id' => $bannerCategoria->id]) }}" class="small fw-semibold text-white text-decoration-underline {{ $slideCount > 1 ? 'mt-1' : '' }} d-inline-block">Ver todos os produtos desta categoria</a>
                                     </div>
                                 </div>
                             @endforeach
@@ -58,7 +69,7 @@
                             </button>
                         @endif
                     </div>
-                @else
+                @elseif ($bannerCategoria ?? null)
                     <a href="{{ route('publico.loja', ['slug' => $slug, 'categoria_id' => $bannerCategoria->id]) }}" class="d-block text-decoration-none">
                         <div class="vf-card vf-loja-banner-media vf-loja-banner-fallback rounded-3 overflow-hidden border-0 shadow-sm bg-primary text-white d-flex flex-column align-items-start justify-content-start text-start px-3 pt-3 pb-3">
                             <span class="h5 fw-bold mb-2 d-block">{{ $bannerCategoria->nome }}</span>
@@ -145,11 +156,11 @@
     </div>
 @endsection
 
-@if (($bannerCategoria ?? null) && ($bannerSlides ?? collect())->count() > 1)
+@if (($mostrarBanner ?? false) && ($bannerSlides ?? collect())->count() > 1)
     @push('scripts')
         <script>
             (function () {
-                var el = document.getElementById('vfLojaBannerCat{{ $bannerCategoria->id }}');
+                var el = document.getElementById('vfLojaBannerEmp{{ $empresa->id }}');
                 if (!el || typeof bootstrap === 'undefined') return;
                 if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
                     el.setAttribute('data-bs-interval', 'false');

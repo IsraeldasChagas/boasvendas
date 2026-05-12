@@ -156,7 +156,7 @@
                         </div>
                     </div>
                 @endif
-                @if (\App\Models\Empresa::schemaTemColunaLojaBannerCategoria() && $empresa->temTelaMenu('loja_online'))
+                @if ($empresa->temTelaMenu('loja_online') && (\App\Models\Empresa::schemaTemColunaLojaBannerCategoria() || \Illuminate\Support\Facades\Schema::hasTable('empresa_loja_banner_imagens')))
                     <div class="vf-card mb-3 border border-primary border-2 shadow-sm overflow-hidden rounded-2">
                         <button type="button" class="vf-config-section-toggle w-100 d-flex align-items-center justify-content-between gap-2 btn border-0 rounded-0 py-3 px-4 text-start text-body shadow-none bg-primary-subtle bg-opacity-25" data-bs-toggle="collapse" data-bs-target="#vf-collapse-banner-cardapio" aria-expanded="true" aria-controls="vf-collapse-banner-cardapio">
                             <span class="h6 fw-bold mb-0"><i class="bi bi-image text-primary me-1"></i>Banner no cardápio</span>
@@ -164,16 +164,46 @@
                         </button>
                         <div id="vf-collapse-banner-cardapio" class="collapse show border-top border-primary border-opacity-25">
                             <div class="p-4 pt-3">
-                                <p class="small text-muted mb-3">Bloco em destaque no topo da loja pública, <strong>antes</strong> do filtro de categorias. Ao tocar, o cliente filtra pela categoria escolhida.</p>
-                        <label class="form-label" for="loja_banner_categoria_id">Categoria em destaque</label>
-                        <select class="form-select form-select-sm @error('loja_banner_categoria_id') is-invalid @enderror" id="loja_banner_categoria_id" name="loja_banner_categoria_id">
-                            <option value="">— Sem banner —</option>
-                            @foreach (($categoriasBanner ?? collect()) as $catBanner)
-                                <option value="{{ $catBanner->id }}" @selected((string) old('loja_banner_categoria_id', $empresa->loja_banner_categoria_id) === (string) $catBanner->id)>{{ $catBanner->nome }}</option>
-                            @endforeach
-                        </select>
-                        @error('loja_banner_categoria_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                        <p class="small text-muted mb-0 mt-2">Só aparecem categorias <strong>ativas</strong>. Se houver foto em algum produto da categoria, ela é usada como imagem do banner.</p>
+                                <p class="small text-muted mb-3">Bloco em destaque no topo da loja pública, <strong>antes</strong> do filtro de categorias. Você pode combinar <strong>imagens enviadas por você</strong> (várias) com o destaque por <strong>categoria</strong> (fotos dos produtos da categoria).</p>
+                                @if (\App\Models\Empresa::schemaTemColunaLojaBannerCategoria())
+                                    <label class="form-label" for="loja_banner_categoria_id">Categoria em destaque</label>
+                                    <select class="form-select form-select-sm @error('loja_banner_categoria_id') is-invalid @enderror" id="loja_banner_categoria_id" name="loja_banner_categoria_id">
+                                        <option value="">— Sem destaque por categoria —</option>
+                                        @foreach (($categoriasBanner ?? collect()) as $catBanner)
+                                            <option value="{{ $catBanner->id }}" @selected((string) old('loja_banner_categoria_id', $empresa->loja_banner_categoria_id) === (string) $catBanner->id)>{{ $catBanner->nome }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('loja_banner_categoria_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    <p class="small text-muted mb-3 mt-2">Só aparecem categorias <strong>ativas</strong>. As fotos dos produtos dessa categoria entram no carrossel <strong>depois</strong> das imagens que você enviar abaixo.</p>
+                                @endif
+                                @if (\Illuminate\Support\Facades\Schema::hasTable('empresa_loja_banner_imagens'))
+                                    <label class="form-label d-block">Imagens do banner <span class="text-muted fw-normal">(opcional, até 12)</span></label>
+                                    @if (($lojaBannerImagens ?? collect())->isNotEmpty())
+                                        <div class="row g-2 mb-3">
+                                            @foreach ($lojaBannerImagens as $bimg)
+                                                <div class="col-6 col-md-4 col-lg-3">
+                                                    <div class="border rounded overflow-hidden position-relative bg-light ratio ratio-16x9">
+                                                        @if ($bimg->urlPublica())
+                                                            <img src="{{ $bimg->urlPublica() }}" alt="" class="object-fit-cover w-100 h-100">
+                                                        @else
+                                                            <div class="d-flex align-items-center justify-content-center small text-muted">Arquivo ausente</div>
+                                                        @endif
+                                                    </div>
+                                                    <div class="form-check mt-1">
+                                                        <input class="form-check-input" type="checkbox" name="loja_banner_imagem_remover[]" value="{{ $bimg->id }}" id="vf-banner-del-{{ $bimg->id }}">
+                                                        <label class="form-check-label small" for="vf-banner-del-{{ $bimg->id }}">Remover</label>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                    <input type="file" class="form-control form-control-sm @error('loja_banner_imagens') is-invalid @enderror @error('loja_banner_imagens.*') is-invalid @enderror" id="loja_banner_imagens" name="loja_banner_imagens[]" accept="image/png,image/jpeg,image/webp" multiple>
+                                    @error('loja_banner_imagens')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                                    @error('loja_banner_imagens.*')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                                    <p class="small text-muted mb-0 mt-1">JPG, PNG ou WebP. Máx. 4&nbsp;MB por arquivo. As novas imagens aparecem <strong>primeiro</strong> no carrossel da vitrine.</p>
+                                @elseif (! \App\Models\Empresa::schemaTemColunaLojaBannerCategoria())
+                                    <p class="small text-warning mb-0">Rode <code class="small">php artisan migrate</code> no servidor para criar a tabela de imagens do banner.</p>
+                                @endif
                             </div>
                         </div>
                     </div>

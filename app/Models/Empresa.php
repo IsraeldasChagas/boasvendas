@@ -148,6 +148,14 @@ class Empresa extends Model
         return $this->belongsTo(Categoria::class, 'loja_banner_categoria_id');
     }
 
+    /** Imagens extras do banner (upload), após migrate da tabela. */
+    public function lojaBannerImagens(): HasMany
+    {
+        return $this->hasMany(EmpresaLojaBannerImagem::class, 'empresa_id')
+            ->orderBy('ordem')
+            ->orderBy('id');
+    }
+
     public function clientes(): HasMany
     {
         return $this->hasMany(Cliente::class, 'empresa_id');

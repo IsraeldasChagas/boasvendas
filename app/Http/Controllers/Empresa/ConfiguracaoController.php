@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Empresa;
 use App\Http\Controllers\Controller;
 use App\Models\Categoria;
 use App\Models\Empresa;
+use App\Models\EmpresaLojaBannerImagem;
 use App\Models\EmpresaSlug;
 use App\Support\OsrmRouting;
 use Illuminate\Database\QueryException;
@@ -41,6 +42,15 @@ class ConfiguracaoController extends Controller
                 ->get();
         }
 
+        $lojaBannerImagens = collect();
+        if (Schema::hasTable('empresa_loja_banner_imagens')) {
+            $lojaBannerImagens = EmpresaLojaBannerImagem::query()
+                ->where('empresa_id', $empresa->id)
+                ->orderBy('ordem')
+                ->orderBy('id')
+                ->get();
+        }
+
         $fretePreviewMapaOrigem = null;
         if (Schema::hasColumn('empresas', 'loja_frete_modo')
             && $empresa->lojaFreteModoEfetivo() === Empresa::LOJA_FRETE_OSRM_DISTANCIA) {
@@ -55,7 +65,7 @@ class ConfiguracaoController extends Controller
             }
         }
 
-        return view('empresa.configuracoes.index', compact('empresa', 'categoriasBanner', 'fretePreviewMapaOrigem'));
+        return view('empresa.configuracoes.index', compact('empresa', 'categoriasBanner', 'lojaBannerImagens', 'fretePreviewMapaOrigem'));
     }
 
     public function update(Request $request): RedirectResponse
@@ -165,6 +175,16 @@ class ConfiguracaoController extends Controller
             ];
         }
 
+        if (Schema::hasTable('empresa_loja_banner_imagens') && $empresa->temTelaMenu('loja_online')) {
+            $rules['loja_banner_imagens'] = ['nullable', 'array', 'max:12'];
+            $rules['loja_banner_imagens.*'] = ['file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'];
+            $rules['loja_banner_imagem_remover'] = ['nullable', 'array'];
+            $rules['loja_banner_imagem_remover.*'] = [
+                'integer',
+                Rule::exists('empresa_loja_banner_imagens', 'id')->where(fn ($q) => $q->where('empresa_id', $empresa->id)),
+            ];
+        }
+
         if (Empresa::schemaTemColunaLojaBannerCategoria() && $request->has('loja_banner_categoria_id')) {
             $rawBannerCat = $request->input('loja_banner_categoria_id');
             $request->merge([
@@ -173,6 +193,27 @@ class ConfiguracaoController extends Controller
         }
 
         $data = $request->validate($rules);
+
+        unset($data['loja_banner_imagens'], $data['loja_banner_imagem_remover']);
+
+        if (Schema::hasTable('empresa_loja_banner_imagens') && $empresa->temTelaMenu('loja_online')) {
+            $removerIds = collect($request->input('loja_banner_imagem_remover', []))
+                ->filter(fn ($v) => $v !== null && $v !== '')
+                ->map(fn ($v) => (int) $v)
+                ->unique()
+                ->values();
+            $novosArquivos = array_values(array_filter(
+                (array) ($request->file('loja_banner_imagens') ?? []),
+                fn ($f) => $f instanceof UploadedFile
+            ));
+            $atuais = EmpresaLojaBannerImagem::query()->where('empresa_id', $empresa->id)->count();
+            $aposRemover = max(0, $atuais - $removerIds->count());
+            if ($aposRemover + count($novosArquivos) > 12) {
+                throw ValidationException::withMessages([
+                    'loja_banner_imagens' => 'No máximo 12 imagens no banner (já salvas, menos as marcadas para remover, mais as novas).',
+                ]);
+            }
+        }
 
         // Sempre gravar aqui: em vários hosts Schema::hasColumn('empresas', instagram_url)
         // retorna false mesmo com a coluna criada (information_schema / permissões).
@@ -418,9 +459,82 @@ class ConfiguracaoController extends Controller
             throw $e;
         }
 
+        $this->sincronizarLojaBannerImagens($request, $empresa);
+
         return redirect()
             ->route('empresa.configuracoes.index')
             ->with('status', 'Configurações salvas.');
+    }
+
+    private function sincronizarLojaBannerImagens(Request $request, Empresa $empresa): void
+    {
+        if (! Schema::hasTable('empresa_loja_banner_imagens') || ! $empresa->temTelaMenu('loja_online')) {
+            return;
+        }
+
+        $removerIds = collect($request->input('loja_banner_imagem_remover', []))
+            ->filter(fn ($v) => $v !== null && $v !== '')
+            ->map(fn ($v) => (int) $v)
+            ->unique()
+            ->values();
+
+        foreach ($removerIds as $rid) {
+            $row = EmpresaLojaBannerImagem::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('id', $rid)
+                ->first();
+            if ($row === null) {
+                continue;
+            }
+            $this->removerLojaBannerArquivoDoDisco($row->caminho);
+            $row->delete();
+        }
+
+        $novos = array_values(array_filter(
+            (array) ($request->file('loja_banner_imagens') ?? []),
+            fn ($f) => $f instanceof UploadedFile
+        ));
+
+        if ($novos === []) {
+            return;
+        }
+
+        $maxOrdem = (int) EmpresaLojaBannerImagem::query()
+            ->where('empresa_id', $empresa->id)
+            ->max('ordem');
+
+        foreach ($novos as $i => $file) {
+            $caminho = $this->armazenarArquivoLojaBanner($file, $empresa);
+            EmpresaLojaBannerImagem::query()->create([
+                'empresa_id' => $empresa->id,
+                'caminho' => $caminho,
+                'ordem' => $maxOrdem + 1 + $i,
+            ]);
+        }
+    }
+
+    private function armazenarArquivoLojaBanner(UploadedFile $file, Empresa $empresa): string
+    {
+        $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+        $ext = preg_match('/^[a-z0-9]{2,4}$/', $ext) ? $ext : 'jpg';
+        $nome = Str::uuid()->toString().'.'.$ext;
+        $dir = 'empresas/'.$empresa->id.'/loja-banner';
+
+        return $file->storeAs($dir, $nome, 'uploads');
+    }
+
+    private function removerLojaBannerArquivoDoDisco(?string $rel): void
+    {
+        if ($rel === null || $rel === '') {
+            return;
+        }
+        $path = ltrim(str_replace('\\', '/', $rel), '/');
+        if ($path === '') {
+            return;
+        }
+        if (Storage::disk('uploads')->exists($path)) {
+            Storage::disk('uploads')->delete($path);
+        }
     }
 
     private function normalizarUrlOpcional(?string $valor, string $campo): ?string
