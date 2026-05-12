@@ -23,9 +23,10 @@ class FidelidadeOtpEntregaTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_usa_email_quando_whatsapp_falha(): void
+    public function test_usa_email_quando_whatsapp_falha_e_fallback_ligado(): void
     {
         Mail::fake();
+        config(['services.fidelidade_otp.email_fallback' => true]);
 
         $this->mock(FidelidadeOtpNotifier::class, function ($m) {
             $m->shouldReceive('tentarEnviarCodigoWhatsapp')
@@ -45,9 +46,10 @@ class FidelidadeOtpEntregaTest extends TestCase
         });
     }
 
-    public function test_sem_destino_quando_whatsapp_falha_e_sem_email_no_cartao(): void
+    public function test_sem_destino_quando_whatsapp_falha_fallback_ligado_e_sem_email_no_cartao(): void
     {
         Mail::fake();
+        config(['services.fidelidade_otp.email_fallback' => true]);
 
         $this->mock(FidelidadeOtpNotifier::class, function ($m) {
             $m->shouldReceive('tentarEnviarCodigoWhatsapp')
@@ -74,6 +76,27 @@ class FidelidadeOtpEntregaTest extends TestCase
 
         $this->assertFalse($r['ok']);
         $this->assertSame(FidelidadeOtpEntrega::FALHA_SEM_DESTINO, $r['resultado']);
+        Mail::assertNothingSent();
+    }
+
+    public function test_so_whatsapp_quando_fallback_desligado_nao_envia_email_mesmo_com_cadastro(): void
+    {
+        Mail::fake();
+        config(['services.fidelidade_otp.email_fallback' => false]);
+
+        $this->mock(FidelidadeOtpNotifier::class, function ($m) {
+            $m->shouldReceive('tentarEnviarCodigoWhatsapp')
+                ->once()
+                ->andReturn(['ok' => false, 'resultado' => FidelidadeOtpNotifier::RESULTADO_HTTP, 'http_status' => 401]);
+        });
+
+        $empresa = $this->criarEmpresaECartaoComEmail();
+
+        $entrega = $this->app->make(FidelidadeOtpEntrega::class);
+        $r = $entrega->entregar($empresa, '11988887777', '999888', 10);
+
+        $this->assertFalse($r['ok']);
+        $this->assertSame(FidelidadeOtpEntrega::FALHA_WHATSAPP, $r['resultado']);
         Mail::assertNothingSent();
     }
 

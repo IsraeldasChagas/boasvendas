@@ -81,6 +81,11 @@ return [
         'json_extra' => trim((string) env('FIDELIDADE_OTP_JSON_EXTRA', '')),
         /** false = aceita certificado SSL inválido (só homologação / Evolution self-hosted). */
         'verify_ssl' => filter_var(env('FIDELIDADE_OTP_VERIFY_SSL', true), FILTER_VALIDATE_BOOL),
+        /**
+         * true = se o WhatsApp falhar, envia o código por e-mail do cartão.
+         * false = só WhatsApp (padrão; alinhe FIDELIDADE_OTP_* na Evolution).
+         */
+        'email_fallback' => filter_var(env('FIDELIDADE_OTP_EMAIL_FALLBACK', false), FILTER_VALIDATE_BOOL),
         /** Em produção sem URL: se true, grava OTP e segue o fluxo (apenas log; não envia WhatsApp real). */
         'simulate_without_url' => filter_var(env('FIDELIDADE_OTP_SIMULATE_WITHOUT_URL', false), FILTER_VALIDATE_BOOL),
     ],

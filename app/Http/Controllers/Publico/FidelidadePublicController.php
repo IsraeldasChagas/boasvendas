@@ -427,6 +427,7 @@ class FidelidadePublicController extends Controller
     {
         return match ($envio['resultado'] ?? '') {
             FidelidadeOtpEntrega::FALHA_EMAIL => 'Não foi possível enviar o e-mail com o código. Verifique o envio de e-mails do site (MAIL_*) ou tente mais tarde.',
+            FidelidadeOtpEntrega::FALHA_WHATSAPP => 'Não foi possível enviar o código pelo WhatsApp. Confira se a integração (Evolution) está ativa no servidor e as variáveis FIDELIDADE_OTP_* no .env; depois tente de novo ou fale com a loja.',
             FidelidadeOtpEntrega::FALHA_SEM_DESTINO => 'Não foi possível enviar o código pelo WhatsApp e não há e-mail válido no cartão. Atualize o cadastro acima ou fale com a loja.',
             default => 'Não foi possível enviar o código pelo WhatsApp. Tente mais tarde ou fale com a loja.',
         };

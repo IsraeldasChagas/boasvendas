@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\Schema;
 use Throwable;
 
 /**
- * Envia o código OTP: tenta WhatsApp (webhook); se não for possível, envia por e-mail do cartão.
+ * Envia o código OTP: tenta WhatsApp (webhook); opcionalmente e-mail do cartão se
+ * {@see config('services.fidelidade_otp.email_fallback')} for true.
  */
 class FidelidadeOtpEntrega
 {
@@ -20,6 +21,9 @@ class FidelidadeOtpEntrega
     public const CANAL_EMAIL = 'email';
 
     public const FALHA_EMAIL = 'email_falhou';
+
+    /** WhatsApp falhou e o fallback por e-mail está desligado. */
+    public const FALHA_WHATSAPP = 'whatsapp_falhou';
 
     public const FALHA_SEM_DESTINO = 'sem_destino';
 
@@ -38,6 +42,16 @@ class FidelidadeOtpEntrega
         $wa = $this->whatsapp->tentarEnviarCodigoWhatsapp($telNorm, $msgWa);
         if ($wa['ok']) {
             return ['ok' => true, 'canal' => self::CANAL_WHATSAPP];
+        }
+
+        if (! (bool) config('services.fidelidade_otp.email_fallback', false)) {
+            Log::warning('[fidelidade-otp] WhatsApp não enviado e fallback por e-mail está desligado (FIDELIDADE_OTP_EMAIL_FALLBACK=false)', [
+                'empresa_id' => $empresa->id,
+                'wa_resultado' => $wa['resultado'] ?? null,
+                'tel_sufixo' => strlen($telNorm) >= 4 ? substr($telNorm, -4) : null,
+            ]);
+
+            return ['ok' => false, 'resultado' => self::FALHA_WHATSAPP, 'wa' => $wa];
         }
 
         Log::notice('[fidelidade-otp] WhatsApp não enviado; tentando e-mail do cartão', [
