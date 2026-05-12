@@ -65,7 +65,11 @@
                     @if ($otpPorEmail)
                         <p class="small text-muted mb-3">O envio pelo <strong>WhatsApp</strong> não está disponível no momento; enviamos o código de <strong>6 dígitos</strong> para o <strong>e-mail do seu cadastro</strong> nesta loja (confira spam/lixeira). Digite o código abaixo.</p>
                     @elseif ($otpPorWame && $waMeUrl)
-                        <p class="small text-muted mb-3">O envio automático pelo WhatsApp da loja não está ativo no momento. Toque no botão abaixo para abrir o WhatsApp com a mensagem já contendo seu <strong>código de 6 dígitos</strong> (número com final <strong>***{{ $suf }}</strong>). Você pode ler o código na própria tela antes de enviar.</p>
+                        <div class="alert alert-warning small mb-3" role="status">
+                            <strong>Importante:</strong> este modo <strong>não envia</strong> o código como mensagem nova para o seu celular. Ele só <strong>abre o WhatsApp</strong> (no computador pode ser o <strong>WhatsApp Web</strong>; no celular, o <strong>aplicativo</strong>) com o texto já escrito — <strong>o código de 6 dígitos aparece nessa tela</strong>, você lê e digita aqui embaixo. Não é obrigado enviar a mensagem.
+                            <span class="d-block mt-2">Para o código <strong>chegar sozinho</strong> no aparelho como conversa recebida, a loja precisa ativar o envio automático no servidor (Evolution).</span>
+                        </div>
+                        <p class="small text-muted mb-3">Telefone do cartão com final <strong>***{{ $suf }}</strong>. Se estiver no <strong>computador</strong> e quiser ver no <strong>celular</strong>, abra este mesmo link da loja no navegador do celular e solicite o código de novo.</p>
                         <div class="d-grid gap-2 mb-3">
                             <a href="{{ $waMeUrl }}" class="btn btn-success" target="_blank" rel="noopener noreferrer">Abrir WhatsApp com o código</a>
                         </div>
@@ -77,7 +81,7 @@
                         @if ($otpPorEmail)
                             <p class="small mb-2 text-muted">Código enviado por <strong>e-mail</strong> (cartão cadastrado com o telefone ***{{ $suf }}).</p>
                         @elseif ($otpPorWame && $waMeUrl)
-                            <p class="small mb-2 text-muted">Código na mensagem do link WhatsApp acima (mesmo telefone ***{{ $suf }}).</p>
+                            <p class="small mb-2 text-muted">O código está <strong>dentro da mensagem</strong> que abre ao tocar no botão verde (não chega como notificação de conversa).</p>
                         @else
                             <p class="small mb-2 text-muted">Código enviado ao <strong>WhatsApp</strong> (número com final ***{{ $suf }}).</p>
                         @endif

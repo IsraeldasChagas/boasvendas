@@ -445,8 +445,8 @@ class FidelidadePublicController extends Controller
 
         if ($canal === FidelidadeOtpEntrega::CANAL_WAME) {
             return $reenvio
-                ? 'Geramos um novo código. Use o botão "Abrir WhatsApp com o código" abaixo: a mensagem já vem preenchida (envio automático da loja indisponível). Você pode ler o código na tela do WhatsApp antes de enviar.'
-                : 'Use o botão "Abrir WhatsApp com o código" abaixo: a mensagem já vem com os 6 dígitos (envio automático da loja indisponível). Leia o código na tela do WhatsApp e digite-o aqui em seguida.';
+                ? 'Geramos um novo código. Use o botão verde na página: ele abre o WhatsApp com o texto já pronto (leia o código na tela). No celular, abra esta página no próprio celular para o código abrir no app.'
+                : 'Use o botão verde nesta página: ele abre o WhatsApp com o código já na mensagem (você lê na tela; não precisa enviar). Para receber como mensagem automática no aparelho, a loja precisa configurar o envio pelo servidor.';
         }
 
         return $reenvio

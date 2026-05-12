@@ -23,9 +23,17 @@
     </div>
 
     <p class="text-muted small mb-4">
-        Defina quantas compras geram a recompensa e se será um produto ou valor em desconto. Na vitrine, o cliente informa o celular e recebe um código no <strong>WhatsApp</strong> para ver os selos com segurança.
+        Defina quantas compras geram a recompensa e se será um produto ou valor em desconto. Na vitrine, o cliente informa o celular e usa um <strong>código de 6 dígitos</strong> para ver os selos com segurança.
         Quando existir integração com pedidos online, os selos poderão ser lançados automaticamente; por enquanto você registra cada compra na tela de cartões.
     </p>
+
+    @php($otpUrlConfigurada = trim((string) config('services.fidelidade_otp.notify_url', '')) !== '')
+    @if (! $otpUrlConfigurada)
+        <div class="alert alert-warning small mb-4" style="max-width: 42rem;" role="status">
+            <strong>Código na vitrine (WhatsApp):</strong> o envio <strong>automático</strong> para o aparelho do cliente <strong>não está configurado</strong> neste servidor (variável <code class="user-select-all">FIDELIDADE_OTP_NOTIFY_URL</code>, Evolution API).
+            Enquanto isso, o cliente vê um <strong>link</strong> que abre o WhatsApp com o código já escrito — útil, mas <strong>não gera mensagem recebida</strong> no celular. Peça ao suporte/hospedagem para configurar a Evolution; depois disso o código passa a chegar como mensagem normal no WhatsApp do cliente.
+        </div>
+    @endif
 
     <div class="vf-card p-4" style="max-width: 42rem;">
         <form action="{{ route('empresa.fidelidade.programa.update') }}" method="post">
