@@ -310,6 +310,16 @@ class AppServiceProvider extends ServiceProvider
                 'publico.acompanhar',
                 'publico.acompanhar.buscar',
                 'publico.entregador.show',
+                // Página do produto: barra inferior / ações não ficam sob o rodapé fixo.
+                'publico.produto',
+                // Fidelidade na vitrine: mesma lógica do fluxo de compra (rodapé fixo cobria botões).
+                'publico.fidelidade',
+                'publico.fidelidade.solicitar-codigo',
+                'publico.fidelidade.reenviar-codigo',
+                'publico.fidelidade.cancelar-otp',
+                'publico.fidelidade.sair',
+                'publico.fidelidade.verificar-codigo',
+                'publico.fidelidade.cadastrar',
             ];
             $rodapeFluirCompra = in_array($nomeRota, $rotasRodapeNoFluxoCompra, true);
 
