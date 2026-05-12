@@ -966,6 +966,58 @@ a.vf-store-brand--outra-unidade:hover {
   font-weight: 600;
 }
 
+/* Aberta / Fechada: neutro (como a filial “foscada”); verde ou vermelho só ao passar o rato no bloco da marca */
+.vf-store-brand-link .vf-loja-status-badge--aberta,
+.vf-store-brand--outra-unidade .vf-loja-status-badge--aberta {
+  color: rgba(var(--bs-body-color-rgb), 0.72);
+  background-color: rgba(var(--bs-secondary-rgb), 0.14);
+  border: 1px solid rgba(var(--bs-secondary-rgb), 0.24);
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.vf-store-brand-link:hover .vf-loja-status-badge--aberta,
+.vf-store-brand--outra-unidade:hover .vf-loja-status-badge--aberta {
+  color: #fff;
+  background-color: var(--bs-success);
+  border-color: var(--bs-success);
+  box-shadow: 0 0.12rem 0.4rem rgba(var(--bs-success-rgb), 0.35);
+}
+
+.vf-store-brand-link .vf-loja-status-badge--fechada,
+.vf-store-brand--outra-unidade .vf-loja-status-badge--fechada {
+  color: rgba(var(--bs-body-color-rgb), 0.72);
+  background-color: rgba(var(--bs-secondary-rgb), 0.14);
+  border: 1px solid rgba(var(--bs-secondary-rgb), 0.24);
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.vf-store-brand-link:hover .vf-loja-status-badge--fechada,
+.vf-store-brand--outra-unidade:hover .vf-loja-status-badge--fechada {
+  color: #fff;
+  background-color: var(--bs-danger);
+  border-color: var(--bs-danger);
+  box-shadow: 0 0.12rem 0.4rem rgba(var(--bs-danger-rgb), 0.35);
+}
+
+/* Sem hover (telemóvel): manter verde/vermelho sempre visível */
+@media (hover: none) {
+  .vf-store-brand-link .vf-loja-status-badge--aberta,
+  .vf-store-brand--outra-unidade .vf-loja-status-badge--aberta {
+    color: #fff;
+    background-color: var(--bs-success);
+    border-color: var(--bs-success);
+    box-shadow: none;
+  }
+
+  .vf-store-brand-link .vf-loja-status-badge--fechada,
+  .vf-store-brand--outra-unidade .vf-loja-status-badge--fechada {
+    color: #fff;
+    background-color: var(--bs-danger);
+    border-color: var(--bs-danger);
+    box-shadow: none;
+  }
+}
+
 @media (max-width: 575.98px) {
   .vf-store-name {
     font-size: clamp(0.78rem, 3.6vw, 0.95rem);

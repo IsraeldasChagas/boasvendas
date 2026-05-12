@@ -34,9 +34,9 @@
                             </span>
                         @if ($empresa)
                             @if ($empresa->loja_aberta ?? true)
-                                <span class="badge rounded-pill bg-success vf-loja-status-badge align-self-start">Aberta</span>
+                                <span class="badge rounded-pill vf-loja-status-badge vf-loja-status-badge--aberta align-self-start">Aberta</span>
                             @else
-                                <span class="badge rounded-pill bg-danger vf-loja-status-badge align-self-start">Fechada</span>
+                                <span class="badge rounded-pill vf-loja-status-badge vf-loja-status-badge--fechada align-self-start">Fechada</span>
                             @endif
                         @endif
                     </span>
@@ -67,9 +67,9 @@
                                     <span class="badge rounded-pill bg-secondary-subtle text-secondary border small fw-normal flex-shrink-0">Ver</span>
                                 </span>
                                 @if ($empresa->loja_aberta ?? true)
-                                    <span class="badge rounded-pill bg-success vf-loja-status-badge align-self-start">Aberta</span>
+                                    <span class="badge rounded-pill vf-loja-status-badge vf-loja-status-badge--aberta align-self-start">Aberta</span>
                                 @else
-                                    <span class="badge rounded-pill bg-danger vf-loja-status-badge align-self-start">Fechada</span>
+                                    <span class="badge rounded-pill vf-loja-status-badge vf-loja-status-badge--fechada align-self-start">Fechada</span>
                                 @endif
                             </span>
                     @if ($filialHref !== '')
