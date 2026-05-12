@@ -58,9 +58,17 @@
                         $suf = strlen($telPend) >= 4 ? substr($telPend, -4) : '****';
                         $canalOtp = is_array($pend) ? (string) ($pend['canal'] ?? '') : '';
                         $otpPorEmail = $canalOtp === \App\Services\FidelidadeOtpEntrega::CANAL_EMAIL;
+                        $otpPorWame = $canalOtp === \App\Services\FidelidadeOtpEntrega::CANAL_WAME;
+                        $waMeUrl = is_array($pend) ? ($pend['wa_me_url'] ?? null) : null;
+                        $waMeUrl = is_string($waMeUrl) && str_starts_with($waMeUrl, 'https://wa.me/') ? $waMeUrl : null;
                     @endphp
                     @if ($otpPorEmail)
                         <p class="small text-muted mb-3">O envio pelo <strong>WhatsApp</strong> não está disponível no momento; enviamos o código de <strong>6 dígitos</strong> para o <strong>e-mail do seu cadastro</strong> nesta loja (confira spam/lixeira). Digite o código abaixo.</p>
+                    @elseif ($otpPorWame && $waMeUrl)
+                        <p class="small text-muted mb-3">O envio automático pelo WhatsApp da loja não está ativo no momento. Toque no botão abaixo para abrir o WhatsApp com a mensagem já contendo seu <strong>código de 6 dígitos</strong> (número com final <strong>***{{ $suf }}</strong>). Você pode ler o código na própria tela antes de enviar.</p>
+                        <div class="d-grid gap-2 mb-3">
+                            <a href="{{ $waMeUrl }}" class="btn btn-success" target="_blank" rel="noopener noreferrer">Abrir WhatsApp com o código</a>
+                        </div>
                     @else
                         <p class="small text-muted mb-3">Digite abaixo o <strong>código de 6 dígitos</strong> que enviamos ao <strong>WhatsApp</strong> do número que termina em <strong>***{{ $suf }}</strong>. Se não for esse número, use <strong>Usar outro telefone</strong>.</p>
                     @endif
@@ -68,6 +76,8 @@
                         @csrf
                         @if ($otpPorEmail)
                             <p class="small mb-2 text-muted">Código enviado por <strong>e-mail</strong> (cartão cadastrado com o telefone ***{{ $suf }}).</p>
+                        @elseif ($otpPorWame && $waMeUrl)
+                            <p class="small mb-2 text-muted">Código na mensagem do link WhatsApp acima (mesmo telefone ***{{ $suf }}).</p>
                         @else
                             <p class="small mb-2 text-muted">Código enviado ao <strong>WhatsApp</strong> (número com final ***{{ $suf }}).</p>
                         @endif
@@ -80,7 +90,7 @@
                     <div class="d-flex flex-column gap-2">
                         <form action="{{ route('publico.fidelidade.reenviar-codigo', ['slug' => $slug]) }}" method="post" class="mb-0">
                             @csrf
-                            <button type="submit" class="btn btn-outline-secondary btn-sm w-100">{{ $otpPorEmail ? 'Reenviar código por e-mail' : 'Reenviar código no WhatsApp' }}</button>
+                            <button type="submit" class="btn btn-outline-secondary btn-sm w-100">{{ $otpPorEmail ? 'Reenviar código por e-mail' : ($otpPorWame ? 'Gerar novo código e link WhatsApp' : 'Reenviar código no WhatsApp') }}</button>
                         </form>
                         <form action="{{ route('publico.fidelidade.cancelar-otp', ['slug' => $slug]) }}" method="post" class="mb-0">
                             @csrf
@@ -88,14 +98,14 @@
                         </form>
                     </div>
                 @else
-                    <p class="small text-muted mb-3">Digite seu <strong>celular</strong> (o mesmo do cadastro e das compras) e clique em <strong>Enviar código no WhatsApp</strong>. Depois informe o código para ver seus selos.</p>
+                    <p class="small text-muted mb-3">Digite seu <strong>celular</strong> (o mesmo do cadastro e das compras) e clique em <strong>Solicitar código</strong>. A loja pode enviar pelo WhatsApp automático, e-mail ou abrir o WhatsApp com a mensagem pronta, conforme a configuração do sistema.</p>
                     <form action="{{ route('publico.fidelidade.solicitar-codigo', ['slug' => $slug]) }}" method="post" class="mb-0">
                         @csrf
                         <label class="form-label small fw-semibold" for="tel-fid">Seu celular</label>
                         <input type="tel" name="telefone" id="tel-fid" value="{{ old('telefone') }}"
                                class="form-control @error('telefone') is-invalid @enderror" placeholder="(11) 98888-7777" autocomplete="tel" required>
                         @error('telefone')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                        <button type="submit" class="btn btn-primary w-100 mt-3">Enviar código no WhatsApp</button>
+                        <button type="submit" class="btn btn-primary w-100 mt-3">Solicitar código</button>
                     </form>
                 @endif
             </div>

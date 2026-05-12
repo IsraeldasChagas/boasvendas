@@ -62,6 +62,23 @@ final class FidelidadeCartaoWhatsappLink
     }
 
     /**
+     * Link wa.me para qualquer texto (ex.: OTP fidelidade) — mesmo formato 55 + dígitos.
+     */
+    public static function urlTextoParaTelefone(string $telefoneRawOuNormalizado, string $mensagemTexto): ?string
+    {
+        $digits = self::telefoneInternacional55($telefoneRawOuNormalizado);
+        if ($digits === null) {
+            return null;
+        }
+        $texto = trim($mensagemTexto);
+        if ($texto === '') {
+            return null;
+        }
+
+        return 'https://wa.me/'.$digits.'?text='.rawurlencode($texto);
+    }
+
+    /**
      * URL https://wa.me/55...?text=... ou null (sem telefone válido).
      */
     public static function urlMensagemCartao(Cliente $cliente, FidelidadeCartao $cartao): ?string

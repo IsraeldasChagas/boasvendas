@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Empresa;
 use App\Models\FidelidadeCartao;
 use App\Models\FidelidadePrograma;
+use App\Services\FidelidadeOtpEntrega;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -125,6 +126,40 @@ class FidelidadeOtpWhatsappTest extends TestCase
                 && isset($request['phone'], $request['message'])
                 && str_contains((string) $request['message'], 'código');
         });
+    }
+
+    public function test_solicitar_quando_webhook_falha_oferece_wa_me_na_sessao(): void
+    {
+        config([
+            'services.fidelidade_otp.notify_url' => 'https://example.test/notify',
+            'services.fidelidade_otp.notify_bearer' => 'secret',
+            'services.fidelidade_otp.email_fallback' => false,
+            'services.fidelidade_otp.wa_me_fallback' => true,
+        ]);
+
+        Http::fake([
+            'https://example.test/notify' => Http::response('', 500),
+        ]);
+
+        $empresa = $this->criarLojaComProgramaAtivo();
+        FidelidadeCartao::query()->create([
+            'empresa_id' => $empresa->id,
+            'telefone_normalizado' => '11933334444',
+            'cpf_normalizado' => '52998224725',
+            'email' => 'wa@exemplo.com',
+            'selos' => 1,
+            'total_resgates' => 0,
+        ]);
+
+        $this->post(route('publico.fidelidade.solicitar-codigo', ['slug' => $empresa->slug]), [
+            'telefone' => '11933334444',
+        ])->assertRedirect(route('publico.fidelidade', ['slug' => $empresa->slug]))
+            ->assertSessionHas('status');
+
+        $pending = session('fidelidade_otp_pending');
+        $this->assertIsArray($pending);
+        $this->assertSame(FidelidadeOtpEntrega::CANAL_WAME, $pending['canal']);
+        $this->assertStringContainsString('https://wa.me/5511933334444', (string) ($pending['wa_me_url'] ?? ''));
     }
 
     private function criarLojaComProgramaAtivo(): Empresa

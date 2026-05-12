@@ -86,6 +86,11 @@ return [
          * false = só WhatsApp (padrão; alinhe FIDELIDADE_OTP_* na Evolution).
          */
         'email_fallback' => filter_var(env('FIDELIDADE_OTP_EMAIL_FALLBACK', false), FILTER_VALIDATE_BOOL),
+        /**
+         * true = se o envio automático (Evolution/webhook) falhar ou não existir, gera link wa.me com o código
+         * (cliente abre o WhatsApp e vê a mensagem na tela; sem API paga).
+         */
+        'wa_me_fallback' => filter_var(env('FIDELIDADE_OTP_WAME_FALLBACK', true), FILTER_VALIDATE_BOOL),
         /** Em produção sem URL: se true, grava OTP e segue o fluxo (apenas log; não envia WhatsApp real). */
         'simulate_without_url' => filter_var(env('FIDELIDADE_OTP_SIMULATE_WITHOUT_URL', false), FILTER_VALIDATE_BOOL),
     ],

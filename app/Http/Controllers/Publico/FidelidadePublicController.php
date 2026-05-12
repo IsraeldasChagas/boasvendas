@@ -118,6 +118,7 @@ class FidelidadePublicController extends Controller
             'tel_norm' => $norm,
             'telefone_input' => $data['telefone'],
             'canal' => $envio['canal'] ?? FidelidadeOtpEntrega::CANAL_EMAIL,
+            'wa_me_url' => $envio['wa_me_url'] ?? null,
         ]);
 
         return redirect()
@@ -181,6 +182,7 @@ class FidelidadePublicController extends Controller
         $pending = session('fidelidade_otp_pending', []);
         if (is_array($pending)) {
             $pending['canal'] = $canal;
+            $pending['wa_me_url'] = $envio['wa_me_url'] ?? null;
             $request->session()->put('fidelidade_otp_pending', $pending);
         }
 
@@ -427,7 +429,7 @@ class FidelidadePublicController extends Controller
     {
         return match ($envio['resultado'] ?? '') {
             FidelidadeOtpEntrega::FALHA_EMAIL => 'Não foi possível enviar o e-mail com o código. Verifique o envio de e-mails do site (MAIL_*) ou tente mais tarde.',
-            FidelidadeOtpEntrega::FALHA_WHATSAPP => 'Não foi possível enviar o código pelo WhatsApp. Confira se a integração (Evolution) está ativa no servidor e as variáveis FIDELIDADE_OTP_* no .env; depois tente de novo ou fale com a loja.',
+            FidelidadeOtpEntrega::FALHA_WHATSAPP => 'Não foi possível enviar nem abrir o WhatsApp com o código para este telefone. Confira o número ou fale com a loja.',
             FidelidadeOtpEntrega::FALHA_SEM_DESTINO => 'Não foi possível enviar o código pelo WhatsApp e não há e-mail válido no cartão. Atualize o cadastro acima ou fale com a loja.',
             default => 'Não foi possível enviar o código pelo WhatsApp. Tente mais tarde ou fale com a loja.',
         };
@@ -439,6 +441,12 @@ class FidelidadePublicController extends Controller
             return $reenvio
                 ? 'Enviamos um novo código para o e-mail cadastrado no seu cartão (confira caixa de entrada e spam). Digite-o abaixo para ver seus selos.'
                 : 'Enviamos o código de 6 dígitos para o e-mail cadastrado no seu cartão (confira caixa de entrada e spam). Digite-o abaixo para ver seus selos.';
+        }
+
+        if ($canal === FidelidadeOtpEntrega::CANAL_WAME) {
+            return $reenvio
+                ? 'Geramos um novo código. Use o botão "Abrir WhatsApp com o código" abaixo: a mensagem já vem preenchida (envio automático da loja indisponível). Você pode ler o código na tela do WhatsApp antes de enviar.'
+                : 'Use o botão "Abrir WhatsApp com o código" abaixo: a mensagem já vem com os 6 dígitos (envio automático da loja indisponível). Leia o código na tela do WhatsApp e digite-o aqui em seguida.';
         }
 
         return $reenvio

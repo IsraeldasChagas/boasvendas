@@ -5,20 +5,24 @@ namespace App\Services;
 use App\Mail\FidelidadeOtpMail;
 use App\Models\Empresa;
 use App\Models\FidelidadeCartao;
+use App\Support\FidelidadeCartaoWhatsappLink;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Throwable;
 
 /**
- * Envia o código OTP: tenta WhatsApp (webhook); opcionalmente e-mail do cartão se
- * {@see config('services.fidelidade_otp.email_fallback')} for true.
+ * Envia o código OTP: tenta WhatsApp (webhook/Evolution); opcionalmente e-mail do cartão;
+ * por fim link wa.me com o texto do código (sem API paga) quando {@see config('services.fidelidade_otp.wa_me_fallback')}.
  */
 class FidelidadeOtpEntrega
 {
     public const CANAL_WHATSAPP = 'whatsapp';
 
     public const CANAL_EMAIL = 'email';
+
+    /** Código disponível via link wa.me (sem webhook / Evolution). */
+    public const CANAL_WAME = 'whatsapp_link';
 
     public const FALHA_EMAIL = 'email_falhou';
 
@@ -32,7 +36,7 @@ class FidelidadeOtpEntrega
     ) {}
 
     /**
-     * @return array{ok: bool, canal?: string, resultado?: string, wa?: array}
+     * @return array{ok: bool, canal?: string, resultado?: string, wa?: array, wa_me_url?: string}
      */
     public function entregar(Empresa $empresa, string $telNorm, string $codigo, int $ttlMinutos): array
     {
@@ -44,8 +48,33 @@ class FidelidadeOtpEntrega
             return ['ok' => true, 'canal' => self::CANAL_WHATSAPP];
         }
 
+        $emailResult = null;
+        if ((bool) config('services.fidelidade_otp.email_fallback', false)) {
+            Log::notice('[fidelidade-otp] WhatsApp não enviado; tentando e-mail do cartão', [
+                'empresa_id' => $empresa->id,
+                'wa_resultado' => $wa['resultado'] ?? null,
+                'tel_sufixo' => strlen($telNorm) >= 4 ? substr($telNorm, -4) : null,
+            ]);
+
+            $emailResult = $this->entregarSomenteEmail($empresa->id, $telNorm, $codigo, $ttlMinutos, $nomeLoja);
+            if ($emailResult['ok']) {
+                return $emailResult;
+            }
+        }
+
+        $waMeUrl = $this->montarUrlWaMeOtp($telNorm, $msgWa);
+        if ($waMeUrl !== null) {
+            Log::notice('[fidelidade-otp] WhatsApp via API indisponível ou falhou; usando link wa.me (sem Evolution).', [
+                'empresa_id' => $empresa->id,
+                'wa_resultado' => $wa['resultado'] ?? null,
+                'tel_sufixo' => strlen($telNorm) >= 4 ? substr($telNorm, -4) : null,
+            ]);
+
+            return ['ok' => true, 'canal' => self::CANAL_WAME, 'wa_me_url' => $waMeUrl, 'wa' => $wa];
+        }
+
         if (! (bool) config('services.fidelidade_otp.email_fallback', false)) {
-            Log::warning('[fidelidade-otp] WhatsApp não enviado e fallback por e-mail está desligado (FIDELIDADE_OTP_EMAIL_FALLBACK=false)', [
+            Log::warning('[fidelidade-otp] WhatsApp não enviado e link wa.me indisponível (telefone inválido ou FIDELIDADE_OTP_WAME_FALLBACK=false).', [
                 'empresa_id' => $empresa->id,
                 'wa_resultado' => $wa['resultado'] ?? null,
                 'tel_sufixo' => strlen($telNorm) >= 4 ? substr($telNorm, -4) : null,
@@ -54,22 +83,20 @@ class FidelidadeOtpEntrega
             return ['ok' => false, 'resultado' => self::FALHA_WHATSAPP, 'wa' => $wa];
         }
 
-        Log::notice('[fidelidade-otp] WhatsApp não enviado; tentando e-mail do cartão', [
-            'empresa_id' => $empresa->id,
-            'wa_resultado' => $wa['resultado'] ?? null,
-            'tel_sufixo' => strlen($telNorm) >= 4 ? substr($telNorm, -4) : null,
-        ]);
-
-        $emailResult = $this->entregarSomenteEmail($empresa->id, $telNorm, $codigo, $ttlMinutos, $nomeLoja);
-        if ($emailResult['ok']) {
-            return $emailResult;
-        }
-
         if (($emailResult['resultado'] ?? '') === self::FALHA_SEM_DESTINO) {
             return ['ok' => false, 'resultado' => self::FALHA_SEM_DESTINO, 'wa' => $wa];
         }
 
-        return $emailResult;
+        return $emailResult ?? ['ok' => false, 'resultado' => self::FALHA_WHATSAPP, 'wa' => $wa];
+    }
+
+    private function montarUrlWaMeOtp(string $telNorm, string $mensagemTexto): ?string
+    {
+        if (! (bool) config('services.fidelidade_otp.wa_me_fallback', true)) {
+            return null;
+        }
+
+        return FidelidadeCartaoWhatsappLink::urlTextoParaTelefone($telNorm, $mensagemTexto);
     }
 
     /**
