@@ -278,7 +278,7 @@
                                         <label class="form-label" for="loja_filial_link_url">Link da filial</label>
                                         <input type="text" class="form-control form-control-sm @error('loja_filial_link_url') is-invalid @enderror" id="loja_filial_link_url" name="loja_filial_link_url" value="{{ old('loja_filial_link_url', $empresa->loja_filial_link_url) }}" maxlength="500" placeholder="https://…">
                                         @error('loja_filial_link_url')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                        <p class="small text-muted mb-0 mt-1">Opcional: ao clicar, abre em nova aba. Sem link, só exibe nome e logo.</p>
+                                        <p class="small text-muted mb-0 mt-1">Opcional: ao clicar, abre na mesma aba. Sem link, só exibe nome e logo.</p>
                                     </div>
                                     <div class="col-12">
                                         <label class="form-label" for="loja_filial_logo">Logo da filial</label>

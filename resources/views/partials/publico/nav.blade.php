@@ -47,9 +47,9 @@
                     @endphp
                     <span class="align-self-stretch border-start d-none d-sm-block mx-1 opacity-25" style="width: 1px; min-height: 3.5rem;" aria-hidden="true"></span>
                     @if ($filialHref !== '')
-                        <a href="{{ $filialHref }}" target="_blank" rel="noopener noreferrer"
+                        <a href="{{ $filialHref }}"
                            class="vf-store-brand-link vf-store-brand--outra-unidade text-decoration-none text-dark fw-bold d-flex align-items-center gap-2 gap-md-3 min-width-0 px-1 rounded-2"
-                           title="Outra unidade — abre em nova aba para o site ou cardápio da filial.">
+                           title="Ir para o site ou cardápio da outra unidade (mesma aba).">
                     @else
                         <div class="vf-store-brand-link vf-store-brand--outra-unidade text-dark fw-bold d-flex align-items-center gap-2 gap-md-3 min-width-0 px-1 rounded-2"
                              role="group"
