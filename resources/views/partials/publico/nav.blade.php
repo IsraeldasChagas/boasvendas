@@ -40,24 +40,28 @@
                     @php
                         $filialHref = trim((string) ($empresa->loja_filial_link_url ?? ''));
                     @endphp
-                    <span class="align-self-stretch border-start d-none d-sm-block mx-1 my-2 opacity-25" style="width: 1px;" aria-hidden="true"></span>
+                    <span class="align-self-stretch border-start d-none d-sm-block mx-1 opacity-25" style="width: 1px; min-height: 3.5rem;" aria-hidden="true"></span>
                     @if ($filialHref !== '')
-                        <a href="{{ $filialHref }}" target="_blank" rel="noopener noreferrer" class="vf-store-brand-filial d-flex align-items-center gap-2 text-decoration-none text-dark min-width-0 py-1">
+                        <a href="{{ $filialHref }}" target="_blank" rel="noopener noreferrer" class="vf-store-brand-link text-decoration-none text-dark fw-bold d-flex align-items-center gap-2 gap-md-3 min-width-0">
+                    @else
+                        <div class="vf-store-brand-link text-dark fw-bold d-flex align-items-center gap-2 gap-md-3 min-width-0" role="group" aria-label="Filial">
+                    @endif
                             @if ($empresa->urlLogoFilial())
-                                <img src="{{ $empresa->urlLogoFilial() }}" alt="" width="48" height="48" class="rounded bg-white border flex-shrink-0" style="object-fit: contain;">
+                                <img src="{{ $empresa->urlLogoFilial() }}" alt="" width="66" height="66" class="vf-store-brand-logo rounded bg-white border flex-shrink-0" style="object-fit: contain;">
                             @else
-                                <i class="bi bi-shop-window text-primary fs-3 flex-shrink-0" aria-hidden="true"></i>
+                                <i class="bi bi-shop-window text-primary vf-store-brand-logo-placeholder flex-shrink-0" aria-hidden="true"></i>
                             @endif
-                            <span class="small fw-semibold text-truncate" style="max-width: 10rem;">{{ $empresa->loja_filial_nome }}</span>
+                            <span class="vf-store-brand-text d-flex flex-column justify-content-center align-items-start gap-1 gap-md-2 min-width-0">
+                                <span class="vf-store-name text-truncate w-100">{{ $empresa->loja_filial_nome }}</span>
+                                @if ($empresa->loja_aberta ?? true)
+                                    <span class="badge rounded-pill bg-success vf-loja-status-badge align-self-start">Aberta</span>
+                                @else
+                                    <span class="badge rounded-pill bg-danger vf-loja-status-badge align-self-start">Fechada</span>
+                                @endif
+                            </span>
+                    @if ($filialHref !== '')
                         </a>
                     @else
-                        <div class="vf-store-brand-filial d-flex align-items-center gap-2 text-dark min-width-0 py-1" role="group" aria-label="Filial">
-                            @if ($empresa->urlLogoFilial())
-                                <img src="{{ $empresa->urlLogoFilial() }}" alt="" width="48" height="48" class="rounded bg-white border flex-shrink-0" style="object-fit: contain;">
-                            @else
-                                <i class="bi bi-shop-window text-primary fs-3 flex-shrink-0" aria-hidden="true"></i>
-                            @endif
-                            <span class="small fw-semibold text-truncate" style="max-width: 10rem;">{{ $empresa->loja_filial_nome }}</span>
                         </div>
                     @endif
                 @endif
