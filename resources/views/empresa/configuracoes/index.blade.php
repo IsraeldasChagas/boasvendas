@@ -30,14 +30,14 @@
     @endif
 
     @if (session('status'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('status') }}
+        <div id="vf-config-status-alert" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-1"></i><strong>{{ session('status') }}</strong>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
         </div>
     @endif
     @if (session('warning'))
-        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-            {{ session('warning') }}
+        <div id="vf-config-warning-alert" class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ session('warning') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
         </div>
     @endif
@@ -661,6 +661,33 @@
     </form>
     @push('scripts')
         <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+        <script>
+            (function () {
+                var statusBox = document.getElementById('vf-config-status-alert');
+                var errorBox = document.querySelector('.alert.alert-danger');
+                if (statusBox || errorBox) {
+                    try {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } catch (e) {
+                        window.scrollTo(0, 0);
+                    }
+                }
+                if (statusBox) {
+                    var toast = document.createElement('div');
+                    toast.className = 'position-fixed top-0 start-50 translate-middle-x mt-3 alert alert-success shadow border border-success-subtle';
+                    toast.style.zIndex = '1080';
+                    toast.style.minWidth = '280px';
+                    toast.style.maxWidth = '92vw';
+                    toast.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i><strong>' + (statusBox.textContent || 'Configurações salvas.').trim() + '</strong>';
+                    document.body.appendChild(toast);
+                    setTimeout(function () {
+                        toast.style.transition = 'opacity 0.4s ease';
+                        toast.style.opacity = '0';
+                        setTimeout(function () { toast.remove(); }, 500);
+                    }, 3500);
+                }
+            })();
+        </script>
         <script>
             (function () {
                 var sel = document.getElementById('loja_frete_modo');
