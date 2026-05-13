@@ -125,11 +125,14 @@ class PdvController extends Controller
             $tiposEntregaPermitidos[] = Pedido::TIPO_ENTREGA_BALCAO;
         }
 
+        $canalEntrada = (string) $request->input('canal', '');
+        $obrigaCliente = $canalEntrada === Pedido::CANAL_WHATSAPP;
+
         $data = $request->validate([
             'canal' => ['required', 'string', Rule::in([Pedido::CANAL_BALCAO, Pedido::CANAL_WHATSAPP])],
             'tipo_entrega' => ['required', 'string', Rule::in($tiposEntregaPermitidos)],
-            'cliente_nome' => ['nullable', 'string', 'max:120'],
-            'cliente_telefone' => ['nullable', 'string', 'max:32'],
+            'cliente_nome' => [$obrigaCliente ? 'required' : 'nullable', 'string', 'max:120'],
+            'cliente_telefone' => [$obrigaCliente ? 'required' : 'nullable', 'string', 'max:32'],
             'cep_entrega' => ['nullable', 'string', 'max:16'],
             'endereco' => ['nullable', 'string', 'max:255'],
             'entrega_numero' => ['nullable', 'string', 'max:32'],
@@ -145,6 +148,9 @@ class PdvController extends Controller
             'itens.*.quantidade' => ['required', 'integer', 'min:1'],
             'itens.*.observacao' => ['nullable', 'string', 'max:200'],
             'acao' => ['required', 'string', Rule::in(['finalizar', 'whatsapp_confirmar'])],
+        ], [
+            'cliente_nome.required' => 'Informe o nome do cliente para pedidos via WhatsApp/Telefone.',
+            'cliente_telefone.required' => 'Informe o telefone do cliente para pedidos via WhatsApp/Telefone.',
         ]);
 
         $produtosIds = collect($data['itens'])->pluck('produto_id')->unique()->values()->all();
@@ -249,17 +255,28 @@ class PdvController extends Controller
             $statusInicial = Pedido::STATUS_RECEBIDO;
         }
 
-        $pedido = DB::transaction(function () use ($empresa, $linhas, $data, $subtotal, $taxaVal, $total, $pagamentoTrocoPara, $tipoEntrega, $cepNorm, $enderecoPedido, $complementoPedido, $statusInicial, $canal) {
+        // Colunas NOT NULL no banco: garantimos fallback no balcão anônimo.
+        $clienteNomeFinal = trim((string) ($data['cliente_nome'] ?? '')) !== ''
+            ? $data['cliente_nome']
+            : ($canal === Pedido::CANAL_BALCAO ? 'Cliente balcão' : 'Cliente sem nome');
+        $clienteTelefoneFinal = trim((string) ($data['cliente_telefone'] ?? '')) !== ''
+            ? $data['cliente_telefone']
+            : '—';
+        $enderecoFinal = trim((string) $enderecoPedido) !== ''
+            ? $enderecoPedido
+            : 'Retirada no balcão';
+
+        $pedido = DB::transaction(function () use ($empresa, $linhas, $data, $subtotal, $taxaVal, $total, $pagamentoTrocoPara, $tipoEntrega, $cepNorm, $enderecoFinal, $complementoPedido, $statusInicial, $canal, $clienteNomeFinal, $clienteTelefoneFinal) {
             $codigo = $this->gerarCodigoPublico();
             $pedido = Pedido::query()->create([
                 'empresa_id' => $empresa->id,
                 'codigo_publico' => $codigo,
                 'canal' => $canal,
                 'tipo_entrega' => $tipoEntrega,
-                'cliente_nome' => $data['cliente_nome'] ?: null,
-                'cliente_telefone' => $data['cliente_telefone'] ?: null,
+                'cliente_nome' => $clienteNomeFinal,
+                'cliente_telefone' => $clienteTelefoneFinal,
                 'cliente_email' => null,
-                'endereco' => $enderecoPedido,
+                'endereco' => $enderecoFinal,
                 'complemento' => $complementoPedido,
                 'cep_entrega' => $cepNorm,
                 'forma_pagamento' => $data['forma_pagamento'],
