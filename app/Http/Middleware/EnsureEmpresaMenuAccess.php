@@ -62,6 +62,9 @@ class EnsureEmpresaMenuAccess
         if (str_starts_with($routeName, 'empresa.pedidos.') || str_starts_with($routeName, 'empresa.entregadores.')) {
             return 'pedidos';
         }
+        if (str_starts_with($routeName, 'empresa.pdv.') || str_starts_with($routeName, 'empresa.frete-calculadora.')) {
+            return 'pedidos';
+        }
         if (str_starts_with($routeName, 'empresa.produtos.')) {
             return 'produtos';
         }

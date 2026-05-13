@@ -13,6 +13,27 @@ class Pedido extends Model
 
     public const CANAL_LOJA = 'loja';
 
+    /** Pedido lançado manualmente no PDV: cliente que vem ao balcão da loja. */
+    public const CANAL_BALCAO = 'balcao';
+
+    /** Pedido lançado manualmente no PDV: cliente que pediu via WhatsApp/telefone. */
+    public const CANAL_WHATSAPP = 'whatsapp';
+
+    /** @return array<string, string> */
+    public static function canalRotulos(): array
+    {
+        return [
+            self::CANAL_LOJA => 'Vitrine online',
+            self::CANAL_BALCAO => 'Balcão',
+            self::CANAL_WHATSAPP => 'WhatsApp/Telefone',
+        ];
+    }
+
+    public function rotuloCanal(): string
+    {
+        return self::canalRotulos()[$this->canal] ?? (string) $this->canal;
+    }
+
     public const TIPO_ENTREGA_ENTREGA = 'entrega';
 
     public const TIPO_ENTREGA_BALCAO = 'balcao';

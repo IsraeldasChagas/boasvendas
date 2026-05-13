@@ -36,6 +36,16 @@
             </a>
         </div>
     @endif
+    @if (session('pdv_whatsapp_url'))
+        <div class="alert alert-info border border-info-subtle d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3" role="alert">
+            <div class="small mb-0">
+                <strong>Enviar resumo do pedido para o cliente</strong> — abre o WhatsApp já com a mensagem pronta para confirmar o pedido.
+            </div>
+            <a href="{{ session('pdv_whatsapp_url') }}" target="_blank" rel="noopener noreferrer" class="btn btn-success text-nowrap flex-shrink-0">
+                <i class="bi bi-whatsapp me-1"></i>Enviar resumo no WhatsApp
+            </a>
+        </div>
+    @endif
 
     @if ($pedido->status === \App\Models\Pedido::STATUS_PENDENTE_LOJA)
         <div class="alert alert-danger border border-danger-subtle shadow-sm mb-3 py-3 px-3">
@@ -64,7 +74,7 @@
                 <div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
                     <div>
                         <h2 class="h5 fw-bold mb-1">{{ $pedido->codigo_publico }}</h2>
-                        <div class="small text-muted">Criado em {{ $pedido->created_at->format('d/m/Y H:i') }} · Canal {{ $pedido->canal === \App\Models\Pedido::CANAL_LOJA ? 'loja online' : $pedido->canal }} · {{ $pedido->rotuloTipoEntrega() }}@if ($pedido->cep_entrega) · CEP {{ substr($pedido->cep_entrega, 0, 5) }}-{{ substr($pedido->cep_entrega, 5) }}@endif</div>
+                        <div class="small text-muted">Criado em {{ $pedido->created_at->format('d/m/Y H:i') }} · Canal {{ $pedido->rotuloCanal() }} · {{ $pedido->rotuloTipoEntrega() }}@if ($pedido->cep_entrega) · CEP {{ substr($pedido->cep_entrega, 0, 5) }}-{{ substr($pedido->cep_entrega, 5) }}@endif</div>
                     </div>
                     <span class="vf-badge {{ $pedido->classeBadgeStatus() }} align-self-start">{{ $pedido->rotuloStatus() }}</span>
                 </div>

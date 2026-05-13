@@ -32,6 +32,12 @@
                 <span class="badge bg-danger rounded-pill ms-1">{{ $badgePedPend }}</span>
             @endif
         </a>
+        <a class="nav-link {{ request()->routeIs('empresa.pdv.*') ? 'active' : '' }}" href="{{ route('empresa.pdv.index') }}">
+            <i class="bi bi-cash-coin"></i> PDV — Novo pedido
+        </a>
+        <a class="nav-link {{ request()->routeIs('empresa.frete-calculadora.*') ? 'active' : '' }}" href="{{ route('empresa.frete-calculadora.index') }}">
+            <i class="bi bi-calculator"></i> Calcular frete
+        </a>
         @if (\Illuminate\Support\Facades\Schema::hasTable('empresa_entregadores'))
             <a class="nav-link {{ request()->routeIs('empresa.entregadores.*') ? 'active' : '' }}" href="{{ route('empresa.entregadores.index') }}">
                 <i class="bi bi-person-badge"></i> Meus entregadores

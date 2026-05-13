@@ -23,6 +23,8 @@ use App\Http\Controllers\Empresa\EntregaController;
 use App\Http\Controllers\Empresa\FidelidadeController;
 use App\Http\Controllers\Empresa\FinanceiroController;
 use App\Http\Controllers\Empresa\LojaEntregaFaixaController;
+use App\Http\Controllers\Empresa\FreteCalculadoraController;
+use App\Http\Controllers\Empresa\PdvController;
 use App\Http\Controllers\Empresa\PedidoController;
 use App\Http\Controllers\Empresa\ProdutoController;
 use App\Http\Controllers\Empresa\RelatorioController;
@@ -160,6 +162,17 @@ Route::middleware(['auth', 'empresa.painel', 'empresa.menu'])->prefix('empresa')
     Route::put('/entregadores/{entregador}', [EmpresaEntregadorController::class, 'update'])->name('entregadores.update');
     Route::delete('/entregadores/{entregador}', [EmpresaEntregadorController::class, 'destroy'])->name('entregadores.destroy');
     Route::get('/entregadores', [EmpresaEntregadorController::class, 'index'])->name('entregadores.index');
+
+    Route::get('/pdv', [PdvController::class, 'index'])->name('pdv.index');
+    Route::post('/pdv', [PdvController::class, 'store'])->name('pdv.store');
+    Route::post('/pdv/calcular-frete', [PdvController::class, 'calcularFrete'])
+        ->middleware('throttle:120,1')
+        ->name('pdv.calcular-frete');
+
+    Route::get('/frete-calculadora', [FreteCalculadoraController::class, 'index'])->name('frete-calculadora.index');
+    Route::post('/frete-calculadora/calcular', [FreteCalculadoraController::class, 'calcular'])
+        ->middleware('throttle:120,1')
+        ->name('frete-calculadora.calcular');
 
     Route::get('/pedidos', [PedidoController::class, 'index'])->name('pedidos.index');
     Route::get('/pedidos/pendentes-poll', [PedidoController::class, 'pollPendentes'])
