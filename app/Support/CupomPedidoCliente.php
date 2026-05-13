@@ -16,13 +16,17 @@ final class CupomPedidoCliente
     /**
      * Texto completo do cupom (UTF-8), linha a linha, com formatação do WhatsApp
      * (*negrito*, _itálico_) na mesma sequência visual do cupom impresso (`imprimir.blade.php`).
+     *
+     * Estilo: tudo alinhado à esquerda, tracejado ocupando toda a largura do bloco
+     * de itens, valores monetários alinhados à direita usando preenchimento por espaços.
      */
     public static function textoCupomCompleto(Pedido $pedido, Empresa $empresa): string
     {
         $pedido->loadMissing('itens');
 
         $slug = trim((string) ($empresa->slug ?? ''));
-        $larguraLinha = 30;
+        // 32 caracteres = limite seguro pra não quebrar a linha em celular comum no WhatsApp.
+        $larguraLinha = 32;
         $lines = [];
 
         $canal = $pedido->canal ?? Pedido::CANAL_LOJA;
@@ -32,35 +36,33 @@ final class CupomPedidoCliente
             default => 'Pedido online',
         };
 
-        $lines[] = self::centralizar($subtituloMarca, $larguraLinha);
-        $lines[] = self::centralizar('*'.self::fixUpperNomeLoja(trim((string) ($empresa->nome ?? 'Loja'))).'*', $larguraLinha);
+        $lines[] = $subtituloMarca;
+        $lines[] = '*'.self::fixUpperNomeLoja(trim((string) ($empresa->nome ?? 'Loja'))).'*';
 
         $end = trim((string) ($empresa->endereco ?? ''));
         if ($end !== '') {
-            $lines[] = self::centralizar($end, $larguraLinha);
+            $lines[] = $end;
         }
         if (trim((string) ($empresa->cep ?? '')) !== '') {
             $cep = preg_replace('/\D+/', '', (string) $empresa->cep);
             if (strlen((string) $cep) === 8) {
-                $lines[] = self::centralizar('CEP '.substr($cep, 0, 5).'-'.substr($cep, 5), $larguraLinha);
+                $lines[] = 'CEP '.substr($cep, 0, 5).'-'.substr($cep, 5);
             }
         }
         $waLoja = trim((string) ($empresa->whatsapp ?? ''));
         if ($waLoja !== '') {
-            $lines[] = self::centralizar('WhatsApp: '.$waLoja, $larguraLinha);
+            $lines[] = 'WhatsApp: '.$waLoja;
         }
         $cnpj = trim((string) ($empresa->cnpj ?? ''));
         if ($cnpj !== '') {
-            $lines[] = self::centralizar('CNPJ '.$cnpj, $larguraLinha);
+            $lines[] = 'CNPJ '.$cnpj;
         }
 
         $lines[] = self::linhaTracejada($larguraLinha);
-        $lines[] = self::centralizar('Cupom simplificado / comanda', $larguraLinha);
-        $lines[] = self::centralizar('*'.$pedido->codigo_publico.'*', $larguraLinha);
-        $lines[] = self::centralizar(
-            $pedido->created_at->format('d/m/Y H:i').' · '.$pedido->rotuloStatus().' · '.$pedido->rotuloTipoEntrega(),
-            $larguraLinha
-        );
+        $lines[] = 'Cupom simplificado / comanda';
+        $lines[] = 'Pedido *'.$pedido->codigo_publico.'*';
+        $lines[] = $pedido->created_at->format('d/m/Y H:i').' · '.$pedido->rotuloStatus();
+        $lines[] = $pedido->rotuloTipoEntrega();
         $lines[] = self::linhaTracejada($larguraLinha);
 
         $lines[] = '*CLIENTE E ENTREGA*';
@@ -83,7 +85,7 @@ final class CupomPedidoCliente
             $lines[] = 'CEP '.substr($pedido->cep_entrega, 0, 5).'-'.substr($pedido->cep_entrega, 5);
         }
 
-        $lines[] = '';
+        $lines[] = self::linhaTracejada($larguraLinha);
         $lines[] = '*ITENS*';
         foreach ($pedido->itens as $it) {
             $nomeQtd = $it->nome_produto.' × '.$it->quantidade;
@@ -102,25 +104,25 @@ final class CupomPedidoCliente
         $lines[] = self::linhaDuasColunas($rotTaxa, 'R$ '.number_format((float) $pedido->taxa_entrega, 2, ',', '.'), $larguraLinha);
         $lines[] = self::linhaDuasColunas('*TOTAL*', '*R$ '.number_format((float) $pedido->total, 2, ',', '.').'*', $larguraLinha);
 
-        $lines[] = '';
+        $lines[] = self::linhaTracejada($larguraLinha);
         $lines[] = '*PAGAMENTO*';
         $lines[] = $pedido->descricaoPagamentoExibicao();
 
         if (trim((string) ($pedido->observacoes ?? '')) !== '') {
-            $lines[] = '';
+            $lines[] = self::linhaTracejada($larguraLinha);
             $lines[] = '*OBSERVAÇÕES*';
             $lines[] = $pedido->observacoes;
         }
 
         if ($slug !== '' && $pedido->codigo_publico !== '') {
-            $lines[] = '';
+            $lines[] = self::linhaTracejada($larguraLinha);
             $lines[] = '*ACOMPANHAR PEDIDO*';
             $lines[] = route('publico.pedido.show', ['slug' => $slug, 'codigo' => $pedido->codigo_publico], absolute: true);
         }
 
         $lines[] = self::linhaTracejada($larguraLinha);
-        $lines[] = self::centralizar('Obrigado pela preferência!', $larguraLinha);
-        $lines[] = self::centralizar('_'.config('app.name').'_', $larguraLinha);
+        $lines[] = 'Obrigado pela preferência!';
+        $lines[] = '_'.config('app.name').'_';
 
         return implode("\n", $lines);
     }
@@ -128,17 +130,6 @@ final class CupomPedidoCliente
     private static function linhaTracejada(int $largura): string
     {
         return str_repeat('-', max(8, $largura));
-    }
-
-    private static function centralizar(string $texto, int $largura): string
-    {
-        $tam = self::larguraVisual($texto);
-        if ($tam >= $largura) {
-            return $texto;
-        }
-        $pad = (int) floor(($largura - $tam) / 2);
-
-        return str_repeat(' ', max(0, $pad)).$texto;
     }
 
     private static function linhaDuasColunas(string $esq, string $dir, int $largura): string
