@@ -414,9 +414,9 @@
                         <div class="row g-3 mb-4 pb-3 border-bottom border-primary border-opacity-25">
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold" for="loja_taxa_entrega_padrao">Taxa de entrega (R$)</label>
-                                <input type="number" step="0.01" min="0" class="form-control form-control-sm @error('loja_taxa_entrega_padrao') is-invalid @enderror" id="loja_taxa_entrega_padrao" name="loja_taxa_entrega_padrao" value="{{ old('loja_taxa_entrega_padrao', $empresa->loja_taxa_entrega_padrao) }}" placeholder="Ex.: 6,00">
+                                <input type="text" inputmode="decimal" class="form-control form-control-sm @error('loja_taxa_entrega_padrao') is-invalid @enderror" id="loja_taxa_entrega_padrao" name="loja_taxa_entrega_padrao" value="{{ old('loja_taxa_entrega_padrao', $empresa->loja_taxa_entrega_padrao) }}" placeholder="Ex.: 10,00">
                                 @error('loja_taxa_entrega_padrao')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                <p class="small text-muted mb-0 mt-1">Usada como valor fixo ou “fallback” quando não houver outra regra.</p>
+                                <p class="small text-muted mb-0 mt-1">Valor base (fixo ou “taxa base” no modo por km). Vazio = padrão R$ 5,99.</p>
                             </div>
                             @if (\Illuminate\Support\Facades\Schema::hasColumn('empresas', 'loja_permite_retirada_balcao'))
                                 <div class="col-md-6">
@@ -440,7 +440,7 @@
                                         <div class="col-md-4">
                                             <label class="form-label small" for="loja_entrega_chuva_percentual">Acréscimo (%)</label>
                                             <div class="input-group input-group-sm">
-                                                <input type="number" step="0.01" min="0" max="100" class="form-control @error('loja_entrega_chuva_percentual') is-invalid @enderror" id="loja_entrega_chuva_percentual" name="loja_entrega_chuva_percentual" value="{{ old('loja_entrega_chuva_percentual', $empresa->loja_entrega_chuva_percentual) }}" placeholder="Ex.: 15">
+                                                <input type="text" inputmode="decimal" class="form-control @error('loja_entrega_chuva_percentual') is-invalid @enderror" id="loja_entrega_chuva_percentual" name="loja_entrega_chuva_percentual" value="{{ old('loja_entrega_chuva_percentual', $empresa->loja_entrega_chuva_percentual) }}" placeholder="Ex.: 20">
                                                 <span class="input-group-text">%</span>
                                             </div>
                                             @error('loja_entrega_chuva_percentual')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
@@ -526,23 +526,23 @@
                                 <p class="small text-muted mb-3">No modo <strong>Google Maps</strong> use R$ por km abaixo. No modo <strong>OSRM</strong> use taxa base + km incluso + valor por km extra (e opcionalmente coordenadas fixas da origem).</p>
                                 <div class="row g-3">
                                     <div class="col-md-4">
-                                        <label class="form-label" for="loja_frete_google_rs_por_km">Quanto cobrar por km <span class="text-danger vf-rs-km-obr" data-vf-google-only>*</span></label>
+                                        <label class="form-label" for="loja_frete_google_rs_por_km">Quanto cobrar por km <span class="text-danger vf-rs-km-obr" data-vf-google-only>*</span> <span class="text-muted small fw-normal">(só modo Google)</span></label>
                                         <div class="input-group input-group-sm">
                                             <span class="input-group-text">R$</span>
-                                            <input type="number" step="0.01" min="0.01" class="form-control @error('loja_frete_google_rs_por_km') is-invalid @enderror" id="loja_frete_google_rs_por_km" name="loja_frete_google_rs_por_km" value="{{ old('loja_frete_google_rs_por_km', $empresa->loja_frete_google_rs_por_km) }}" placeholder="2,50" data-vf-google-rs>
+                                            <input type="text" inputmode="decimal" class="form-control @error('loja_frete_google_rs_por_km') is-invalid @enderror" id="loja_frete_google_rs_por_km" name="loja_frete_google_rs_por_km" value="{{ old('loja_frete_google_rs_por_km', $empresa->loja_frete_google_rs_por_km) }}" placeholder="2,50" data-vf-google-rs>
                                         </div>
                                         @error('loja_frete_google_rs_por_km')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                                     </div>
                                     <div class="col-md-4">
-                                        <label class="form-label" for="loja_frete_google_taxa_minima">Nunca cobrar menos que (R$)</label>
-                                        <input type="number" step="0.01" min="0" class="form-control form-control-sm @error('loja_frete_google_taxa_minima') is-invalid @enderror" id="loja_frete_google_taxa_minima" name="loja_frete_google_taxa_minima" value="{{ old('loja_frete_google_taxa_minima', $empresa->loja_frete_google_taxa_minima) }}" placeholder="Opcional">
+                                        <label class="form-label" for="loja_frete_google_taxa_minima">Nunca cobrar menos que (R$) <span class="text-muted small fw-normal">(só modo Google)</span></label>
+                                        <input type="text" inputmode="decimal" class="form-control form-control-sm @error('loja_frete_google_taxa_minima') is-invalid @enderror" id="loja_frete_google_taxa_minima" name="loja_frete_google_taxa_minima" value="{{ old('loja_frete_google_taxa_minima', $empresa->loja_frete_google_taxa_minima) }}" placeholder="Opcional">
                                         @error('loja_frete_google_taxa_minima')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label" for="loja_frete_google_km_max">Até quantos km entrega</label>
-                                        <input type="number" step="0.01" min="0" class="form-control form-control-sm @error('loja_frete_google_km_max') is-invalid @enderror" id="loja_frete_google_km_max" name="loja_frete_google_km_max" value="{{ old('loja_frete_google_km_max', $empresa->loja_frete_google_km_max) }}" placeholder="Opcional">
+                                        <input type="text" inputmode="decimal" class="form-control form-control-sm @error('loja_frete_google_km_max') is-invalid @enderror" id="loja_frete_google_km_max" name="loja_frete_google_km_max" value="{{ old('loja_frete_google_km_max', $empresa->loja_frete_google_km_max) }}" placeholder="Ex.: 10">
                                         @error('loja_frete_google_km_max')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                                        <p class="small text-muted mb-0 mt-1">Vazio = sem limite.</p>
+                                        <p class="small text-muted mb-0 mt-1">Vazio = sem limite. Acima desse valor, o pedido é bloqueado.</p>
                                     </div>
                                     <div class="col-12">
                                         <label class="form-label" for="loja_frete_origem_endereco">Saída das entregas <span class="text-muted fw-normal">(se quiser diferente do endereço da empresa)</span></label>
@@ -556,35 +556,37 @@
                                             <div class="row g-2">
                                                 <div class="col-md-4">
                                                     <label class="form-label small" for="loja_entrega_lat_origem">Latitude origem</label>
-                                                    <input type="number" step="any" class="form-control form-control-sm @error('loja_entrega_lat_origem') is-invalid @enderror" id="loja_entrega_lat_origem" name="loja_entrega_lat_origem" value="{{ old('loja_entrega_lat_origem', $empresa->loja_entrega_lat_origem) }}" placeholder="-8.7619">
+                                                    <input type="text" inputmode="decimal" class="form-control form-control-sm @error('loja_entrega_lat_origem') is-invalid @enderror" id="loja_entrega_lat_origem" name="loja_entrega_lat_origem" value="{{ old('loja_entrega_lat_origem', $empresa->loja_entrega_lat_origem) }}" placeholder="Ex.: -8.7619">
                                                     @error('loja_entrega_lat_origem')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                                 </div>
                                                 <div class="col-md-4">
                                                     <label class="form-label small" for="loja_entrega_lng_origem">Longitude origem</label>
-                                                    <input type="number" step="any" class="form-control form-control-sm @error('loja_entrega_lng_origem') is-invalid @enderror" id="loja_entrega_lng_origem" name="loja_entrega_lng_origem" value="{{ old('loja_entrega_lng_origem', $empresa->loja_entrega_lng_origem) }}" placeholder="-63.9039">
+                                                    <input type="text" inputmode="decimal" class="form-control form-control-sm @error('loja_entrega_lng_origem') is-invalid @enderror" id="loja_entrega_lng_origem" name="loja_entrega_lng_origem" value="{{ old('loja_entrega_lng_origem', $empresa->loja_entrega_lng_origem) }}" placeholder="Ex.: -63.9039">
                                                     @error('loja_entrega_lng_origem')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                                 </div>
                                                 <div class="col-md-4">
                                                     <label class="form-label small" for="loja_entrega_km_incluso">Km inclusos na taxa base</label>
-                                                    <input type="number" step="0.1" min="0.1" class="form-control form-control-sm @error('loja_entrega_km_incluso') is-invalid @enderror" id="loja_entrega_km_incluso" name="loja_entrega_km_incluso" value="{{ old('loja_entrega_km_incluso', $empresa->loja_entrega_km_incluso ?? 3) }}">
+                                                    <input type="text" inputmode="decimal" class="form-control form-control-sm @error('loja_entrega_km_incluso') is-invalid @enderror" id="loja_entrega_km_incluso" name="loja_entrega_km_incluso" value="{{ old('loja_entrega_km_incluso', $empresa->loja_entrega_km_incluso) }}" placeholder="Ex.: 3 (padrão se vazio)">
                                                     @error('loja_entrega_km_incluso')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                                    <p class="small text-muted mb-0 mt-1">Se ficar vazio, o sistema usa 3 km como padrão.</p>
                                                 </div>
                                                 <div class="col-md-4">
                                                     <label class="form-label small" for="loja_entrega_valor_km_extra">R$ por km acima do incluso</label>
                                                     <div class="input-group input-group-sm">
                                                         <span class="input-group-text">R$</span>
-                                                        <input type="number" step="0.01" min="0" class="form-control @error('loja_entrega_valor_km_extra') is-invalid @enderror" id="loja_entrega_valor_km_extra" name="loja_entrega_valor_km_extra" value="{{ old('loja_entrega_valor_km_extra', $empresa->loja_entrega_valor_km_extra ?? 2) }}">
+                                                        <input type="text" inputmode="decimal" class="form-control @error('loja_entrega_valor_km_extra') is-invalid @enderror" id="loja_entrega_valor_km_extra" name="loja_entrega_valor_km_extra" value="{{ old('loja_entrega_valor_km_extra', $empresa->loja_entrega_valor_km_extra) }}" placeholder="Ex.: 3,00 (padrão R$ 2,00)">
                                                     </div>
                                                     @error('loja_entrega_valor_km_extra')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                                                    <p class="small text-muted mb-0 mt-1">Se ficar vazio, o sistema usa R$ 2,00 como padrão.</p>
                                                 </div>
                                                 <div class="col-md-8">
                                                     <label class="form-label small" for="loja_entrega_gratis_acima_pedido">Entrega grátis acima do pedido (R$)</label>
                                                     <div class="input-group input-group-sm">
                                                         <span class="input-group-text">R$</span>
-                                                        <input type="number" step="0.01" min="0" class="form-control @error('loja_entrega_gratis_acima_pedido') is-invalid @enderror" id="loja_entrega_gratis_acima_pedido" name="loja_entrega_gratis_acima_pedido" value="{{ old('loja_entrega_gratis_acima_pedido', $empresa->loja_entrega_gratis_acima_pedido) }}" placeholder="Opcional — ex.: 100">
+                                                        <input type="text" inputmode="decimal" class="form-control @error('loja_entrega_gratis_acima_pedido') is-invalid @enderror" id="loja_entrega_gratis_acima_pedido" name="loja_entrega_gratis_acima_pedido" value="{{ old('loja_entrega_gratis_acima_pedido', $empresa->loja_entrega_gratis_acima_pedido) }}" placeholder="Opcional — ex.: 100,00">
                                                     </div>
                                                     @error('loja_entrega_gratis_acima_pedido')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                                                    <p class="small text-muted mb-0 mt-1">A taxa base fica em <strong>Taxa de entrega</strong> acima. Ex.: base R$ 5 até 3 km inclusos; cada km (ou fração) acima cobra o valor ao lado.</p>
+                                                    <p class="small text-muted mb-0 mt-1">Vazio = sem frete grátis. Ex.: base R$ 10 até 3 km; cada km extra cobra o valor ao lado.</p>
                                                 </div>
                                             </div>
                                         </div>

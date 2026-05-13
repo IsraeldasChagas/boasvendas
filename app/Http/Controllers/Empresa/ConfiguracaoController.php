@@ -83,6 +83,8 @@ class ConfiguracaoController extends Controller
             : null;
         $request->merge(['slug' => $slugNormalizado]);
 
+        $this->normalizarDecimaisFreteRequest($request);
+
         $rules = [
             'nome' => ['required', 'string', 'max:255'],
             'slug' => [
@@ -534,6 +536,56 @@ class ConfiguracaoController extends Controller
         }
         if (Storage::disk('uploads')->exists($path)) {
             Storage::disk('uploads')->delete($path);
+        }
+    }
+
+    /**
+     * Aceita "10,00", "10.00" ou "1.000,50" nos campos numéricos do frete e converte para o formato
+     * canônico ("10.00") antes da validação `numeric` rodar. Evita perda silenciosa quando o navegador
+     * envia vírgula decimal em type=number e a validação rejeita como inválido.
+     */
+    private function normalizarDecimaisFreteRequest(Request $request): void
+    {
+        $campos = [
+            'loja_taxa_entrega_padrao',
+            'loja_frete_google_rs_por_km',
+            'loja_frete_google_taxa_minima',
+            'loja_frete_google_km_max',
+            'loja_entrega_lat_origem',
+            'loja_entrega_lng_origem',
+            'loja_entrega_km_incluso',
+            'loja_entrega_valor_km_extra',
+            'loja_entrega_gratis_acima_pedido',
+            'loja_entrega_chuva_percentual',
+        ];
+        $atualizados = [];
+        foreach ($campos as $campo) {
+            if (! $request->has($campo)) {
+                continue;
+            }
+            $valor = $request->input($campo);
+            if (! is_string($valor)) {
+                continue;
+            }
+            $v = trim($valor);
+            if ($v === '') {
+                $atualizados[$campo] = null;
+
+                continue;
+            }
+            $temVirgula = str_contains($v, ',');
+            $temPonto = str_contains($v, '.');
+            if ($temVirgula && $temPonto) {
+                $v = str_replace('.', '', $v);
+                $v = str_replace(',', '.', $v);
+            } elseif ($temVirgula) {
+                $v = str_replace(',', '.', $v);
+            }
+            $v = preg_replace('/[^0-9\.\-]/', '', $v) ?? '';
+            $atualizados[$campo] = $v;
+        }
+        if ($atualizados !== []) {
+            $request->merge($atualizados);
         }
     }
 
