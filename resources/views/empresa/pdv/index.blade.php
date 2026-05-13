@@ -4,9 +4,6 @@
 
 @push('styles')
 <style>
-    .vf-pdv-produtos { max-height: 70vh; overflow-y: auto; }
-    .vf-pdv-produto-item { cursor: pointer; transition: background-color 0.15s; }
-    .vf-pdv-produto-item:hover { background-color: rgba(13, 110, 253, 0.08); }
     .vf-pdv-carrinho { max-height: 50vh; overflow-y: auto; }
     .vf-pdv-tab.active { background-color: #0d6efd; color: white; }
     .vf-pdv-resumo { position: sticky; bottom: 0; }
@@ -53,38 +50,29 @@
                     <div class="p-3">
                         <input type="hidden" name="tipo_entrega" id="vf-pdv-tipo-entrega" value="{{ $temBalcao ? \App\Models\Pedido::TIPO_ENTREGA_BALCAO : \App\Models\Pedido::TIPO_ENTREGA_ENTREGA }}">
 
-                        <label class="form-label small fw-semibold mb-2">Adicionar produtos</label>
+                        <label class="form-label small fw-semibold mb-2" for="vf-pdv-busca">Adicionar produtos</label>
                         <div class="input-group input-group-sm mb-2">
                             <span class="input-group-text"><i class="bi bi-search"></i></span>
-                            <input type="text" class="form-control" id="vf-pdv-busca" placeholder="Digite o nome ou parte do produto...">
+                            <input type="text" class="form-control" id="vf-pdv-busca" placeholder="Filtrar produtos por nome...">
                         </div>
 
-                        <div class="vf-pdv-produtos border rounded">
-                            <div class="list-group list-group-flush" id="vf-pdv-lista">
+                        <div class="input-group input-group-sm">
+                            <select class="form-select" id="vf-pdv-select-produto" aria-label="Selecione um produto">
+                                <option value="">— Selecione um produto —</option>
                                 @foreach ($produtos as $p)
-                                    <button type="button"
-                                            class="list-group-item list-group-item-action vf-pdv-produto-item d-flex align-items-center justify-content-between"
-                                            data-id="{{ $p->id }}"
+                                    <option value="{{ $p->id }}"
                                             data-nome="{{ $p->nome }}"
                                             data-preco="{{ $p->preco }}"
-                                            data-estoque="{{ $p->estoque ?? '' }}">
-                                        <div class="text-start">
-                                            <div class="fw-semibold small">{{ $p->nome }}</div>
-                                            @if ($p->estoque !== null)
-                                                <div class="text-muted" style="font-size: 0.75rem;">Estoque: {{ $p->estoque }}</div>
-                                            @endif
-                                        </div>
-                                        <div class="text-end">
-                                            <div class="fw-bold text-primary">R$ {{ number_format((float) $p->preco, 2, ',', '.') }}</div>
-                                            <i class="bi bi-plus-circle text-primary"></i>
-                                        </div>
-                                    </button>
+                                            data-estoque="{{ $p->estoque ?? '' }}">{{ $p->nome }} — R$ {{ number_format((float) $p->preco, 2, ',', '.') }}@if ($p->estoque !== null) · estoque {{ $p->estoque }}@endif</option>
                                 @endforeach
-                            </div>
-                            <div class="text-center text-muted small p-3 d-none" id="vf-pdv-sem-resultado">
-                                Nenhum produto encontrado.
-                            </div>
+                            </select>
+                            <button type="button" class="btn btn-primary" id="vf-pdv-btn-adicionar" title="Adicionar produto ao pedido">
+                                <i class="bi bi-plus-circle me-1"></i>Adicionar
+                            </button>
                         </div>
+                        <p class="small text-muted mb-0 mt-2" id="vf-pdv-busca-info">
+                            <span id="vf-pdv-busca-total">{{ $produtos->count() }}</span> produto(s) disponíveis.
+                        </p>
                     </div>
                 </div>
 
@@ -250,8 +238,10 @@
     const elNomeReq = document.getElementById('vf-pdv-nome-req');
     const elTelReq = document.getElementById('vf-pdv-tel-req');
     const elBusca = document.getElementById('vf-pdv-busca');
-    const elLista = document.getElementById('vf-pdv-lista');
-    const elSemRes = document.getElementById('vf-pdv-sem-resultado');
+    const elSelectProduto = document.getElementById('vf-pdv-select-produto');
+    const elBtnAdicionar = document.getElementById('vf-pdv-btn-adicionar');
+    const elBuscaTotal = document.getElementById('vf-pdv-busca-total');
+    const elBuscaInfo = document.getElementById('vf-pdv-busca-info');
     const elCarrinho = document.getElementById('vf-pdv-carrinho');
     const elVazio = document.getElementById('vf-pdv-carrinho-vazio');
     const elQtd = document.getElementById('vf-pdv-qtd-itens');
@@ -307,31 +297,91 @@
         });
     });
 
-    elBusca.addEventListener('input', function () {
-        const q = elBusca.value.trim().toLowerCase();
-        let visiveis = 0;
-        elLista.querySelectorAll('.vf-pdv-produto-item').forEach(function (btn) {
-            const nome = (btn.getAttribute('data-nome') || '').toLowerCase();
-            const ok = q === '' || nome.includes(q);
-            btn.style.display = ok ? '' : 'none';
-            if (ok) visiveis++;
+    function todasOpcoesProduto() {
+        return Array.from(elSelectProduto.options).filter(function (op) {
+            return op.value !== '';
         });
-        elSemRes.classList.toggle('d-none', visiveis !== 0);
-    });
+    }
 
-    elLista.addEventListener('click', function (e) {
-        const btn = e.target.closest('.vf-pdv-produto-item');
-        if (!btn) return;
-        const id = parseInt(btn.getAttribute('data-id'), 10);
-        const nome = btn.getAttribute('data-nome');
-        const preco = parseFloat(btn.getAttribute('data-preco'));
-        const existente = itens.find(function (i) { return i.produto_id === id; });
+    function adicionarProdutoPorId(id) {
+        const idNum = parseInt(id, 10);
+        if (!idNum) return false;
+        const op = elSelectProduto.querySelector('option[value="' + idNum + '"]');
+        if (!op) return false;
+        const nome = op.getAttribute('data-nome') || op.textContent.trim();
+        const preco = parseFloat(op.getAttribute('data-preco')) || 0;
+        const existente = itens.find(function (i) { return i.produto_id === idNum; });
         if (existente) {
             existente.quantidade += 1;
         } else {
-            itens.push({ produto_id: id, nome: nome, preco_unitario: preco, quantidade: 1, observacao: '' });
+            itens.push({ produto_id: idNum, nome: nome, preco_unitario: preco, quantidade: 1, observacao: '' });
         }
         renderCarrinho();
+        return true;
+    }
+
+    elBusca.addEventListener('input', function () {
+        const q = elBusca.value.trim().toLowerCase();
+        let visiveis = 0;
+        let primeiroVisivel = '';
+        todasOpcoesProduto().forEach(function (op) {
+            const nome = (op.getAttribute('data-nome') || '').toLowerCase();
+            const ok = q === '' || nome.includes(q);
+            op.hidden = !ok;
+            op.disabled = !ok;
+            if (ok) {
+                visiveis++;
+                if (primeiroVisivel === '') primeiroVisivel = op.value;
+            }
+        });
+        if (q === '') {
+            elBuscaInfo.classList.remove('text-danger');
+            elBuscaTotal.textContent = todasOpcoesProduto().length;
+            elBuscaInfo.innerHTML = '<span id="vf-pdv-busca-total">' + todasOpcoesProduto().length + '</span> produto(s) disponíveis.';
+        } else if (visiveis === 0) {
+            elBuscaInfo.classList.add('text-danger');
+            elBuscaInfo.textContent = 'Nenhum produto encontrado para "' + q + '".';
+        } else {
+            elBuscaInfo.classList.remove('text-danger');
+            elBuscaInfo.textContent = visiveis + ' produto(s) encontrados para "' + q + '". Selecione e clique em Adicionar.';
+        }
+        if (elSelectProduto.selectedOptions[0] && elSelectProduto.selectedOptions[0].disabled) {
+            elSelectProduto.value = primeiroVisivel || '';
+        } else if (elSelectProduto.value === '' && primeiroVisivel !== '') {
+            elSelectProduto.value = primeiroVisivel;
+        }
+    });
+
+    elBtnAdicionar.addEventListener('click', function () {
+        const id = elSelectProduto.value;
+        if (!id) {
+            elBuscaInfo.classList.add('text-danger');
+            elBuscaInfo.textContent = 'Selecione um produto na lista antes de adicionar.';
+            elSelectProduto.focus();
+            return;
+        }
+        if (adicionarProdutoPorId(id)) {
+            elBuscaInfo.classList.remove('text-danger');
+            elBuscaInfo.innerHTML = '<i class="bi bi-check-circle text-success me-1"></i>Produto adicionado ao pedido.';
+            elBusca.value = '';
+            elBusca.dispatchEvent(new Event('input'));
+            elSelectProduto.value = '';
+            elBusca.focus();
+        }
+    });
+
+    elSelectProduto.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            elBtnAdicionar.click();
+        }
+    });
+
+    elBusca.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            elBtnAdicionar.click();
+        }
     });
 
     function renderCarrinho() {
