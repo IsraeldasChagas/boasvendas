@@ -90,15 +90,22 @@
                                 <label class="form-label">Documento (opcional)</label>
                                 <input type="text" name="cliente_documento" class="form-control" maxlength="32" placeholder="CPF / CNPJ">
                             </div>
-                            <div class="mb-2">
-                                <label class="form-label">Garçom</label>
-                                <select name="garcom_id" class="form-select">
-                                    <option value="">—</option>
-                                    @foreach (\App\Models\User::query()->where('empresa_id', auth()->user()->empresa_id)->orderBy('name')->get() as $u)
-                                        <option value="{{ $u->id }}">{{ $u->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+                            @if (auth()->user()->temPainelEmpresaCompleto())
+                                <div class="mb-2">
+                                    <label class="form-label">Garçom</label>
+                                    <select name="garcom_id" class="form-select">
+                                        <option value="">—</option>
+                                        @foreach (\App\Models\User::query()->where('empresa_id', auth()->user()->empresa_id)->orderBy('name')->get() as $u)
+                                            <option value="{{ $u->id }}">{{ $u->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @else
+                                <input type="hidden" name="garcom_id" value="{{ auth()->id() }}">
+                                <p class="small text-muted mb-2 mb-md-0">
+                                    <i class="bi bi-person-check me-1"></i>Atendente: <strong>{{ auth()->user()->name }}</strong>
+                                </p>
+                            @endif
                             <div class="mb-0">
                                 <label class="form-label">Observação</label>
                                 <textarea name="observacao" class="form-control" rows="2" maxlength="2000"></textarea>

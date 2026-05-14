@@ -131,12 +131,17 @@ class ComandaController extends Controller
             'observacao' => ['nullable', 'string', 'max:2000'],
         ]);
 
+        $garcomId = isset($data['garcom_id']) ? (int) $data['garcom_id'] : null;
+        if ($request->user()->temAcessoRestritoAoPainelEmpresa()) {
+            $garcomId = (int) $request->user()->id;
+        }
+
         try {
             $this->comandaService->atualizarCabecalho(
                 $comanda,
                 $data['cliente_nome'] ?? null,
                 $data['cliente_documento'] ?? null,
-                isset($data['garcom_id']) ? (int) $data['garcom_id'] : null,
+                $garcomId,
                 $data['observacao'] ?? null,
             );
         } catch (\Throwable $e) {

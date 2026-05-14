@@ -28,15 +28,22 @@ Comanda — Mesa #{{ $comanda->mesa?->numero }}
                             <label class="form-label">Documento</label>
                             <input type="text" name="cliente_documento" value="{{ old('cliente_documento', $comanda->cliente_documento) }}" class="form-control">
                         </div>
-                        <div class="mb-2">
-                            <label class="form-label">Garçom</label>
-                            <select name="garcom_id" class="form-select">
-                                <option value="">—</option>
-                                @foreach ($garcons as $u)
-                                    <option value="{{ $u->id }}" @selected(old('garcom_id', $comanda->garcom_id) == $u->id)>{{ $u->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+                        @if (auth()->user()->temPainelEmpresaCompleto())
+                            <div class="mb-2">
+                                <label class="form-label">Garçom</label>
+                                <select name="garcom_id" class="form-select">
+                                    <option value="">—</option>
+                                    @foreach ($garcons as $u)
+                                        <option value="{{ $u->id }}" @selected(old('garcom_id', $comanda->garcom_id) == $u->id)>{{ $u->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @else
+                            <input type="hidden" name="garcom_id" value="{{ auth()->id() }}">
+                            <p class="small text-muted mb-2">
+                                <i class="bi bi-person-check me-1"></i>Atendente: <strong>{{ auth()->user()->name }}</strong>
+                            </p>
+                        @endif
                         <div class="mb-2">
                             <label class="form-label">Observação</label>
                             <textarea name="observacao" class="form-control" rows="2">{{ old('observacao', $comanda->observacao) }}</textarea>
