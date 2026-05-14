@@ -152,6 +152,11 @@
                                                 <div class="vf-escolha-card vf-escolha-card--acrescimo-chk" data-ad-id="{{ $ad->id }}">
                                                     <div class="vf-escolha-card-inner vf-escolha-card-inner--retirar-chk">
                                                         <span class="vf-escolha-bar" aria-hidden="true"></span>
+                                                        @if ($ad->urlFoto())
+                                                            <div class="vf-escolha-thumb-wrap vf-escolha-thumb-wrap--adicional flex-shrink-0" aria-hidden="true">
+                                                                <img src="{{ $ad->urlFoto() }}" alt="" class="vf-escolha-thumb-ing vf-escolha-thumb-ing--adicional rounded border">
+                                                            </div>
+                                                        @endif
                                                         <div class="vf-retirar-chk-wrap flex-grow-1 min-w-0 d-flex align-items-start gap-3 py-2 ps-2 pe-3">
                                                             <input class="form-check-input vf-acrescimo-chk flex-shrink-0 mt-1" type="checkbox" id="acre_ad_{{ $ad->id }}" autocomplete="off" aria-describedby="acre_ad_label_{{ $ad->id }}" @checked(((int) old('adicional_qtd.'.$ad->id, 0)) > 0)>
                                                             <label class="form-check-label mb-0 flex-grow-1" for="acre_ad_{{ $ad->id }}" id="acre_ad_label_{{ $ad->id }}">
@@ -176,6 +181,11 @@
                                                 <div class="vf-escolha-card" data-ad-id="{{ $ad->id }}">
                                                     <div class="vf-escolha-card-inner">
                                                         <span class="vf-escolha-bar" aria-hidden="true"></span>
+                                                        @if ($ad->urlFoto())
+                                                            <div class="vf-escolha-thumb-wrap vf-escolha-thumb-wrap--adicional flex-shrink-0" aria-hidden="true">
+                                                                <img src="{{ $ad->urlFoto() }}" alt="" class="vf-escolha-thumb-ing vf-escolha-thumb-ing--adicional rounded border">
+                                                            </div>
+                                                        @endif
                                                         <div class="vf-escolha-textos">
                                                             <span class="vf-personalizar-nome">
                                                                 {{ $ad->nome }}

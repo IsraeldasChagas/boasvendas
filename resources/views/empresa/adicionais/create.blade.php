@@ -11,7 +11,7 @@
         <div class="col-lg-8">
             <div class="vf-card p-4">
                 <h2 class="h5 fw-bold mb-4">Novo adicional</h2>
-                <form action="{{ route('empresa.adicionais.store') }}" method="post" id="form-adicional">
+                <form action="{{ route('empresa.adicionais.store') }}" method="post" id="form-adicional" enctype="multipart/form-data">
                     @csrf
                     <div class="row g-3">
                         <div class="col-md-8">
@@ -38,6 +38,12 @@
                             <input type="number" class="form-control @error('preco') is-invalid @enderror" id="preco" name="preco" value="{{ old('preco', 0) }}" min="0" step="0.01" required>
                             @error('preco')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             <div class="form-text">Só vale para “Acrescentar”. Retirar fica com preço zero.</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="foto">Foto <span class="text-muted fw-normal">(opcional)</span></label>
+                            <input type="file" class="form-control form-control-sm @error('foto') is-invalid @enderror" id="foto" name="foto" accept="image/*">
+                            @error('foto')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <div class="form-text">Aparece na vitrine como miniatura discreta ao lado do nome (opcional).</div>
                         </div>
                         <div class="col-12">
                             <div class="form-check">

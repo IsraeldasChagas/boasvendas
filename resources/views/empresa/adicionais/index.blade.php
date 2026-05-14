@@ -30,7 +30,10 @@
         <ul class="list-group list-group-flush">
             @forelse ($adicionais as $a)
                 <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
-                    <div>
+                    <div class="d-flex align-items-center gap-2 min-w-0">
+                        @if ($a->urlFoto())
+                            <img src="{{ $a->urlFoto() }}" alt="" class="rounded border flex-shrink-0 vf-adicional-foto-thumb-list" width="36" height="36" style="object-fit: cover; opacity: 0.9;">
+                        @endif
                         <span class="fw-medium">{{ $a->nome }}</span>
                         @if ($a->tipo === \App\Models\Adicional::TIPO_RETIRAR)
                             <span class="vf-badge bg-warning-subtle text-warning-emphasis ms-1">Retirar</span>

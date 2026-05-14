@@ -9,7 +9,7 @@
     ]])
     <div class="vf-card p-4">
         <h2 class="h5 fw-bold mb-4">Editar adicional</h2>
-        <form action="{{ route('empresa.adicionais.update', $adicional) }}" method="post" id="form-adicional">
+        <form action="{{ route('empresa.adicionais.update', $adicional) }}" method="post" id="form-adicional" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             <div class="row g-3">
@@ -36,6 +36,21 @@
                     <label class="form-label" for="preco">Preço extra (R$)</label>
                     <input type="number" class="form-control @error('preco') is-invalid @enderror" id="preco" name="preco" value="{{ old('preco', $adicional->preco) }}" min="0" step="0.01" required>
                     @error('preco')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="foto">Foto <span class="text-muted fw-normal">(opcional)</span></label>
+                    @if ($adicional->urlFoto())
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <img src="{{ $adicional->urlFoto() }}" alt="" class="rounded border vf-adicional-foto-preview" width="56" height="56" style="object-fit: cover;">
+                            <div class="form-check mb-0">
+                                <input class="form-check-input" type="checkbox" name="remover_foto" id="remover_foto" value="1" @checked(old('remover_foto'))>
+                                <label class="form-check-label small text-muted" for="remover_foto">Remover foto atual</label>
+                            </div>
+                        </div>
+                    @endif
+                    <input type="file" class="form-control form-control-sm @error('foto') is-invalid @enderror" id="foto" name="foto" accept="image/*">
+                    @error('foto')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    <div class="form-text">Miniatura discreta na vitrine ao lado do nome da opção.</div>
                 </div>
                 <div class="col-12">
                     <div class="form-check">

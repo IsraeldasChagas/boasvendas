@@ -540,6 +540,35 @@ body.vf-body {
   }
 }
 
+/* Miniatura discreta de adicional (acréscimo pago) na vitrine */
+.vf-escolha-thumb-wrap--adicional {
+  padding: 0.3rem 0 0.3rem 0.3rem;
+  min-width: 0;
+  align-items: center;
+}
+
+.vf-escolha-thumb-ing--adicional {
+  width: 2.25rem;
+  height: 2.25rem;
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  opacity: 0.88;
+  box-shadow: none;
+}
+
+@media (min-width: 768px) {
+  .vf-escolha-thumb-ing--adicional {
+    width: 2.4rem;
+    height: 2.4rem;
+    min-width: 2.4rem;
+    min-height: 2.4rem;
+  }
+}
+
+.vf-adicional-thumb-admin {
+  opacity: 0.85;
+}
+
 .vf-escolha-card-inner--retirar-chk {
   flex-wrap: nowrap;
   align-items: center;

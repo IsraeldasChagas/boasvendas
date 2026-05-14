@@ -63,6 +63,10 @@ Route::get('/media/produto-ingrediente/{produtoIngrediente}', [PublicoController
     ->whereNumber('produtoIngrediente')
     ->name('publico.produto_ingrediente_foto');
 
+Route::get('/media/adicional/{adicionalId}', [PublicoController::class, 'adicionalFoto'])
+    ->whereNumber('adicionalId')
+    ->name('publico.adicional_foto');
+
 Route::get('/media/empresa/{empresa}', [PublicoController::class, 'empresaLogo'])
     ->whereNumber('empresa')
     ->name('publico.empresa_logo');

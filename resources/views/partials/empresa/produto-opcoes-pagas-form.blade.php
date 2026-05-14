@@ -82,12 +82,18 @@
             <p class="small text-muted mb-2">Marque <strong>só para este produto</strong> quais opções (cadastradas em <a href="{{ route('empresa.adicionais.index') }}">Adicionais</a>) aparecem na vitrine.</p>
             <div class="border rounded p-3 bg-light mb-2" style="max-height: 12rem; overflow-y: auto;">
                 @forelse ($adicionais->where('tipo', \App\Models\Adicional::TIPO_ACRESCENTAR) as $ad)
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="adicional_ids[]" id="ad_{{ $ad->id }}" value="{{ $ad->id }}"
+                    <div class="form-check d-flex align-items-start gap-2">
+                        <input class="form-check-input mt-1 flex-shrink-0" type="checkbox" name="adicional_ids[]" id="ad_{{ $ad->id }}" value="{{ $ad->id }}"
                             @checked(in_array($ad->id, array_map('intval', $sel), true))>
-                        <label class="form-check-label" for="ad_{{ $ad->id }}">
-                            {{ $ad->nome }}
-                            <span class="text-muted small">(+ R$ {{ number_format((float) $ad->preco, 2, ',', '.') }})</span>
+                        <label class="form-check-label flex-grow-1 min-w-0" for="ad_{{ $ad->id }}">
+                            <span class="d-inline-flex align-items-center gap-2 flex-wrap">
+                                @if ($ad->urlFoto())
+                                    <img src="{{ $ad->urlFoto() }}" alt="" class="rounded border flex-shrink-0 vf-adicional-thumb-admin" width="28" height="28" style="object-fit: cover;">
+                                @endif
+                                <span>{{ $ad->nome }}
+                                    <span class="text-muted small">(+ R$ {{ number_format((float) $ad->preco, 2, ',', '.') }})</span>
+                                </span>
+                            </span>
                         </label>
                     </div>
                 @empty
