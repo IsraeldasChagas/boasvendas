@@ -191,6 +191,11 @@ class Empresa extends Model
         return $this->hasMany(FiscalLog::class, 'empresa_id');
     }
 
+    public function mesas(): HasMany
+    {
+        return $this->hasMany(Mesa::class, 'empresa_id');
+    }
+
     public function financeiroTitulos(): HasMany
     {
         return $this->hasMany(FinanceiroTitulo::class, 'empresa_id');
@@ -576,6 +581,7 @@ class Empresa extends Model
             've_fiados' => 'Venda externa: Fiados',
             've_relatorios' => 'Venda externa: Relatórios',
             'fiscal' => 'Fiscal',
+            'mesas' => 'Vendas por mesa',
             'suporte' => 'Suporte',
             'configuracoes' => 'Configurações',
             'usuarios' => 'Usuários',
@@ -629,6 +635,10 @@ class Empresa extends Model
             return true;
         }
         if (str_starts_with($key, 'fiscal') && in_array('fiscal', $libs, true)) {
+            return true;
+        }
+
+        if (str_starts_with($key, 'mesas') && in_array('mesas', $libs, true)) {
             return true;
         }
 

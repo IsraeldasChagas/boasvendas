@@ -5,6 +5,9 @@ namespace App\Providers;
 use App\Models\Adicional;
 use App\Models\Categoria;
 use App\Models\Cliente;
+use App\Models\Comanda;
+use App\Models\ComandaItem;
+use App\Models\Mesa;
 use App\Models\FidelidadeCartao;
 use App\Models\FinanceiroDespesaFixa;
 use App\Models\FinanceiroTitulo;
@@ -240,6 +243,50 @@ class AppServiceProvider extends ServiceProvider
                 ->where('id', $value)
                 ->where('empresa_id', $empresaId)
                 ->firstOrFail();
+        });
+
+        Route::bind('mesa', function (string $value) {
+            if (! auth()->check()) {
+                abort(404);
+            }
+
+            $empresaId = auth()->user()->empresa_id;
+            abort_unless($empresaId, 404);
+
+            return Mesa::query()
+                ->where('id', $value)
+                ->where('empresa_id', $empresaId)
+                ->firstOrFail();
+        });
+
+        Route::bind('comanda', function (string $value) {
+            if (! auth()->check()) {
+                abort(404);
+            }
+
+            $empresaId = auth()->user()->empresa_id;
+            abort_unless($empresaId, 404);
+
+            return Comanda::query()
+                ->where('id', $value)
+                ->where('empresa_id', $empresaId)
+                ->firstOrFail();
+        });
+
+        Route::bind('comandaItem', function (string $value) {
+            if (! auth()->check()) {
+                abort(404);
+            }
+
+            $empresaId = auth()->user()->empresa_id;
+            abort_unless($empresaId, 404);
+
+            $item = ComandaItem::query()
+                ->where('id', $value)
+                ->whereHas('comanda', fn ($q) => $q->where('empresa_id', $empresaId))
+                ->firstOrFail();
+
+            return $item;
         });
 
         View::composer('layouts.publico', function ($view) {

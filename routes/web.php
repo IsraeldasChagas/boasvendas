@@ -15,6 +15,11 @@ use App\Http\Controllers\Empresa\CaixaController;
 use App\Http\Controllers\Empresa\CategoriaController;
 use App\Http\Controllers\Empresa\ChamadoController as EmpresaChamadoController;
 use App\Http\Controllers\Empresa\ClienteController;
+use App\Http\Controllers\Empresa\CozinhaController;
+use App\Http\Controllers\Empresa\ComandaController;
+use App\Http\Controllers\Empresa\FechamentoMesaController;
+use App\Http\Controllers\Empresa\MesaController;
+use App\Http\Controllers\Empresa\RelatorioMesaController;
 use App\Http\Controllers\Empresa\ClienteFidelidadeCartaoController;
 use App\Http\Controllers\Empresa\ConfiguracaoController;
 use App\Http\Controllers\Empresa\DashboardController as EmpresaDashboardController;
@@ -257,6 +262,53 @@ Route::middleware(['auth', 'empresa.painel', 'empresa.menu'])->prefix('empresa')
     Route::get('/fiscal/notas/rejeicoes', [FiscalNotaController::class, 'rejeicoes'])->name('fiscal.notas.rejeicoes');
     Route::get('/fiscal/certificados', [FiscalCertificadoController::class, 'index'])->name('fiscal.certificados.index');
     Route::get('/fiscal/logs', [FiscalLogController::class, 'index'])->name('fiscal.logs.index');
+
+    Route::prefix('mesas')->name('mesas.')->group(function () {
+        Route::get('/', [MesaController::class, 'index'])->name('index');
+        Route::get('/configuracoes', [MesaController::class, 'configuracoes'])->name('configuracoes');
+        Route::put('/configuracoes', [MesaController::class, 'configuracoesUpdate'])->name('configuracoes.update');
+        Route::post('/cadastro', [MesaController::class, 'store'])->name('store');
+        Route::put('/cadastro/{mesa}', [MesaController::class, 'update'])->name('update');
+        Route::delete('/cadastro/{mesa}', [MesaController::class, 'destroy'])->name('destroy');
+        Route::get('/comandas-abertas', [ComandaController::class, 'indexAbertas'])->name('comandas-abertas');
+        Route::get('/cozinha', [CozinhaController::class, 'index'])->name('cozinha');
+        Route::post('/cozinha/itens/{comandaItem}', [CozinhaController::class, 'updateStatus'])
+            ->middleware('throttle:120,1')
+            ->name('cozinha.item-status');
+        Route::get('/fechamento', [FechamentoMesaController::class, 'index'])->name('fechamento.index');
+        Route::get('/fechamento/{comanda}', [FechamentoMesaController::class, 'show'])->name('fechamento.show');
+        Route::post('/fechamento/{comanda}/finalizar', [FechamentoMesaController::class, 'finalizar'])
+            ->middleware('throttle:30,1')
+            ->name('fechamento.finalizar');
+        Route::get('/relatorios', [RelatorioMesaController::class, 'index'])->name('relatorios');
+        Route::post('/{mesa}/abrir', [MesaController::class, 'abrir'])
+            ->middleware('throttle:30,1')
+            ->name('abrir');
+        Route::post('/{mesa}/solicitar-conta', [MesaController::class, 'solicitarConta'])
+            ->middleware('throttle:60,1')
+            ->name('solicitar-conta');
+        Route::get('/{mesa}/fechamento', [FechamentoMesaController::class, 'redirectFromMesa'])->name('fechamento.redirect-mesa');
+    });
+
+    Route::prefix('comandas')->name('comandas.')->group(function () {
+        Route::get('/{comanda}', [ComandaController::class, 'show'])->name('show');
+        Route::get('/{comanda}/pre-conta', [ComandaController::class, 'preConta'])->name('pre-conta');
+        Route::post('/{comanda}/itens', [ComandaController::class, 'adicionarItem'])
+            ->middleware('throttle:120,1')
+            ->name('itens.store');
+        Route::delete('/{comanda}/itens/{comandaItem}', [ComandaController::class, 'removerItem'])->name('itens.destroy');
+        Route::post('/{comanda}/enviar-cozinha', [ComandaController::class, 'enviarCozinha'])
+            ->middleware('throttle:60,1')
+            ->name('enviar-cozinha');
+        Route::put('/{comanda}/cabecalho', [ComandaController::class, 'atualizarCabecalho'])->name('cabecalho');
+        Route::post('/{comanda}/fechar', [FechamentoMesaController::class, 'finalizar'])
+            ->middleware('throttle:30,1')
+            ->name('fechar');
+        Route::post('/{comanda}/pagamento', [FechamentoMesaController::class, 'finalizar'])
+            ->middleware('throttle:30,1')
+            ->name('pagamento');
+        Route::get('/{comanda}/fiscal-futuro', [ComandaController::class, 'fiscalFuturo'])->name('fiscal-futuro');
+    });
 
     Route::get('/entregas', [EntregaController::class, 'index'])->name('entregas.index');
 

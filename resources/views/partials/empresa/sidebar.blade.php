@@ -132,6 +132,35 @@
             </a>
         </div>
     @endif
+    @if ($tem('mesas') && \Illuminate\Support\Facades\Schema::hasTable('mesas'))
+        @php $mesasMenuAtivo = request()->routeIs('empresa.mesas.*', 'empresa.comandas.*'); @endphp
+        <button type="button" class="nav-link vf-submenu-toggle {{ $mesasMenuAtivo ? 'active' : '' }}" data-vf-submenu-toggle aria-expanded="{{ $mesasMenuAtivo ? 'true' : 'false' }}">
+            <span class="d-flex align-items-center gap-2">
+                <i class="bi bi-grid-3x3-gap"></i> Vendas por mesa
+            </span>
+            <i class="bi bi-chevron-right vf-submenu-chevron"></i>
+        </button>
+        <div class="submenu vf-submenu-content {{ $mesasMenuAtivo ? '' : 'd-none' }}">
+            <a class="nav-link {{ request()->routeIs('empresa.mesas.index') ? 'active' : '' }}" href="{{ route('empresa.mesas.index') }}">
+                <i class="bi bi-map"></i> Mapa de mesas
+            </a>
+            <a class="nav-link {{ request()->routeIs('empresa.mesas.comandas-abertas') ? 'active' : '' }}" href="{{ route('empresa.mesas.comandas-abertas') }}">
+                <i class="bi bi-journal-bookmark"></i> Comandas abertas
+            </a>
+            <a class="nav-link {{ request()->routeIs('empresa.mesas.cozinha') ? 'active' : '' }}" href="{{ route('empresa.mesas.cozinha') }}">
+                <i class="bi bi-fire"></i> Painel da cozinha
+            </a>
+            <a class="nav-link {{ request()->routeIs('empresa.mesas.fechamento.*') ? 'active' : '' }}" href="{{ route('empresa.mesas.fechamento.index') }}">
+                <i class="bi bi-cash-stack"></i> Fechamento de mesa
+            </a>
+            <a class="nav-link {{ request()->routeIs('empresa.mesas.relatorios') ? 'active' : '' }}" href="{{ route('empresa.mesas.relatorios') }}">
+                <i class="bi bi-graph-up"></i> Relatórios de mesas
+            </a>
+            <a class="nav-link {{ request()->routeIs('empresa.mesas.configuracoes*') ? 'active' : '' }}" href="{{ route('empresa.mesas.configuracoes') }}">
+                <i class="bi bi-sliders"></i> Configurações de mesas
+            </a>
+        </div>
+    @endif
     @php
         $veItens = [
             've_dashboard' => ['active' => request()->routeIs('empresa.venda-externa.dashboard'), 'url' => route('empresa.venda-externa.dashboard'), 'icon' => 'bi-pin-map', 'label' => 'Dashboard'],

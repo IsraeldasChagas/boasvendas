@@ -66,6 +66,10 @@ class EnsureEmpresaMenuAccess
             return 'fiscal';
         }
 
+        if (str_starts_with($routeName, 'empresa.mesas.') || str_starts_with($routeName, 'empresa.comandas.')) {
+            return 'mesas';
+        }
+
         if (str_starts_with($routeName, 'empresa.pedidos.') || str_starts_with($routeName, 'empresa.entregadores.')) {
             return 'pedidos';
         }
