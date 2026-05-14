@@ -41,7 +41,7 @@
         @php
             $vfEmpPainel = Auth::user()?->empresa;
         @endphp
-        @if ($vfEmpPainel && $vfEmpPainel->temTelaMenu('pedidos'))
+        @if ($vfEmpPainel && Auth::user()?->deveCarregarPollPedidosPendentesNoPainel())
             @include('partials.empresa.pedido-pendente-modal')
         @endif
     @endauth

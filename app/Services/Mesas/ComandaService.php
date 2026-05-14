@@ -11,6 +11,7 @@ use App\Models\Mesa;
 use App\Models\MesaConfiguracao;
 use App\Models\Produto;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class ComandaService
@@ -27,6 +28,13 @@ class ComandaService
         ?string $observacao,
     ): Comanda {
         $this->mesaService->garantirPodeAbrir($mesa);
+
+        if (($garcomId === null || $garcomId === 0) && Auth::check()) {
+            $auth = Auth::user();
+            if ($auth instanceof User && $auth->temAcessoRestritoAoPainelEmpresa()) {
+                $garcomId = (int) $auth->id;
+            }
+        }
 
         $config = MesaConfiguracao::obterOuCriarPadrao((int) $mesa->empresa_id, $mesa->unidade_id !== null ? (int) $mesa->unidade_id : null);
         if ($config->exigir_garcom_abertura && ($garcomId === null || $garcomId === 0)) {

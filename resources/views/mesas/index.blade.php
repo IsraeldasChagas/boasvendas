@@ -20,9 +20,11 @@
 @section('content')
 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
     <p class="text-muted mb-0">Toque nos botões — otimizado para tablet e celular do salão.</p>
-    <a href="{{ route('empresa.mesas.configuracoes') }}" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-sliders me-1"></i>Configurações
-    </a>
+    @if (auth()->user()->temPainelEmpresaCompleto())
+        <a href="{{ route('empresa.mesas.configuracoes') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-sliders me-1"></i>Configurações
+        </a>
+    @endif
 </div>
 
 <div class="row g-3">
@@ -57,7 +59,9 @@
                                 @csrf
                                 <button type="submit" class="btn btn-outline-dark btn-lg">Solicitar conta</button>
                             </form>
-                            <a href="{{ route('empresa.mesas.fechamento.redirect-mesa', $mesa) }}" class="btn btn-success btn-lg">Fechar mesa</a>
+                            @if (auth()->user()->role !== \App\Models\User::ROLE_ATENDENTE)
+                                <a href="{{ route('empresa.mesas.fechamento.redirect-mesa', $mesa) }}" class="btn btn-success btn-lg">Fechar mesa</a>
+                            @endif
                         @else
                             <button type="button" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#modalAbrir{{ $mesa->id }}">
                                 <i class="bi bi-unlock me-1"></i>Abrir mesa
@@ -111,7 +115,12 @@
     @empty
         <div class="col-12">
             <div class="alert alert-info mb-0">
-                Nenhuma mesa cadastrada. Acesse <a href="{{ route('empresa.mesas.configuracoes') }}">Configurações de mesas</a> para criar.
+                Nenhuma mesa cadastrada.
+                @if (auth()->user()->temPainelEmpresaCompleto())
+                    Acesse <a href="{{ route('empresa.mesas.configuracoes') }}">Configurações de mesas</a> para criar.
+                @else
+                    Peça ao gestor para cadastrar as mesas.
+                @endif
             </div>
         </div>
     @endforelse

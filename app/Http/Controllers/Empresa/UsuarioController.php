@@ -11,8 +11,16 @@ use Illuminate\View\View;
 
 class UsuarioController extends Controller
 {
+    private function assertPodeGerenciarUsuarios(Request $request): void
+    {
+        if (! $request->user()?->podeGerenciarUsuariosEquipe()) {
+            abort(403, 'Apenas gestor ou operador de caixa podem gerenciar usuários da empresa.');
+        }
+    }
+
     public function index(Request $request): View|RedirectResponse
     {
+        $this->assertPodeGerenciarUsuarios($request);
         $empresa = $request->user()->empresa;
         if (! $empresa) {
             return redirect()
@@ -31,6 +39,7 @@ class UsuarioController extends Controller
 
     public function create(Request $request): View|RedirectResponse
     {
+        $this->assertPodeGerenciarUsuarios($request);
         $empresa = $request->user()->empresa;
         if (! $empresa) {
             return redirect()
@@ -46,6 +55,7 @@ class UsuarioController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $this->assertPodeGerenciarUsuarios($request);
         $empresa = $request->user()->empresa;
         if (! $empresa) {
             return redirect()
@@ -65,6 +75,7 @@ class UsuarioController extends Controller
 
     public function edit(Request $request, User $usuario): View|RedirectResponse
     {
+        $this->assertPodeGerenciarUsuarios($request);
         $empresa = $request->user()->empresa;
         if (! $empresa) {
             return redirect()
@@ -77,6 +88,7 @@ class UsuarioController extends Controller
 
     public function update(Request $request, User $usuario): RedirectResponse
     {
+        $this->assertPodeGerenciarUsuarios($request);
         $empresa = $request->user()->empresa;
         if (! $empresa) {
             return redirect()
@@ -98,6 +110,7 @@ class UsuarioController extends Controller
 
     public function destroy(Request $request, User $usuario): RedirectResponse
     {
+        $this->assertPodeGerenciarUsuarios($request);
         $empresa = $request->user()->empresa;
         if (! $empresa) {
             return redirect()

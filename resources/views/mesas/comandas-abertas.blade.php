@@ -27,7 +27,9 @@
                     <td class="text-end">R$ {{ number_format((float) $c->total, 2, ',', '.') }}</td>
                     <td class="text-end">
                         <a href="{{ route('empresa.comandas.show', $c) }}" class="btn btn-sm btn-primary">Abrir</a>
-                        <a href="{{ route('empresa.mesas.fechamento.show', $c) }}" class="btn btn-sm btn-outline-success">Fechamento</a>
+                        @if (auth()->user()->role !== \App\Models\User::ROLE_ATENDENTE)
+                            <a href="{{ route('empresa.mesas.fechamento.show', $c) }}" class="btn btn-sm btn-outline-success">Fechamento</a>
+                        @endif
                     </td>
                 </tr>
             @empty

@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,6 +25,10 @@ class EnsureEmpresaMenuAccess
 
         $key = $this->mapRouteToMenuKey($routeName);
         if ($key === null) {
+            return $next($request);
+        }
+
+        if ($user instanceof User && $user->temAcessoRestritoAoPainelEmpresa() && $user->podeAcessarRotaEmpresa($routeName)) {
             return $next($request);
         }
 

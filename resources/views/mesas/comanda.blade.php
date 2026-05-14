@@ -99,7 +99,9 @@ Comanda — Mesa #{{ $comanda->mesa?->numero }}
                             <button type="submit" class="btn btn-warning">Enviar pendentes</button>
                         </form>
                         <a href="{{ route('empresa.comandas.pre-conta', $comanda) }}" target="_blank" class="btn btn-outline-secondary">Pré-conta</a>
-                        <a href="{{ route('empresa.mesas.fechamento.show', $comanda) }}" class="btn btn-outline-success">Fechamento</a>
+                        @if (auth()->user()->role !== \App\Models\User::ROLE_ATENDENTE)
+                            <a href="{{ route('empresa.mesas.fechamento.show', $comanda) }}" class="btn btn-outline-success">Fechamento</a>
+                        @endif
                     </div>
                 @endif
             </div>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Empresa;
 use App\Http\Controllers\Controller;
 use App\Models\Mesa;
 use App\Models\MesaConfiguracao;
+use App\Models\User;
 use App\Services\Mesas\ComandaService;
 use App\Services\Mesas\MesaService;
 use Illuminate\Http\RedirectResponse;
@@ -150,6 +151,12 @@ class MesaController extends Controller
             $comanda = $this->mesaService->solicitarConta($mesa);
         } catch (\Throwable $e) {
             return redirect()->route('empresa.mesas.index')->with('error', $e->getMessage());
+        }
+
+        if ($request->user()->role === User::ROLE_ATENDENTE) {
+            return redirect()
+                ->route('empresa.comandas.show', $comanda)
+                ->with('success', 'Conta solicitada. O caixa fará o fechamento e o pagamento.');
         }
 
         return redirect()->route('empresa.mesas.fechamento.show', $comanda)->with('success', 'Conta solicitada. Finalize o pagamento.');

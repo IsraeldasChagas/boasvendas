@@ -389,6 +389,9 @@ class AppServiceProvider extends ServiceProvider
             if ($user && $user->acessaPainelMaster()) {
                 return route('admin.dashboard');
             }
+            if ($user && $user->empresa_id) {
+                return route($user->rotaPainelEmpresaPadrao());
+            }
 
             return route('empresa.dashboard');
         });

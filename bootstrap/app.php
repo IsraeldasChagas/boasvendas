@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureEmpresaColaboradorPapel;
 use App\Http\Middleware\EnsureEmpresaMenuAccess;
 use App\Http\Middleware\EnsureEmpresaPainelAccess;
 use App\Http\Middleware\EnsureUserIsAdmin;
@@ -25,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => EnsureUserIsAdmin::class,
             'empresa.painel' => EnsureEmpresaPainelAccess::class,
+            'empresa.colaborador' => EnsureEmpresaColaboradorPapel::class,
             'empresa.menu' => EnsureEmpresaMenuAccess::class,
         ]);
     })

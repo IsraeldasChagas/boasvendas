@@ -8,13 +8,19 @@ use App\Models\Pedido;
 use App\Models\PedidoItem;
 use App\Models\Produto;
 use App\Models\SuporteTicket;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function index(): View
+    public function index(): View|RedirectResponse
     {
-        $empresa = auth()->user()?->empresa;
+        $user = auth()->user();
+        if ($user?->temAcessoRestritoAoPainelEmpresa()) {
+            return redirect()->route('empresa.mesas.index');
+        }
+
+        $empresa = $user?->empresa;
 
         $assinatura = null;
         $ticketsAbertos = 0;

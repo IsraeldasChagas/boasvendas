@@ -22,6 +22,8 @@
         </a>
     @php $menu = $empresa?->telasMenuEmpresaLiberadas() ?? []; @endphp
     @php $tem = fn (string $k) => $menu === [] ? true : in_array($k, $menu, true); @endphp
+    @php $painelCompleto = Auth::user()?->temPainelEmpresaCompleto() ?? false; @endphp
+    @if ($painelCompleto)
     @if ($tem('pedidos'))
         @php
             $badgePedPend = $empresa ? \App\Models\Pedido::query()->where('empresa_id', $empresa->id)->where('status', \App\Models\Pedido::STATUS_PENDENTE_LOJA)->count() : 0;
@@ -292,6 +294,9 @@
         <a class="nav-link {{ request()->routeIs('empresa.usuarios.*') ? 'active' : '' }}" href="{{ route('empresa.usuarios.index') }}">
             <i class="bi bi-person-badge"></i> Usuários
         </a>
+    @endif
+    @else
+        @include('partials.empresa.sidebar-colaborador')
     @endif
     </nav>
 </aside>
