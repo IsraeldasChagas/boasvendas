@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\CalcularEntregaController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Empresa\AdicionalController;
 use App\Http\Controllers\Empresa\CaixaController;
+use App\Http\Controllers\Empresa\CardapioController;
 use App\Http\Controllers\Empresa\CategoriaController;
 use App\Http\Controllers\Empresa\ChamadoController as EmpresaChamadoController;
 use App\Http\Controllers\Empresa\ClienteController;
@@ -159,6 +160,8 @@ Route::get('/acompanhar-pedido', [PublicoController::class, 'legadoAcompanhar'])
 
 Route::middleware(['auth', 'empresa.painel', 'empresa.colaborador', 'empresa.menu'])->prefix('empresa')->name('empresa.')->group(function () {
     Route::get('/dashboard', [EmpresaDashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/cardapio', [CardapioController::class, 'index'])->name('cardapio.index');
 
     Route::get('/suporte/chamados', [EmpresaChamadoController::class, 'index'])->name('chamados.index');
     Route::get('/suporte/chamados/novo', [EmpresaChamadoController::class, 'create'])->name('chamados.create');

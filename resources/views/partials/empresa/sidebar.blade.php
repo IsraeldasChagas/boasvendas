@@ -50,6 +50,9 @@
         <a class="nav-link {{ request()->routeIs('empresa.produtos.*') ? 'active' : '' }}" href="{{ route('empresa.produtos.index') }}">
             <i class="bi bi-box-seam"></i> Produtos
         </a>
+        <a class="nav-link {{ request()->routeIs('empresa.cardapio.*') ? 'active' : '' }}" href="{{ route('empresa.cardapio.index') }}">
+            <i class="bi bi-journal-richtext"></i> Cardápio (consulta)
+        </a>
     @endif
     @if ($tem('categorias'))
         <a class="nav-link {{ request()->routeIs('empresa.categorias.*') ? 'active' : '' }}" href="{{ route('empresa.categorias.index') }}">

@@ -149,6 +149,9 @@ class EnsureEmpresaMenuAccess
         if (str_starts_with($routeName, 'empresa.usuarios.')) {
             return 'usuarios';
         }
+        if (str_starts_with($routeName, 'empresa.cardapio.')) {
+            return null;
+        }
 
         return null;
     }

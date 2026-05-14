@@ -3,6 +3,9 @@
     $ehAtendente = $r === \App\Models\User::ROLE_ATENDENTE;
     $ehCaixa = $r === \App\Models\User::ROLE_ATENDENTE_CAIXA;
 @endphp
+<a class="nav-link {{ request()->routeIs('empresa.cardapio.*') ? 'active' : '' }}" href="{{ route('empresa.cardapio.index') }}">
+    <i class="bi bi-journal-richtext"></i> Cardápio
+</a>
 @if (\Illuminate\Support\Facades\Schema::hasTable('mesas'))
     @php $mesasMenuAtivo = request()->routeIs('empresa.mesas.*', 'empresa.comandas.*'); @endphp
     <button type="button" class="nav-link vf-submenu-toggle {{ $mesasMenuAtivo ? 'active' : '' }}" data-vf-submenu-toggle aria-expanded="{{ $mesasMenuAtivo ? 'true' : 'false' }}">

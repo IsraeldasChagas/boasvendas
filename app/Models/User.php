@@ -188,7 +188,8 @@ class User extends Authenticatable
             }
 
             return str_starts_with($routeName, 'empresa.mesas.')
-                || str_starts_with($routeName, 'empresa.comandas.');
+                || str_starts_with($routeName, 'empresa.comandas.')
+                || str_starts_with($routeName, 'empresa.cardapio.');
         }
 
         if ($this->role === self::ROLE_ATENDENTE_CAIXA) {
@@ -207,6 +208,7 @@ class User extends Authenticatable
             $liberados = [
                 'empresa.mesas.',
                 'empresa.comandas.',
+                'empresa.cardapio.',
                 'empresa.pedidos.',
                 'empresa.pdv.',
                 'empresa.frete-calculadora.',
