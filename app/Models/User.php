@@ -97,8 +97,8 @@ class User extends Authenticatable
             self::ROLE_GESTOR => 'Gestor',
             self::ROLE_OPERADOR => 'Operador de caixa',
             self::ROLE_ENTREGADOR => 'Entregador',
-            self::ROLE_ATENDENTE => 'Atendente (salão / mesas)',
-            self::ROLE_ATENDENTE_CAIXA => 'Atendente caixa (balcão / fechamento)',
+            self::ROLE_ATENDENTE => 'Atendente',
+            self::ROLE_ATENDENTE_CAIXA => 'Atendente caixa',
         ];
     }
 
