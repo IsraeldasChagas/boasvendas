@@ -137,6 +137,11 @@
                                                     <button type="submit" class="btn btn-sm btn-success">Resgate</button>
                                                 </form>
                                             @endif
+                                            <form action="{{ route('empresa.fidelidade.cartoes.destroy', $c) }}" method="post" class="d-inline" onsubmit="return confirm('Excluir este cartão para sempre? Selos, pontos e histórico serão apagados. Esta ação não pode ser desfeita.');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">Excluir</button>
+                                            </form>
                                         </div>
                                     </td>
                                 </tr>

@@ -134,6 +134,21 @@ class FidelidadeController extends Controller
         return view('empresa.fidelidade.cartoes-historico', compact('empresa', 'fidelidadeCartao', 'historicos'));
     }
 
+    public function cartoesDestroy(Request $request, FidelidadeCartao $fidelidadeCartao): RedirectResponse
+    {
+        $empresa = $request->user()->empresa;
+        if (! $empresa || (int) $fidelidadeCartao->empresa_id !== (int) $empresa->id) {
+            abort(403);
+        }
+
+        $telNorm = $fidelidadeCartao->telefone_normalizado;
+        $fidelidadeCartao->delete();
+
+        return redirect()
+            ->route('empresa.fidelidade.cartoes', ['q' => $telNorm])
+            ->with('status', 'Cartão excluído. O cliente pode cadastrar de novo com o mesmo telefone, se desejar.');
+    }
+
     public function cartoesUpdatePontos(Request $request, FidelidadeCartao $fidelidadeCartao): RedirectResponse
     {
         $empresa = $request->user()->empresa;

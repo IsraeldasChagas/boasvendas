@@ -226,6 +226,7 @@ Route::middleware(['auth', 'empresa.painel', 'empresa.menu'])->prefix('empresa')
     Route::get('/fidelidade/cartoes', [FidelidadeController::class, 'cartoes'])->name('fidelidade.cartoes');
     Route::post('/fidelidade/cartoes/selo', [FidelidadeController::class, 'adicionarSelo'])->name('fidelidade.cartoes.selo');
     Route::get('/fidelidade/cartoes/{fidelidadeCartao}/historico', [FidelidadeController::class, 'cartoesHistorico'])->name('fidelidade.cartoes.historico');
+    Route::delete('/fidelidade/cartoes/{fidelidadeCartao}', [FidelidadeController::class, 'cartoesDestroy'])->name('fidelidade.cartoes.destroy');
     Route::post('/fidelidade/cartoes/{fidelidadeCartao}/pontos', [FidelidadeController::class, 'cartoesUpdatePontos'])->name('fidelidade.cartoes.pontos');
     Route::post('/fidelidade/cartoes/{fidelidadeCartao}/toggle-status', [FidelidadeController::class, 'cartoesToggleStatus'])->name('fidelidade.cartoes.toggle-status');
     Route::post('/fidelidade/cartoes/{fidelidadeCartao}/resgatar', [FidelidadeController::class, 'resgatar'])->name('fidelidade.cartoes.resgatar');

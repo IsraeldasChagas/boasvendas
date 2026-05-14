@@ -50,4 +50,14 @@
             </table>
         </div>
     </div>
+
+    <div class="vf-card p-3 mt-3 border border-danger-subtle bg-danger-subtle bg-opacity-10">
+        <p class="small fw-semibold text-danger mb-2">Zona de risco</p>
+        <p class="small text-muted mb-3">Excluir remove o cartão, selos, pontos e todo o histórico. O telefone fica livre para um novo cadastro.</p>
+        <form action="{{ route('empresa.fidelidade.cartoes.destroy', $fidelidadeCartao) }}" method="post" onsubmit="return confirm('Excluir este cartão para sempre? Esta ação não pode ser desfeita.');">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-sm btn-outline-danger">Excluir cartão</button>
+        </form>
+    </div>
 @endsection
