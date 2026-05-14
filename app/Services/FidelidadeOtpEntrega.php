@@ -36,9 +36,10 @@ class FidelidadeOtpEntrega
     ) {}
 
     /**
+     * @param  string|null  $emailFallbackCadastro  E-mail informado no cadastro (ainda sem cartão) para fallback quando {@see config('services.fidelidade_otp.email_fallback')} está ativo.
      * @return array{ok: bool, canal?: string, resultado?: string, wa?: array, wa_me_url?: string}
      */
-    public function entregar(Empresa $empresa, string $telNorm, string $codigo, int $ttlMinutos): array
+    public function entregar(Empresa $empresa, string $telNorm, string $codigo, int $ttlMinutos, ?string $emailFallbackCadastro = null): array
     {
         $nomeLoja = trim((string) ($empresa->nome ?? 'Loja'));
         $msgWa = '['.$nomeLoja.'] Seu código para ver o cartão fidelidade: '.$codigo.'. Válido por '.$ttlMinutos.' minutos. Não compartilhe com ninguém.';
@@ -56,7 +57,7 @@ class FidelidadeOtpEntrega
                 'tel_sufixo' => strlen($telNorm) >= 4 ? substr($telNorm, -4) : null,
             ]);
 
-            $emailResult = $this->entregarSomenteEmail($empresa->id, $telNorm, $codigo, $ttlMinutos, $nomeLoja);
+            $emailResult = $this->entregarSomenteEmail($empresa->id, $telNorm, $codigo, $ttlMinutos, $nomeLoja, $emailFallbackCadastro);
             if ($emailResult['ok']) {
                 return $emailResult;
             }
@@ -102,9 +103,18 @@ class FidelidadeOtpEntrega
     /**
      * @return array{ok: bool, canal?: string, resultado?: string}
      */
-    private function entregarSomenteEmail(int $empresaId, string $telNorm, string $codigo, int $ttlMinutos, string $nomeLoja): array
+    private function entregarSomenteEmail(int $empresaId, string $telNorm, string $codigo, int $ttlMinutos, string $nomeLoja, ?string $emailOverride = null): array
     {
-        $email = $this->emailDoCartao($empresaId, $telNorm);
+        $email = null;
+        if ($emailOverride !== null && $emailOverride !== '') {
+            $e = strtolower(trim($emailOverride));
+            if (filter_var($e, FILTER_VALIDATE_EMAIL)) {
+                $email = $e;
+            }
+        }
+        if ($email === null) {
+            $email = $this->emailDoCartao($empresaId, $telNorm);
+        }
         if ($email === null) {
             return ['ok' => false, 'resultado' => self::FALHA_SEM_DESTINO];
         }

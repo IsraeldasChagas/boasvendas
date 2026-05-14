@@ -49,7 +49,7 @@
                             <input type="email" name="cadastro_email" id="cad-email" value="{{ old('cadastro_email') }}"
                                    class="form-control @error('cadastro_email') is-invalid @enderror" placeholder="seu@email.com" autocomplete="email" required maxlength="255">
                             @error('cadastro_email')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                            <button type="submit" class="btn btn-success w-100 mt-3">Salvar cadastro</button>
+                            <button type="submit" class="btn btn-success w-100 mt-3">Enviar código para confirmar</button>
                         </form>
                     </div>
                 </div>
@@ -69,6 +69,7 @@
                 @if ($fidelidade_otp_pending ?? false)
                     @php
                         $pend = session('fidelidade_otp_pending', []);
+                        $otpCadastroFlow = $fidelidade_otp_cadastro ?? false;
                         $telPend = is_array($pend) ? (string) ($pend['tel_norm'] ?? '') : '';
                         $suf = strlen($telPend) >= 4 ? substr($telPend, -4) : '****';
                         $canalOtp = is_array($pend) ? (string) ($pend['canal'] ?? '') : '';
@@ -78,7 +79,13 @@
                         $waMeUrl = is_string($waMeUrl) && str_starts_with($waMeUrl, 'https://wa.me/') ? $waMeUrl : null;
                     @endphp
                     @if ($otpPorEmail)
-                        <p class="small text-muted mb-3">O envio pelo <strong>WhatsApp</strong> não está disponível no momento; enviamos o código de <strong>6 dígitos</strong> para o <strong>e-mail do seu cadastro</strong> nesta loja (confira spam/lixeira). Digite o código abaixo.</p>
+                        <p class="small text-muted mb-3">
+                            @if ($otpCadastroFlow)
+                                O envio pelo <strong>WhatsApp</strong> não está disponível no momento; enviamos o código de <strong>6 dígitos</strong> para o <strong>e-mail informado no cadastro</strong> (confira spam/lixeira). Digite o código abaixo para confirmar.
+                            @else
+                                O envio pelo <strong>WhatsApp</strong> não está disponível no momento; enviamos o código de <strong>6 dígitos</strong> para o <strong>e-mail do seu cadastro</strong> nesta loja (confira spam/lixeira). Digite o código abaixo.
+                            @endif
+                        </p>
                     @elseif ($otpPorWame && $waMeUrl)
                         <div class="alert alert-warning small mb-3" role="status">
                             <strong>Importante:</strong> este modo <strong>não envia</strong> o código como mensagem nova para o seu celular. Ele só <strong>abre o WhatsApp</strong> (no computador pode ser o <strong>WhatsApp Web</strong>; no celular, o <strong>aplicativo</strong>) com o texto já escrito — <strong>o código de 6 dígitos aparece nessa tela</strong>, você lê e digita aqui embaixo. Não é obrigado enviar a mensagem.
@@ -89,22 +96,46 @@
                             <a href="{{ $waMeUrl }}" class="btn btn-success" target="_blank" rel="noopener noreferrer">Abrir WhatsApp com o código</a>
                         </div>
                     @else
-                        <p class="small text-muted mb-3">Digite abaixo o <strong>código de 6 dígitos</strong> que enviamos ao <strong>WhatsApp</strong> do número que termina em <strong>***{{ $suf }}</strong>. Se não for esse número, use <strong>Usar outro telefone</strong>.</p>
+                        <p class="small text-muted mb-3">
+                            @if ($otpCadastroFlow)
+                                Digite abaixo o <strong>código de 6 dígitos</strong> que enviamos ao <strong>WhatsApp</strong> do número que termina em <strong>***{{ $suf }}</strong> para <strong>confirmar o cadastro</strong>. Se não for esse número, use <strong>Usar outro telefone</strong>.
+                            @else
+                                Digite abaixo o <strong>código de 6 dígitos</strong> que enviamos ao <strong>WhatsApp</strong> do número que termina em <strong>***{{ $suf }}</strong>. Se não for esse número, use <strong>Usar outro telefone</strong>.
+                            @endif
+                        </p>
                     @endif
                     <form action="{{ route('publico.fidelidade.verificar-codigo', ['slug' => $slug]) }}" method="post" class="mb-3">
                         @csrf
                         @if ($otpPorEmail)
-                            <p class="small mb-2 text-muted">Código enviado por <strong>e-mail</strong> (cartão cadastrado com o telefone ***{{ $suf }}).</p>
+                            <p class="small mb-2 text-muted">
+                                @if ($otpCadastroFlow)
+                                    Código enviado por <strong>e-mail</strong> (telefone informado no cadastro: ***{{ $suf }}).
+                                @else
+                                    Código enviado por <strong>e-mail</strong> (cartão cadastrado com o telefone ***{{ $suf }}).
+                                @endif
+                            </p>
                         @elseif ($otpPorWame && $waMeUrl)
-                            <p class="small mb-2 text-muted">O código está <strong>dentro da mensagem</strong> que abre ao tocar no botão verde (não chega como notificação de conversa).</p>
+                            <p class="small mb-2 text-muted">
+                                @if ($otpCadastroFlow)
+                                    O código está <strong>dentro da mensagem</strong> que abre ao tocar no botão verde — use-o para <strong>confirmar o cadastro</strong> (não chega como notificação de conversa).
+                                @else
+                                    O código está <strong>dentro da mensagem</strong> que abre ao tocar no botão verde (não chega como notificação de conversa).
+                                @endif
+                            </p>
                         @else
-                            <p class="small mb-2 text-muted">Código enviado ao <strong>WhatsApp</strong> (número com final ***{{ $suf }}).</p>
+                            <p class="small mb-2 text-muted">
+                                @if ($otpCadastroFlow)
+                                    Código enviado ao <strong>WhatsApp</strong> (número com final ***{{ $suf }}) para confirmar o cadastro.
+                                @else
+                                    Código enviado ao <strong>WhatsApp</strong> (número com final ***{{ $suf }}).
+                                @endif
+                            </p>
                         @endif
                         <label class="form-label small fw-semibold" for="fid-codigo">Código de 6 dígitos</label>
                         <input type="text" name="codigo" id="fid-codigo" value="{{ old('codigo') }}" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code"
                                class="form-control @error('codigo') is-invalid @enderror" placeholder="000000" required>
                         @error('codigo')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                        <button type="submit" class="btn btn-primary w-100 mt-3">Confirmar e ver selos</button>
+                        <button type="submit" class="btn btn-primary w-100 mt-3">{{ $otpCadastroFlow ? 'Confirmar cadastro' : 'Confirmar e ver selos' }}</button>
                     </form>
                     <div class="d-flex flex-column gap-2">
                         <form action="{{ route('publico.fidelidade.reenviar-codigo', ['slug' => $slug]) }}" method="post" class="mb-0">
