@@ -67,7 +67,16 @@ class PedidoController extends Controller
                 ->get();
         }
 
-        return view('empresa.pedidos.show', compact('empresa', 'pedido', 'cupomWhatsUrl', 'entregadoresParaPedido'));
+        $fiscalConfig = null;
+        $fiscalNota = null;
+        if (Schema::hasTable('fiscal_configuracoes')) {
+            $fiscalConfig = \App\Models\FiscalConfiguracao::obterOuCriarPadrao($empresa->id);
+        }
+        if (Schema::hasTable('fiscal_notas')) {
+            $fiscalNota = \App\Models\FiscalNota::query()->where('pedido_id', $pedido->id)->first();
+        }
+
+        return view('empresa.pedidos.show', compact('empresa', 'pedido', 'cupomWhatsUrl', 'entregadoresParaPedido', 'fiscalConfig', 'fiscalNota'));
     }
 
     public function imprimir(Request $request, Pedido $pedido): View

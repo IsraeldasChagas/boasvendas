@@ -590,6 +590,9 @@ class FidelidadePublicController extends Controller
         if ($clienteId) {
             $atualizar['cliente_id'] = $clienteId;
         }
+        if (! $cartao->estaAtivo() && Schema::hasColumn('fidelidade_cartoes', 'status')) {
+            $atualizar['status'] = FidelidadeCartao::STATUS_ATIVO;
+        }
         if ($atualizar !== []) {
             $cartao->update($atualizar);
         }

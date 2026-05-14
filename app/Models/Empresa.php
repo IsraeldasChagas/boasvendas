@@ -171,6 +171,26 @@ class Empresa extends Model
         return $this->hasMany(FidelidadeCartao::class, 'empresa_id');
     }
 
+    public function fiscalConfiguracao(): HasOne
+    {
+        return $this->hasOne(FiscalConfiguracao::class, 'empresa_id');
+    }
+
+    public function fiscalEmitentes(): HasMany
+    {
+        return $this->hasMany(FiscalEmitente::class, 'empresa_id');
+    }
+
+    public function fiscalNotas(): HasMany
+    {
+        return $this->hasMany(FiscalNota::class, 'empresa_id');
+    }
+
+    public function fiscalLogs(): HasMany
+    {
+        return $this->hasMany(FiscalLog::class, 'empresa_id');
+    }
+
     public function financeiroTitulos(): HasMany
     {
         return $this->hasMany(FinanceiroTitulo::class, 'empresa_id');
@@ -555,6 +575,7 @@ class Empresa extends Model
             've_acertos' => 'Venda externa: Acertos',
             've_fiados' => 'Venda externa: Fiados',
             've_relatorios' => 'Venda externa: Relatórios',
+            'fiscal' => 'Fiscal',
             'suporte' => 'Suporte',
             'configuracoes' => 'Configurações',
             'usuarios' => 'Usuários',
@@ -607,6 +628,10 @@ class Empresa extends Model
         if ($key === 'caixa_fluxo_diario' && in_array('caixa_visao', $libs, true)) {
             return true;
         }
+        if (str_starts_with($key, 'fiscal') && in_array('fiscal', $libs, true)) {
+            return true;
+        }
+
         if (str_starts_with($key, 'fidelidade_') && in_array('fidelidade', $libs, true)) {
             return true;
         }

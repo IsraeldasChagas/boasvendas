@@ -59,6 +59,13 @@ class EnsureEmpresaMenuAccess
             return 've_relatorios';
         }
 
+        if (str_starts_with($routeName, 'empresa.fiscal.')) {
+            return 'fiscal';
+        }
+        if (str_starts_with($routeName, 'empresa.pedidos.fiscal.')) {
+            return 'fiscal';
+        }
+
         if (str_starts_with($routeName, 'empresa.pedidos.') || str_starts_with($routeName, 'empresa.entregadores.')) {
             return 'pedidos';
         }

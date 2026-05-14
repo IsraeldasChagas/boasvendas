@@ -97,6 +97,41 @@
             @endforeach
         </div>
     @endif
+    @if ($tem('fiscal'))
+        @php $fiscalMenuAtivo = request()->routeIs('empresa.fiscal.*'); @endphp
+        <button type="button" class="nav-link vf-submenu-toggle {{ $fiscalMenuAtivo ? 'active' : '' }}" data-vf-submenu-toggle aria-expanded="{{ $fiscalMenuAtivo ? 'true' : 'false' }}">
+            <span class="d-flex align-items-center gap-2">
+                <i class="bi bi-file-earmark-text"></i> Fiscal
+            </span>
+            <i class="bi bi-chevron-right vf-submenu-chevron"></i>
+        </button>
+        <div class="submenu vf-submenu-content {{ $fiscalMenuAtivo ? '' : 'd-none' }}">
+            <a class="nav-link {{ request()->routeIs('empresa.fiscal.dashboard') ? 'active' : '' }}" href="{{ route('empresa.fiscal.dashboard') }}">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+            <a class="nav-link {{ request()->routeIs('empresa.fiscal.configuracoes.*') ? 'active' : '' }}" href="{{ route('empresa.fiscal.configuracoes.edit') }}">
+                <i class="bi bi-sliders"></i> Configurações fiscais
+            </a>
+            <a class="nav-link {{ request()->routeIs('empresa.fiscal.emitentes.*') ? 'active' : '' }}" href="{{ route('empresa.fiscal.emitentes.index') }}">
+                <i class="bi bi-building"></i> Empresas emitentes
+            </a>
+            <a class="nav-link {{ request()->routeIs('empresa.fiscal.notas.emitidas') ? 'active' : '' }}" href="{{ route('empresa.fiscal.notas.emitidas') }}">
+                <i class="bi bi-check2-circle"></i> Notas emitidas
+            </a>
+            <a class="nav-link {{ request()->routeIs('empresa.fiscal.notas.pendentes') ? 'active' : '' }}" href="{{ route('empresa.fiscal.notas.pendentes') }}">
+                <i class="bi bi-hourglass-split"></i> Notas pendentes
+            </a>
+            <a class="nav-link {{ request()->routeIs('empresa.fiscal.notas.rejeicoes') ? 'active' : '' }}" href="{{ route('empresa.fiscal.notas.rejeicoes') }}">
+                <i class="bi bi-x-octagon"></i> Rejeições
+            </a>
+            <a class="nav-link {{ request()->routeIs('empresa.fiscal.certificados.*') ? 'active' : '' }}" href="{{ route('empresa.fiscal.certificados.index') }}">
+                <i class="bi bi-shield-lock"></i> Certificados
+            </a>
+            <a class="nav-link {{ request()->routeIs('empresa.fiscal.logs.*') ? 'active' : '' }}" href="{{ route('empresa.fiscal.logs.index') }}">
+                <i class="bi bi-journal-text"></i> Logs fiscais
+            </a>
+        </div>
+    @endif
     @php
         $veItens = [
             've_dashboard' => ['active' => request()->routeIs('empresa.venda-externa.dashboard'), 'url' => route('empresa.venda-externa.dashboard'), 'icon' => 'bi-pin-map', 'label' => 'Dashboard'],

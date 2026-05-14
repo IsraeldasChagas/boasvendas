@@ -56,6 +56,15 @@ class Pedido extends Model
     /** Entrega não concluída: motoboy não localizou o endereço */
     public const STATUS_ENDERECO_NAO_ENCONTRADO = 'endereco_nao_encontrado';
 
+    /** Situação fiscal do pedido (resumo para UI; detalhe em {@see FiscalNota}). */
+    public const FISCAL_SEM_NOTA = 'sem_nota';
+
+    public const FISCAL_AGUARDANDO_EMISSAO = 'aguardando_emissao';
+
+    public const FISCAL_NOTA_AUTORIZADA = 'nota_autorizada';
+
+    public const FISCAL_NOTA_REJEITADA = 'nota_rejeitada';
+
     public const PAGAMENTO_PIX = 'pix';
 
     /** @deprecated Pedidos antigos; exibir como cartão genérico */
@@ -83,6 +92,11 @@ class Pedido extends Model
         'forma_pagamento',
         'pagamento_troco_para',
         'observacoes',
+        'fiscal_quer_cpf_nota',
+        'fiscal_documento',
+        'fiscal_razao_social',
+        'fiscal_email',
+        'fiscal_status',
         'status',
         'entregador_token',
         'subtotal',
@@ -97,6 +111,7 @@ class Pedido extends Model
             'taxa_entrega' => 'decimal:2',
             'total' => 'decimal:2',
             'pagamento_troco_para' => 'decimal:2',
+            'fiscal_quer_cpf_nota' => 'boolean',
         ];
     }
 
@@ -108,6 +123,39 @@ class Pedido extends Model
     public function itens(): HasMany
     {
         return $this->hasMany(PedidoItem::class, 'pedido_id');
+    }
+
+    public function fiscalNotas(): HasMany
+    {
+        return $this->hasMany(FiscalNota::class, 'pedido_id');
+    }
+
+    /** @return array<string, string> */
+    public static function fiscalStatusRotulos(): array
+    {
+        return [
+            self::FISCAL_SEM_NOTA => 'Sem nota',
+            self::FISCAL_AGUARDANDO_EMISSAO => 'Aguardando emissão',
+            self::FISCAL_NOTA_AUTORIZADA => 'Nota autorizada',
+            self::FISCAL_NOTA_REJEITADA => 'Nota rejeitada',
+        ];
+    }
+
+    public function rotuloFiscalStatus(): string
+    {
+        $s = (string) ($this->fiscal_status ?? self::FISCAL_SEM_NOTA);
+
+        return self::fiscalStatusRotulos()[$s] ?? $s;
+    }
+
+    public function classeBadgeFiscalStatus(): string
+    {
+        return match ((string) ($this->fiscal_status ?? self::FISCAL_SEM_NOTA)) {
+            self::FISCAL_NOTA_AUTORIZADA => 'bg-success-subtle text-success',
+            self::FISCAL_NOTA_REJEITADA => 'bg-danger-subtle text-danger',
+            self::FISCAL_AGUARDANDO_EMISSAO => 'bg-warning-subtle text-warning-emphasis',
+            default => 'bg-secondary-subtle text-secondary',
+        };
     }
 
     /** @return array<string, string> */

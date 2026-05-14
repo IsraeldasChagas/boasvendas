@@ -126,6 +126,7 @@ class FidelidadeCartaoConflitoCadastroTest extends TestCase
             'email' => 'mesmo@exemplo.com',
             'selos' => 0,
             'total_resgates' => 0,
+            'status' => FidelidadeCartao::STATUS_ATIVO,
         ]);
 
         $c = FidelidadeCartao::conflitoCadastroFidelidade(
@@ -137,6 +138,58 @@ class FidelidadeCartaoConflitoCadastroTest extends TestCase
         );
         $this->assertNotNull($c);
         $this->assertSame('cadastro_telefone', $c['field']);
+    }
+
+    public function test_permite_triplo_identico_quando_cartao_inativo(): void
+    {
+        $empresa = Empresa::query()->create([
+            'nome' => 'Loja Fid',
+            'status' => 'ativa',
+        ]);
+
+        FidelidadeCartao::query()->create([
+            'empresa_id' => $empresa->id,
+            'telefone_normalizado' => '11999999999',
+            'cpf_normalizado' => self::CPF_A,
+            'email' => 'mesmo@exemplo.com',
+            'selos' => 0,
+            'total_resgates' => 0,
+            'status' => FidelidadeCartao::STATUS_INATIVO,
+        ]);
+
+        $this->assertNull(FidelidadeCartao::conflitoCadastroFidelidade(
+            $empresa->id,
+            '11999999999',
+            self::CPF_A,
+            'mesmo@exemplo.com',
+            false
+        ));
+    }
+
+    public function test_permite_outro_cpf_no_mesmo_telefone_quando_cartao_inativo(): void
+    {
+        $empresa = Empresa::query()->create([
+            'nome' => 'Loja Fid',
+            'status' => 'ativa',
+        ]);
+
+        FidelidadeCartao::query()->create([
+            'empresa_id' => $empresa->id,
+            'telefone_normalizado' => '11999999999',
+            'cpf_normalizado' => self::CPF_A,
+            'email' => 'a@exemplo.com',
+            'selos' => 0,
+            'total_resgates' => 0,
+            'status' => FidelidadeCartao::STATUS_INATIVO,
+        ]);
+
+        $this->assertNull(FidelidadeCartao::conflitoCadastroFidelidade(
+            $empresa->id,
+            '11999999999',
+            self::CPF_B,
+            'b@exemplo.com',
+            false
+        ));
     }
 
     public function test_checkout_usa_chave_fidelidade_cpf_para_telefone_com_outro_cpf(): void

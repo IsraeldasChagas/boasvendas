@@ -191,6 +191,72 @@
                     </script>
                 @endpush
             @endif
+            @if (\Illuminate\Support\Facades\Schema::hasTable('fiscal_configuracoes') && $fiscalConfig)
+                <div class="vf-card p-3 mb-3 border border-success border-opacity-25">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                        <h3 class="h6 fw-bold mb-0"><i class="bi bi-receipt-cutoff text-success me-1"></i>Fiscal (NF)</h3>
+                        <span class="vf-badge {{ $pedido->classeBadgeFiscalStatus() }}">{{ $pedido->rotuloFiscalStatus() }}</span>
+                    </div>
+                    @if (! $fiscalConfig->modulo_ativo)
+                        <p class="small text-muted mb-0">Módulo fiscal desativado. Ative em <a href="{{ route('empresa.fiscal.configuracoes.edit') }}">Fiscal → Configurações</a>.</p>
+                    @else
+                        <p class="small text-muted mb-3">Estrutura preparatória: drivers ainda não chamam SEFAZ/API real.</p>
+                        <form action="{{ route('empresa.pedidos.fiscal.dados', $pedido) }}" method="post" class="mb-3">
+                            @csrf
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" name="fiscal_quer_cpf_nota" value="1" id="fid-quer-doc" @checked(old('fiscal_quer_cpf_nota', $pedido->fiscal_quer_cpf_nota))>
+                                <label class="form-check-label small" for="fid-quer-doc">Deseja CPF/CNPJ na nota?</label>
+                            </div>
+                            <div id="fid-campos-doc" class="{{ old('fiscal_quer_cpf_nota', $pedido->fiscal_quer_cpf_nota) ? '' : 'd-none' }}">
+                                <label class="form-label small mb-0" for="fid-doc">CPF/CNPJ</label>
+                                <input type="text" class="form-control form-control-sm mb-2" name="fiscal_documento" id="fid-doc" value="{{ old('fiscal_documento', $pedido->fiscal_documento) }}" maxlength="20" inputmode="numeric" autocomplete="off">
+                                <label class="form-label small mb-0" for="fid-nome">Nome / Razão social</label>
+                                <input type="text" class="form-control form-control-sm mb-2" name="fiscal_razao_social" id="fid-nome" value="{{ old('fiscal_razao_social', $pedido->fiscal_razao_social) }}" maxlength="180">
+                                <label class="form-label small mb-0" for="fid-email">E-mail (envio da nota)</label>
+                                <input type="email" class="form-control form-control-sm mb-2" name="fiscal_email" id="fid-email" value="{{ old('fiscal_email', $pedido->fiscal_email) }}" maxlength="180">
+                            </div>
+                            <button type="submit" class="btn btn-outline-primary btn-sm w-100">Salvar dados fiscais</button>
+                        </form>
+                        <div class="d-flex flex-wrap gap-2">
+                            <form action="{{ route('empresa.pedidos.fiscal.emitir', $pedido) }}" method="post" class="d-inline">
+                                @csrf
+                                <button type="submit" class="btn btn-success btn-sm" @disabled(! $fiscalConfig->modulo_ativo)>Emitir nota</button>
+                            </form>
+                            <form action="{{ route('empresa.pedidos.fiscal.reemitir', $pedido) }}" method="post" class="d-inline" onsubmit="return confirm('Reemitir nota para este pedido?');">
+                                @csrf
+                                <button type="submit" class="btn btn-outline-secondary btn-sm">Reemitir</button>
+                            </form>
+                            <form action="{{ route('empresa.pedidos.fiscal.cancelar', $pedido) }}" method="post" class="d-inline" id="vf-form-fiscal-cancel">
+                                @csrf
+                                <input type="hidden" name="motivo" id="vf-fiscal-motivo" value="">
+                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="(function(){var m=prompt('Motivo do cancelamento (obrigatório):'); if(!m||!String(m).trim()) return; document.getElementById('vf-fiscal-motivo').value=m; document.getElementById('vf-form-fiscal-cancel').submit();})();">Cancelar nota</button>
+                            </form>
+                            <a href="{{ route('empresa.pedidos.fiscal.xml', $pedido) }}" class="btn btn-outline-dark btn-sm">Baixar XML</a>
+                            <a href="{{ route('empresa.pedidos.fiscal.danfe', $pedido) }}" class="btn btn-outline-dark btn-sm">Baixar DANFE</a>
+                        </div>
+                        @if ($fiscalNota ?? null)
+                            <p class="small text-muted mt-3 mb-0">
+                                Status interno: <code>{{ $fiscalNota->status->value }}</code>
+                                @if ($fiscalNota->motivo_rejeicao)
+                                    <span class="d-block mt-1">{{ \Illuminate\Support\Str::limit($fiscalNota->motivo_rejeicao, 220) }}</span>
+                                @endif
+                            </p>
+                        @endif
+                    @endif
+                </div>
+                @push('scripts')
+                    <script>
+                        (function () {
+                            var chk = document.getElementById('fid-quer-doc');
+                            var box = document.getElementById('fid-campos-doc');
+                            if (!chk || !box) return;
+                            function sync() { box.classList.toggle('d-none', !chk.checked); }
+                            chk.addEventListener('change', sync);
+                            sync();
+                        })();
+                    </script>
+                @endpush
+            @endif
             <div class="vf-card p-3 mb-3">
                 <h3 class="h6 fw-bold mb-2">Cliente</h3>
                 <p class="mb-1 fw-medium">{{ $pedido->cliente_nome }}</p>

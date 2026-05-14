@@ -21,11 +21,18 @@ use App\Http\Controllers\Empresa\DashboardController as EmpresaDashboardControll
 use App\Http\Controllers\Empresa\EmpresaEntregadorController;
 use App\Http\Controllers\Empresa\EntregaController;
 use App\Http\Controllers\Empresa\FidelidadeController;
+use App\Http\Controllers\Empresa\Fiscal\FiscalCertificadoController;
+use App\Http\Controllers\Empresa\Fiscal\FiscalConfiguracaoController;
+use App\Http\Controllers\Empresa\Fiscal\FiscalDashboardController;
+use App\Http\Controllers\Empresa\Fiscal\FiscalEmitenteController;
+use App\Http\Controllers\Empresa\Fiscal\FiscalLogController;
+use App\Http\Controllers\Empresa\Fiscal\FiscalNotaController;
 use App\Http\Controllers\Empresa\FinanceiroController;
 use App\Http\Controllers\Empresa\LojaEntregaFaixaController;
 use App\Http\Controllers\Empresa\FreteCalculadoraController;
 use App\Http\Controllers\Empresa\PdvController;
 use App\Http\Controllers\Empresa\PedidoController;
+use App\Http\Controllers\Empresa\PedidoFiscalController;
 use App\Http\Controllers\Empresa\ProdutoController;
 use App\Http\Controllers\Empresa\RelatorioController;
 use App\Http\Controllers\Empresa\UsuarioController;
@@ -191,6 +198,12 @@ Route::middleware(['auth', 'empresa.painel', 'empresa.menu'])->prefix('empresa')
         ->middleware('throttle:30,1')
         ->name('pedidos.pendente');
     Route::put('/pedidos/{pedido}/status', [PedidoController::class, 'updateStatus'])->name('pedidos.status');
+    Route::post('/pedidos/{pedido}/fiscal/dados', [PedidoFiscalController::class, 'salvarDados'])->name('pedidos.fiscal.dados');
+    Route::post('/pedidos/{pedido}/fiscal/emitir', [PedidoFiscalController::class, 'emitir'])->name('pedidos.fiscal.emitir');
+    Route::post('/pedidos/{pedido}/fiscal/reemitir', [PedidoFiscalController::class, 'reemitir'])->name('pedidos.fiscal.reemitir');
+    Route::post('/pedidos/{pedido}/fiscal/cancelar', [PedidoFiscalController::class, 'cancelar'])->name('pedidos.fiscal.cancelar');
+    Route::get('/pedidos/{pedido}/fiscal/xml', [PedidoFiscalController::class, 'downloadXml'])->name('pedidos.fiscal.xml');
+    Route::get('/pedidos/{pedido}/fiscal/danfe', [PedidoFiscalController::class, 'downloadDanfe'])->name('pedidos.fiscal.danfe');
 
     Route::get('/produtos', [ProdutoController::class, 'index'])->name('produtos.index');
     Route::get('/produtos/novo', [ProdutoController::class, 'create'])->name('produtos.create');
@@ -230,6 +243,20 @@ Route::middleware(['auth', 'empresa.painel', 'empresa.menu'])->prefix('empresa')
     Route::post('/fidelidade/cartoes/{fidelidadeCartao}/pontos', [FidelidadeController::class, 'cartoesUpdatePontos'])->name('fidelidade.cartoes.pontos');
     Route::post('/fidelidade/cartoes/{fidelidadeCartao}/toggle-status', [FidelidadeController::class, 'cartoesToggleStatus'])->name('fidelidade.cartoes.toggle-status');
     Route::post('/fidelidade/cartoes/{fidelidadeCartao}/resgatar', [FidelidadeController::class, 'resgatar'])->name('fidelidade.cartoes.resgatar');
+
+    Route::get('/fiscal', [FiscalDashboardController::class, 'index'])->name('fiscal.dashboard');
+    Route::get('/fiscal/configuracoes', [FiscalConfiguracaoController::class, 'edit'])->name('fiscal.configuracoes.edit');
+    Route::put('/fiscal/configuracoes', [FiscalConfiguracaoController::class, 'update'])->name('fiscal.configuracoes.update');
+    Route::get('/fiscal/emitentes', [FiscalEmitenteController::class, 'index'])->name('fiscal.emitentes.index');
+    Route::get('/fiscal/emitentes/novo', [FiscalEmitenteController::class, 'create'])->name('fiscal.emitentes.create');
+    Route::post('/fiscal/emitentes', [FiscalEmitenteController::class, 'store'])->name('fiscal.emitentes.store');
+    Route::get('/fiscal/emitentes/{emitente}/editar', [FiscalEmitenteController::class, 'edit'])->name('fiscal.emitentes.edit');
+    Route::put('/fiscal/emitentes/{emitente}', [FiscalEmitenteController::class, 'update'])->name('fiscal.emitentes.update');
+    Route::get('/fiscal/notas/emitidas', [FiscalNotaController::class, 'emitidas'])->name('fiscal.notas.emitidas');
+    Route::get('/fiscal/notas/pendentes', [FiscalNotaController::class, 'pendentes'])->name('fiscal.notas.pendentes');
+    Route::get('/fiscal/notas/rejeicoes', [FiscalNotaController::class, 'rejeicoes'])->name('fiscal.notas.rejeicoes');
+    Route::get('/fiscal/certificados', [FiscalCertificadoController::class, 'index'])->name('fiscal.certificados.index');
+    Route::get('/fiscal/logs', [FiscalLogController::class, 'index'])->name('fiscal.logs.index');
 
     Route::get('/entregas', [EntregaController::class, 'index'])->name('entregas.index');
 

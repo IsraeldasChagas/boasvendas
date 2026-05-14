@@ -172,7 +172,8 @@ class FidelidadeCartao extends Model
 
     /**
      * Regras de unicidade por loja: CPF e e-mail não podem repetir em outro telefone;
-     * o mesmo telefone não pode ficar com outro CPF após o CPF já gravado; cadastro idêntico (telefone + CPF + e-mail) não pode repetir.
+     * o mesmo telefone não pode ficar com outro CPF após o CPF já gravado (cartão ativo); cadastro idêntico (telefone + CPF + e-mail) não pode repetir em cartão ativo.
+     * Cartão inativo não bloqueia novo cadastro no mesmo telefone (permite reativar ou trocar dados após exclusão lógica / inativação).
      *
      * @param  string  $emailLower  E-mail já em minúsculas e sem espaços nas pontas.
      * @return array{field: string, message: string}|null
@@ -193,6 +194,7 @@ class FidelidadeCartao extends Model
 
         if (Schema::hasColumn($table, 'cpf_normalizado')
             && $existenteTel
+            && $existenteTel->estaAtivo()
             && $existenteTel->cpf_normalizado
             && $existenteTel->cpf_normalizado !== $cpf11
         ) {
@@ -236,6 +238,7 @@ class FidelidadeCartao extends Model
 
         if (
             $existenteTel
+            && $existenteTel->estaAtivo()
             && Schema::hasColumn($table, 'cpf_normalizado')
             && Schema::hasColumn($table, 'email')
         ) {
