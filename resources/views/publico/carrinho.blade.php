@@ -40,30 +40,57 @@
                                 </thead>
                                 <tbody>
                                     @foreach ($linhas as $l)
-                                        @php $p = $l['produto']; @endphp
+                                        @php
+                                            $modoLinha = $l['modo_linha'] ?? 'produto';
+                                            $p = $l['produto'] ?? null;
+                                            $adC = $l['adicional'] ?? null;
+                                        @endphp
                                         <tr>
                                             <td class="fw-medium">
                                                 <div class="d-flex align-items-start gap-2">
-                                                    @if ($p->urlFoto())
-                                                        <img src="{{ $p->urlFoto() }}" alt="" width="48" height="48" class="rounded border flex-shrink-0 object-fit-cover" style="width:48px;height:48px;">
+                                                    @if ($modoLinha === 'adicional_avulso' && $adC)
+                                                        @if ($adC->urlFoto())
+                                                            <img src="{{ $adC->urlFoto() }}" alt="" width="48" height="48" class="rounded border flex-shrink-0 object-fit-cover" style="width:48px;height:48px;">
+                                                        @else
+                                                            <span class="d-inline-flex align-items-center justify-content-center rounded border bg-light flex-shrink-0 text-muted" style="width:48px;height:48px;"><i class="bi bi-plus-lg"></i></span>
+                                                        @endif
+                                                        <div>
+                                                            <span class="text-dark">{{ $adC->nome }}</span>
+                                                            <div class="small text-muted">Adicional avulso</div>
+                                                            @php
+                                                                $__opShow = [];
+                                                                if (($l['observacao'] ?? '') !== '') {
+                                                                    $__opShow['observacao'] = $l['observacao'];
+                                                                }
+                                                                $__nota = (int) ($l['nota_produto'] ?? 0);
+                                                                if ($__nota >= 1 && $__nota <= 5) {
+                                                                    $__opShow['nota_produto'] = $__nota;
+                                                                }
+                                                            @endphp
+                                                            @include('partials.opcoes-pedido-item', ['opcoesLinha' => $__opShow === [] ? null : $__opShow])
+                                                        </div>
+                                                    @elseif ($p)
+                                                        @if ($p->urlFoto())
+                                                            <img src="{{ $p->urlFoto() }}" alt="" width="48" height="48" class="rounded border flex-shrink-0 object-fit-cover" style="width:48px;height:48px;">
+                                                        @endif
+                                                        <div>
+                                                            <a href="{{ route('publico.produto', ['slug' => $slug, 'produto_id' => $p->id]) }}" class="text-decoration-none text-dark">{{ $p->nome }}</a>
+                                                            @php
+                                                                $__opShow = [];
+                                                                if (($l['opcoes'] ?? []) !== []) {
+                                                                    $__opShow['adicionais'] = $l['opcoes'];
+                                                                }
+                                                                if (($l['observacao'] ?? '') !== '') {
+                                                                    $__opShow['observacao'] = $l['observacao'];
+                                                                }
+                                                                $__nota = (int) ($l['nota_produto'] ?? 0);
+                                                                if ($__nota >= 1 && $__nota <= 5) {
+                                                                    $__opShow['nota_produto'] = $__nota;
+                                                                }
+                                                            @endphp
+                                                            @include('partials.opcoes-pedido-item', ['opcoesLinha' => $__opShow === [] ? null : $__opShow])
+                                                        </div>
                                                     @endif
-                                                    <div>
-                                                        <a href="{{ route('publico.produto', ['slug' => $slug, 'produto_id' => $p->id]) }}" class="text-decoration-none text-dark">{{ $p->nome }}</a>
-                                                        @php
-                                                            $__opShow = [];
-                                                            if (($l['opcoes'] ?? []) !== []) {
-                                                                $__opShow['adicionais'] = $l['opcoes'];
-                                                            }
-                                                            if (($l['observacao'] ?? '') !== '') {
-                                                                $__opShow['observacao'] = $l['observacao'];
-                                                            }
-                                                            $__nota = (int) ($l['nota_produto'] ?? 0);
-                                                            if ($__nota >= 1 && $__nota <= 5) {
-                                                                $__opShow['nota_produto'] = $__nota;
-                                                            }
-                                                        @endphp
-                                                        @include('partials.opcoes-pedido-item', ['opcoesLinha' => $__opShow === [] ? null : $__opShow])
-                                                    </div>
                                                 </div>
                                             </td>
                                             <td class="text-center">

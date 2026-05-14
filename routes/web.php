@@ -103,6 +103,9 @@ Route::get('/loja/{slug}/produto/{produto_id}', [PublicoController::class, 'prod
 Route::post('/loja/{slug}/carrinho/adicionar', [PublicoController::class, 'carrinhoAdicionar'])
     ->middleware('throttle:60,1')
     ->name('publico.carrinho.adicionar');
+Route::post('/loja/{slug}/carrinho/adicionar-adicional', [PublicoController::class, 'carrinhoAdicionarAdicionalAvulso'])
+    ->middleware('throttle:40,1')
+    ->name('publico.carrinho.adicionar-adicional');
 Route::get('/loja/{slug}/carrinho', [PublicoController::class, 'carrinho'])->name('publico.carrinho');
 Route::post('/loja/{slug}/carrinho/atualizar', [PublicoController::class, 'carrinhoAtualizar'])->name('publico.carrinho.atualizar');
 Route::post('/loja/{slug}/carrinho/remover', [PublicoController::class, 'carrinhoRemover'])->name('publico.carrinho.remover');

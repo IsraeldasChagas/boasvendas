@@ -18,7 +18,7 @@
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
             <h2 class="h5 fw-bold mb-0">Adicionais e retiradas</h2>
-            <p class="small text-muted mb-0">Cadastre opções para o cliente acrescentar (com preço) ou retirar ingredientes. Depois vincule aos produtos que permitem personalização.</p>
+            <p class="small text-muted mb-0">Cadastre opções para o cliente acrescentar (com preço) ou retirar ingredientes. Depois vincule aos produtos que permitem personalização. Os de acréscimo com vínculo aparecem na vitrine na mesma categoria desses produtos e podem ser comprados à parte.</p>
         </div>
         <div class="d-flex gap-2">
             <a href="{{ route('empresa.produtos.index') }}" class="btn btn-outline-secondary btn-sm">Produtos</a>

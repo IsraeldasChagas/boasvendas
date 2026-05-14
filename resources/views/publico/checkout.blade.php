@@ -206,7 +206,11 @@
                             @foreach ($linhas as $l)
                                 <li class="py-1 border-bottom">
                                     <div class="d-flex justify-content-between">
-                                        <span>{{ $l['produto']->nome }} × {{ $l['quantidade'] }}</span>
+                                        @if (($l['modo_linha'] ?? 'produto') === 'adicional_avulso' && ($l['adicional'] ?? null))
+                                            <span>{{ $l['adicional']->nome }} <span class="text-muted">(adicional)</span> × {{ $l['quantidade'] }}</span>
+                                        @else
+                                            <span>{{ $l['produto']->nome }} × {{ $l['quantidade'] }}</span>
+                                        @endif
                                         <span>R$ {{ number_format($l['subtotal'], 2, ',', '.') }}</span>
                                     </div>
                                     @include('partials.opcoes-pedido-item', ['opcoesLinha' => $l['opcoes'] === [] ? null : ['adicionais' => $l['opcoes']]])

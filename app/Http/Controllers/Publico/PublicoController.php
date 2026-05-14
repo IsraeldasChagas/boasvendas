@@ -63,7 +63,16 @@ class PublicoController extends Controller
     }
 
     /**
-     * @return list<array{produto_id: int, quantidade: int, adicional_qtd: array<int, int>, retirar_qtd: array<int, int>, observacao: string, nota_produto: int}>
+     * @return list<array{
+     *   linha_tipo: 'produto'|'adicional_avulso',
+     *   produto_id?: int,
+     *   adicional_avulso_id?: int,
+     *   quantidade: int,
+     *   adicional_qtd: array<int, int>,
+     *   retirar_qtd: array<int, int>,
+     *   observacao: string,
+     *   nota_produto: int
+     * }>
      */
     private function getCarrinhoLines(string $slug): array
     {
@@ -72,13 +81,35 @@ class PublicoController extends Controller
             return [];
         }
 
-        if (isset($raw[0]) && is_array($raw[0]) && array_key_exists('produto_id', $raw[0])) {
+        if (isset($raw[0]) && is_array($raw[0])) {
             $out = [];
             foreach ($raw as $line) {
-                if (! is_array($line) || ! isset($line['produto_id'])) {
+                if (! is_array($line)) {
+                    continue;
+                }
+                $tipo = $line['linha_tipo'] ?? null;
+                if ($tipo === 'adicional_avulso' || (int) ($line['adicional_avulso_id'] ?? 0) > 0) {
+                    $aid = (int) ($line['adicional_avulso_id'] ?? 0);
+                    if ($aid < 1) {
+                        continue;
+                    }
+                    $out[] = [
+                        'linha_tipo' => 'adicional_avulso',
+                        'adicional_avulso_id' => $aid,
+                        'quantidade' => max(0, (int) ($line['quantidade'] ?? 0)),
+                        'adicional_qtd' => [],
+                        'retirar_qtd' => [],
+                        'observacao' => $this->normalizarObservacao($line['observacao'] ?? null),
+                        'nota_produto' => $this->normalizarNotaProduto($line['nota_produto'] ?? null),
+                    ];
+
+                    continue;
+                }
+                if (! isset($line['produto_id'])) {
                     continue;
                 }
                 $out[] = [
+                    'linha_tipo' => 'produto',
                     'produto_id' => (int) $line['produto_id'],
                     'quantidade' => max(0, (int) ($line['quantidade'] ?? 0)),
                     'adicional_qtd' => $this->linhaParaMapaAdicionalQtd($line),
@@ -101,6 +132,7 @@ class PublicoController extends Controller
                 continue;
             }
             $lines[] = [
+                'linha_tipo' => 'produto',
                 'produto_id' => (int) $pid,
                 'quantidade' => $q,
                 'adicional_qtd' => [],
@@ -272,6 +304,13 @@ class PublicoController extends Controller
         return $produtoId.'|a:'.implode(',', $partsA).'|r:'.implode(',', $partsR).'|'.sha1($observacaoNormalizada).'|n:'.$notaProduto;
     }
 
+    private function fingerprintLinhaAdicionalAvulso(int $adicionalId, string $observacaoNormalizada, int $notaProduto = 0): string
+    {
+        $notaProduto = max(0, min(5, $notaProduto));
+
+        return 'avulso|'.$adicionalId.'|'.sha1($observacaoNormalizada).'|n:'.$notaProduto;
+    }
+
     private function normalizarObservacao(?string $text): string
     {
         if ($text === null || $text === '') {
@@ -308,17 +347,7 @@ class PublicoController extends Controller
     }
 
     /**
-     * @return list<array{
-     *   line_index: int,
-     *   produto: Produto,
-     *   quantidade: int,
-     *   adicional_qtd: array<int, int>,
-     *   opcoes: list<array{id:int,nome:string,tipo:string,preco:float,quantidade?:int}>,
-     *   preco_unitario: float,
-     *   subtotal: float,
-     *   observacao: string,
-     *   nota_produto: int
-     * }>
+     * @return list<array<string, mixed>>
      */
     private function linhasCarrinho(Empresa $empresa, string $slug): array
     {
@@ -329,7 +358,12 @@ class PublicoController extends Controller
             return [];
         }
 
-        $pids = collect($linesRaw)->pluck('produto_id')->unique()->filter()->all();
+        $pids = collect($linesRaw)
+            ->filter(fn (array $line) => ($line['linha_tipo'] ?? 'produto') === 'produto')
+            ->pluck('produto_id')
+            ->unique()
+            ->filter()
+            ->all();
         $produtos = Produto::query()
             ->where('empresa_id', $empresa->id)
             ->whereIn('id', $pids)
@@ -342,18 +376,77 @@ class PublicoController extends Controller
             ->get()
             ->keyBy('id');
 
+        $avids = collect($linesRaw)
+            ->filter(fn (array $line) => ($line['linha_tipo'] ?? '') === 'adicional_avulso')
+            ->pluck('adicional_avulso_id')
+            ->unique()
+            ->filter()
+            ->all();
+        $adicionaisAvulsos = $avids === []
+            ? collect()
+            : Adicional::query()
+                ->where('empresa_id', $empresa->id)
+                ->whereIn('id', $avids)
+                ->where('ativo', true)
+                ->where('tipo', Adicional::TIPO_ACRESCENTAR)
+                ->get()
+                ->keyBy('id');
+
         $novasLinhasSessao = [];
         $linhas = [];
         $idx = 0;
 
         foreach ($linesRaw as $line) {
-            $pid = (int) $line['produto_id'];
+            $tipo = $line['linha_tipo'] ?? 'produto';
             $qty = max(0, (int) $line['quantidade']);
-            $mapReq = $this->linhaParaMapaAdicionalQtd($line);
-            $retReqMap = $this->linhaParaMapaRetirarQtd($line);
             if ($qty < 1) {
                 continue;
             }
+
+            if ($tipo === 'adicional_avulso') {
+                $aid = (int) ($line['adicional_avulso_id'] ?? 0);
+                if ($aid < 1) {
+                    continue;
+                }
+                $ad = $adicionaisAvulsos->get($aid);
+                if (! $ad || ! Adicional::permiteCompraAvulsaNaLoja((int) $empresa->id, $aid, null)) {
+                    continue;
+                }
+
+                $obsLinha = $this->normalizarObservacao($line['observacao'] ?? null);
+                $notaLinha = $this->normalizarNotaProduto($line['nota_produto'] ?? null);
+                $precoUnit = round((float) $ad->preco, 2);
+                $subtotal = round($precoUnit * $qty, 2);
+
+                $novasLinhasSessao[] = [
+                    'linha_tipo' => 'adicional_avulso',
+                    'adicional_avulso_id' => $aid,
+                    'quantidade' => $qty,
+                    'observacao' => $obsLinha,
+                    'nota_produto' => $notaLinha,
+                ];
+
+                $linhas[] = [
+                    'line_index' => $idx,
+                    'modo_linha' => 'adicional_avulso',
+                    'produto' => null,
+                    'adicional' => $ad,
+                    'quantidade' => $qty,
+                    'adicional_qtd' => [],
+                    'opcoes' => [],
+                    'preco_unitario' => $precoUnit,
+                    'subtotal' => $subtotal,
+                    'observacao' => $obsLinha,
+                    'nota_produto' => $notaLinha,
+                ];
+                $idx++;
+
+                continue;
+            }
+
+            $pid = (int) ($line['produto_id'] ?? 0);
+            $mapReq = $this->linhaParaMapaAdicionalQtd($line);
+            $retReqMap = $this->linhaParaMapaRetirarQtd($line);
 
             $p = $produtos->get($pid);
             if (! $p) {
@@ -463,6 +556,7 @@ class PublicoController extends Controller
             $subtotal = round($precoUnit * $qty, 2);
 
             $novasLinhasSessao[] = [
+                'linha_tipo' => 'produto',
                 'produto_id' => $pid,
                 'quantidade' => $qty,
                 'adicional_qtd' => $mapOk,
@@ -473,7 +567,9 @@ class PublicoController extends Controller
 
             $linhas[] = [
                 'line_index' => $idx,
+                'modo_linha' => 'produto',
                 'produto' => $p,
+                'adicional' => null,
                 'quantidade' => $qty,
                 'adicional_qtd' => $mapOk,
                 'opcoes' => $opcoes,
@@ -876,6 +972,9 @@ class PublicoController extends Controller
 
         $mostrarBanner = $bannerCategoria !== null || $bannerSlides->isNotEmpty();
 
+        $catFiltro = $request->filled('categoria_id') ? $request->integer('categoria_id') : null;
+        $adicionaisCatalogo = Adicional::adicionaisAvulsosCatalogoParaLoja((int) $empresa->id, $catFiltro);
+
         return view('publico.loja', compact(
             'slug',
             'empresa',
@@ -883,7 +982,8 @@ class PublicoController extends Controller
             'categorias',
             'bannerCategoria',
             'bannerSlides',
-            'mostrarBanner'
+            'mostrarBanner',
+            'adicionaisCatalogo'
         ));
     }
 
@@ -1092,6 +1192,9 @@ class PublicoController extends Controller
         $fp = $this->fingerprintLinha((int) $p->id, $mapOk, $retOk, $obsNorm, $notaNorm);
         $found = false;
         foreach ($lines as $i => $line) {
+            if (($line['linha_tipo'] ?? 'produto') !== 'produto') {
+                continue;
+            }
             $lineObs = $this->normalizarObservacao($line['observacao'] ?? null);
             $lineNota = $this->normalizarNotaProduto($line['nota_produto'] ?? null);
             $lineFp = $this->fingerprintLinha(
@@ -1110,6 +1213,7 @@ class PublicoController extends Controller
 
         if (! $found) {
             $lines[] = [
+                'linha_tipo' => 'produto',
                 'produto_id' => (int) $p->id,
                 'quantidade' => $qty,
                 'adicional_qtd' => $mapOk,
@@ -1119,7 +1223,9 @@ class PublicoController extends Controller
             ];
         }
 
-        $totalMesmoProduto = collect($lines)->where('produto_id', (int) $p->id)->sum('quantidade');
+        $totalMesmoProduto = collect($lines)
+            ->filter(fn (array $l) => ($l['linha_tipo'] ?? 'produto') === 'produto' && (int) ($l['produto_id'] ?? 0) === (int) $p->id)
+            ->sum('quantidade');
         if ($p->estoque !== null && $totalMesmoProduto > $p->estoque) {
             return back()->withInput()->with('warning', 'Não há estoque suficiente para a quantidade desejada.');
         }
@@ -1129,6 +1235,75 @@ class PublicoController extends Controller
         return redirect()
             ->route('publico.carrinho', ['slug' => $slug])
             ->with('status', 'Item adicionado ao carrinho.');
+    }
+
+    public function carrinhoAdicionarAdicionalAvulso(Request $request, string $slug): RedirectResponse
+    {
+        $empresa = $this->empresaLojaAtiva($slug);
+
+        $data = $request->validate([
+            'adicional_id' => ['required', 'integer', 'min:1'],
+            'quantidade' => ['nullable', 'integer', 'min:1', 'max:99'],
+            'contexto_categoria_id' => ['nullable', 'integer', 'min:0'],
+        ]);
+
+        $qty = max(1, (int) ($data['quantidade'] ?? 1));
+        $aid = (int) $data['adicional_id'];
+        $ctxCat = isset($data['contexto_categoria_id']) && (int) $data['contexto_categoria_id'] > 0
+            ? (int) $data['contexto_categoria_id']
+            : null;
+
+        if (! Adicional::permiteCompraAvulsaNaLoja((int) $empresa->id, $aid, $ctxCat)) {
+            return back()->with('warning', 'Este adicional não está disponível para compra avulsa no momento.');
+        }
+
+        $ad = Adicional::query()
+            ->where('empresa_id', $empresa->id)
+            ->where('id', $aid)
+            ->where('ativo', true)
+            ->where('tipo', Adicional::TIPO_ACRESCENTAR)
+            ->first();
+        if (! $ad) {
+            return back()->with('warning', 'Adicional não encontrado.');
+        }
+
+        $obsNorm = '';
+        $notaNorm = 0;
+
+        $lines = $this->getCarrinhoLines($slug);
+        $fp = $this->fingerprintLinhaAdicionalAvulso($aid, $obsNorm, $notaNorm);
+        $found = false;
+        foreach ($lines as $i => $line) {
+            if (($line['linha_tipo'] ?? '') !== 'adicional_avulso') {
+                continue;
+            }
+            if ((int) ($line['adicional_avulso_id'] ?? 0) !== $aid) {
+                continue;
+            }
+            $lineObs = $this->normalizarObservacao($line['observacao'] ?? null);
+            $lineNota = $this->normalizarNotaProduto($line['nota_produto'] ?? null);
+            if ($this->fingerprintLinhaAdicionalAvulso($aid, $lineObs, $lineNota) === $fp) {
+                $lines[$i]['quantidade'] = (int) $lines[$i]['quantidade'] + $qty;
+                $found = true;
+                break;
+            }
+        }
+
+        if (! $found) {
+            $lines[] = [
+                'linha_tipo' => 'adicional_avulso',
+                'adicional_avulso_id' => $aid,
+                'quantidade' => $qty,
+                'observacao' => $obsNorm,
+                'nota_produto' => $notaNorm,
+            ];
+        }
+
+        $this->setCarrinhoLines($slug, array_values($lines));
+
+        return redirect()
+            ->route('publico.carrinho', ['slug' => $slug])
+            ->with('status', 'Adicional adicionado ao carrinho.');
     }
 
     public function carrinho(string $slug): View
@@ -1511,7 +1686,13 @@ class PublicoController extends Controller
         }
 
         foreach ($linhas as $l) {
+            if (($l['modo_linha'] ?? 'produto') === 'adicional_avulso') {
+                continue;
+            }
             $p = $l['produto'];
+            if ($p === null) {
+                continue;
+            }
             $q = $l['quantidade'];
             if ($p->estoque !== null && $p->estoque < $q) {
                 return back()->withInput()->with('warning', 'O produto "'.$p->nome.'" não tem estoque suficiente. Ajuste o carrinho.');
@@ -1550,7 +1731,38 @@ class PublicoController extends Controller
             ]);
 
             foreach ($linhas as $l) {
+                if (($l['modo_linha'] ?? 'produto') === 'adicional_avulso') {
+                    /** @var Adicional $ad */
+                    $ad = $l['adicional'];
+                    $opLinha = [
+                        'tipo_item' => 'adicional_avulso',
+                        'adicional_id' => (int) $ad->id,
+                    ];
+                    if (($l['observacao'] ?? '') !== '') {
+                        $opLinha['observacao'] = $l['observacao'];
+                    }
+                    $notaItem = (int) ($l['nota_produto'] ?? 0);
+                    if ($notaItem >= 1 && $notaItem <= 5) {
+                        $opLinha['nota_produto'] = $notaItem;
+                    }
+
+                    PedidoItem::query()->create([
+                        'pedido_id' => $pedido->id,
+                        'produto_id' => null,
+                        'nome_produto' => '[Adicional] '.$ad->nome,
+                        'preco_unitario' => $l['preco_unitario'],
+                        'quantidade' => $l['quantidade'],
+                        'subtotal' => $l['subtotal'],
+                        'opcoes_linha' => $opLinha,
+                    ]);
+
+                    continue;
+                }
+
                 $p = $l['produto'];
+                if ($p === null) {
+                    continue;
+                }
                 $opLinha = [];
                 if ($l['opcoes'] !== []) {
                     $opLinha['adicionais'] = $l['opcoes'];

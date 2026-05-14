@@ -1071,6 +1071,10 @@ a.vf-store-brand--outra-unidade:hover {
   box-shadow: var(--vf-shadow-lg);
 }
 
+.vf-loja-adicional-card {
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
 .admin-theme .vf-sidebar {
   background: #020617;
 }

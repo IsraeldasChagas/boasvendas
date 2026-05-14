@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 class Adicional extends Model
@@ -42,6 +43,55 @@ class Adicional extends Model
     public function produtos(): BelongsToMany
     {
         return $this->belongsToMany(Produto::class, 'adicional_produto')->withTimestamps();
+    }
+
+    /**
+     * Adicionais de acréscimo ligados a pelo menos um produto visível na loja (com personalização).
+     * Se $categoriaId for informado, só entram adicionais usados por produtos dessa categoria.
+     *
+     * @return Collection<int, self>
+     */
+    public static function adicionaisAvulsosCatalogoParaLoja(int $empresaId, ?int $categoriaId): Collection
+    {
+        $q = static::query()
+            ->where('empresa_id', $empresaId)
+            ->where('ativo', true)
+            ->where('tipo', self::TIPO_ACRESCENTAR)
+            ->whereHas('produtos', function ($pq) use ($empresaId, $categoriaId) {
+                $pq->where('produtos.empresa_id', $empresaId)
+                    ->where('produtos.ativo', true)
+                    ->where('produtos.visivel_loja', true)
+                    ->where('produtos.permite_adicionais', true);
+                if ($categoriaId !== null && $categoriaId > 0) {
+                    $pq->where('produtos.categoria_id', $categoriaId);
+                }
+            })
+            ->orderBy('ordem')
+            ->orderBy('nome');
+
+        return $q->get()->unique('id')->values();
+    }
+
+    /**
+     * Pode ser vendido avulso na vitrine (ligado a produto elegível). $contextoCategoriaId opcional restringe à categoria.
+     */
+    public static function permiteCompraAvulsaNaLoja(int $empresaId, int $adicionalId, ?int $contextoCategoriaId): bool
+    {
+        return static::query()
+            ->where('id', $adicionalId)
+            ->where('empresa_id', $empresaId)
+            ->where('ativo', true)
+            ->where('tipo', self::TIPO_ACRESCENTAR)
+            ->whereHas('produtos', function ($pq) use ($empresaId, $contextoCategoriaId) {
+                $pq->where('produtos.empresa_id', $empresaId)
+                    ->where('produtos.ativo', true)
+                    ->where('produtos.visivel_loja', true)
+                    ->where('produtos.permite_adicionais', true);
+                if ($contextoCategoriaId !== null && $contextoCategoriaId > 0) {
+                    $pq->where('produtos.categoria_id', $contextoCategoriaId);
+                }
+            })
+            ->exists();
     }
 
     /** @return array<string, string> */

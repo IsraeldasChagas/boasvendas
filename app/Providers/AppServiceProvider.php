@@ -257,10 +257,15 @@ class AppServiceProvider extends ServiceProvider
             $raw = session('loja_carrinho.'.$slug, []);
             $count = 0;
             if (is_array($raw) && $raw !== []) {
-                if (isset($raw[0]) && is_array($raw[0]) && array_key_exists('produto_id', $raw[0])) {
-                    foreach ($raw as $line) {
-                        if (is_array($line)) {
-                            $count += (int) ($line['quantidade'] ?? 0);
+                if (isset($raw[0]) && is_array($raw[0])) {
+                    $first = $raw[0];
+                    if (array_key_exists('produto_id', $first)
+                        || array_key_exists('adicional_avulso_id', $first)
+                        || (($first['linha_tipo'] ?? '') === 'adicional_avulso')) {
+                        foreach ($raw as $line) {
+                            if (is_array($line)) {
+                                $count += (int) ($line['quantidade'] ?? 0);
+                            }
                         }
                     }
                 } else {

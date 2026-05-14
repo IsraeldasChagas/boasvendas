@@ -101,6 +101,45 @@
             </div>
         </form>
 
+        @if (isset($adicionaisCatalogo) && $adicionaisCatalogo->isNotEmpty())
+            <div class="mb-4">
+                <h2 class="h6 fw-bold mb-2">Adicionais nesta parte do cardápio</h2>
+                <p class="small text-muted mb-3">
+                    Opções de acréscimo ligadas aos produtos @if (request()->filled('categoria_id'))desta categoria @elseem exibição @endif.
+                    Você pode levar também <strong>à parte</strong> — o mesmo item do cadastro de adicionais.
+                </p>
+                <div class="row g-3">
+                    @foreach ($adicionaisCatalogo as $adCat)
+                        <div class="col-6 col-md-4 col-lg-3">
+                            <div class="vf-card vf-loja-adicional-card h-100 overflow-hidden d-flex flex-column">
+                                <div class="ratio ratio-4x3 bg-light border-bottom overflow-hidden">
+                                    @if ($adCat->urlFoto())
+                                        <img src="{{ $adCat->urlFoto() }}" alt="" class="w-100 h-100 object-fit-cover">
+                                    @else
+                                        <div class="d-flex align-items-center justify-content-center w-100 h-100 text-muted">
+                                            <i class="bi bi-plus-lg fs-3 opacity-50"></i>
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="p-3 flex-grow-1 d-flex flex-column">
+                                    <div class="fw-semibold small mb-1">{{ $adCat->nome }}</div>
+                                    <div class="text-success fw-bold small mb-3">R$ {{ number_format((float) $adCat->preco, 2, ',', '.') }}</div>
+                                    <form action="{{ route('publico.carrinho.adicionar-adicional', ['slug' => $slug]) }}" method="post" class="mt-auto">
+                                        @csrf
+                                        <input type="hidden" name="adicional_id" value="{{ $adCat->id }}">
+                                        @if (request()->filled('categoria_id'))
+                                            <input type="hidden" name="contexto_categoria_id" value="{{ request('categoria_id') }}">
+                                        @endif
+                                        <button type="submit" class="btn btn-primary btn-sm w-100">Adicionar ao carrinho</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
         <div class="row g-3">
             @forelse ($produtos as $pr)
                 <div class="col-6 col-md-4 col-lg-3">
