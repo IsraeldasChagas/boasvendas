@@ -88,6 +88,7 @@
                     <label class="form-label small text-muted mb-1" for="loja-cat">Categoria</label>
                     <select class="form-select form-select-sm" id="loja-cat" name="categoria_id" onchange="this.form.submit()">
                         <option value="">Todas</option>
+                        <option value="adicionais" @selected((string) request('categoria_id') === 'adicionais')>Adicionais</option>
                         @foreach ($categorias as $cat)
                             <option value="{{ $cat->id }}" @selected((string) request('categoria_id') === (string) $cat->id)>{{ $cat->nome }}</option>
                         @endforeach
@@ -103,10 +104,20 @@
 
         @if (isset($adicionaisCatalogo) && $adicionaisCatalogo->isNotEmpty())
             <div class="mb-4">
-                <h2 class="h6 fw-bold mb-2">Adicionais nesta parte do cardápio</h2>
+                <h2 class="h6 fw-bold mb-2">
+                    @if (! empty($soloAdicionais))
+                        Adicionais
+                    @else
+                        Adicionais nesta parte do cardápio
+                    @endif
+                </h2>
                 <p class="small text-muted mb-3">
-                    Opções de acréscimo ligadas aos produtos @if (request()->filled('categoria_id'))desta categoria @elseem exibição @endif.
-                    Você pode levar também <strong>à parte</strong> — o mesmo item do cadastro de adicionais.
+                    @if (! empty($soloAdicionais))
+                        Extras de acréscimo disponíveis na loja para levar à parte.
+                    @else
+                        Opções de acréscimo ligadas aos produtos @if (request()->filled('categoria_id') && ctype_digit((string) request('categoria_id')))desta categoria @elseem exibição @endif.
+                        Você pode levar também <strong>à parte</strong> — o mesmo item do cadastro de adicionais.
+                    @endif
                 </p>
                 <div class="row g-3">
                     @foreach ($adicionaisCatalogo as $adCat)
@@ -127,7 +138,7 @@
                                     <form action="{{ route('publico.carrinho.adicionar-adicional', ['slug' => $slug]) }}" method="post" class="mt-auto">
                                         @csrf
                                         <input type="hidden" name="adicional_id" value="{{ $adCat->id }}">
-                                        @if (request()->filled('categoria_id'))
+                                        @if (request()->filled('categoria_id') && ctype_digit((string) request('categoria_id')))
                                             <input type="hidden" name="contexto_categoria_id" value="{{ request('categoria_id') }}">
                                         @endif
                                         <button type="submit" class="btn btn-primary btn-sm w-100">Adicionar ao carrinho</button>
@@ -140,6 +151,7 @@
             </div>
         @endif
 
+        @if (empty($soloAdicionais))
         <div class="row g-3">
             @forelse ($produtos as $pr)
                 <div class="col-6 col-md-4 col-lg-3">
@@ -193,6 +205,9 @@
 
         @if ($produtos->hasPages())
             <div class="mt-4 d-flex justify-content-center">{{ $produtos->links() }}</div>
+        @endif
+        @else
+            <p class="small text-muted mb-4">Para ver os pratos, escolha <strong>Todas</strong> ou uma categoria no filtro acima.</p>
         @endif
     </div>
 @endsection

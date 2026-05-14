@@ -902,8 +902,16 @@ class PublicoController extends Controller
             ])
             ->withCount('ingredientes');
 
-        if ($request->filled('categoria_id')) {
-            $query->where('categoria_id', $request->integer('categoria_id'));
+        $categoriaRaw = $request->input('categoria_id');
+        $soloAdicionais = is_string($categoriaRaw) && $categoriaRaw === 'adicionais';
+
+        if ($soloAdicionais) {
+            $query->whereRaw('0 = 1');
+        } elseif ($request->filled('categoria_id')) {
+            $cid = (int) $request->input('categoria_id');
+            if ($cid > 0) {
+                $query->where('categoria_id', $cid);
+            }
         }
 
         $produtos = $query->orderBy('nome')->paginate(24)->withQueryString();
@@ -972,8 +980,17 @@ class PublicoController extends Controller
 
         $mostrarBanner = $bannerCategoria !== null || $bannerSlides->isNotEmpty();
 
-        $catFiltro = $request->filled('categoria_id') ? $request->integer('categoria_id') : null;
-        $adicionaisCatalogo = Adicional::adicionaisAvulsosCatalogoParaLoja((int) $empresa->id, $catFiltro);
+        $catFiltro = null;
+        if (! $soloAdicionais && $request->filled('categoria_id')) {
+            $cid = (int) $request->input('categoria_id');
+            if ($cid > 0) {
+                $catFiltro = $cid;
+            }
+        }
+        $adicionaisCatalogo = Adicional::adicionaisAvulsosCatalogoParaLoja(
+            (int) $empresa->id,
+            $soloAdicionais ? null : $catFiltro
+        );
 
         return view('publico.loja', compact(
             'slug',
@@ -983,7 +1000,8 @@ class PublicoController extends Controller
             'bannerCategoria',
             'bannerSlides',
             'mostrarBanner',
-            'adicionaisCatalogo'
+            'adicionaisCatalogo',
+            'soloAdicionais'
         ));
     }
 
