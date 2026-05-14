@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Empresa;
 
 use App\Http\Controllers\Controller;
+use App\Models\Cliente;
 use App\Models\Empresa;
 use App\Models\EmpresaEntregaFaixaCep;
 use App\Models\Pedido;
@@ -51,6 +52,14 @@ class PdvController extends Controller
             ->unique()
             ->values();
 
+        $clientes = Schema::hasTable('clientes')
+            ? Cliente::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('ativo', true)
+                ->orderBy('nome')
+                ->get(['id', 'nome', 'telefone', 'email', 'documento'])
+            : collect();
+
         $temBalcao = $this->lojaPermiteRetiradaBalcao($empresa);
         $formasPagamento = $this->formasPagamentoPdv($empresa);
 
@@ -58,6 +67,7 @@ class PdvController extends Controller
             'empresa' => $empresa,
             'produtos' => $produtos,
             'categorias' => $categorias,
+            'clientes' => $clientes,
             'temBalcao' => $temBalcao,
             'formasPagamento' => $formasPagamento,
         ]);

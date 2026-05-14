@@ -81,6 +81,36 @@
                         <h2 class="h6 fw-bold mb-0"><i class="bi bi-person text-secondary me-1"></i>Cliente</h2>
                     </div>
                     <div class="p-3">
+                        @if ($clientes->isNotEmpty())
+                            <label class="form-label small fw-semibold mb-1" for="vf-pdv-busca-cli">
+                                <i class="bi bi-people me-1"></i>Buscar cliente cadastrado (opcional)
+                            </label>
+                            <div class="input-group input-group-sm mb-2">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control" id="vf-pdv-busca-cli" placeholder="Digite nome, telefone ou e-mail...">
+                            </div>
+                            <div class="input-group input-group-sm mb-2">
+                                <select class="form-select" id="vf-pdv-select-cli" aria-label="Selecione um cliente">
+                                    <option value="">— Cliente novo (digitar abaixo) —</option>
+                                    @foreach ($clientes as $c)
+                                        <option value="{{ $c->id }}"
+                                                data-nome="{{ $c->nome }}"
+                                                data-telefone="{{ $c->telefone }}"
+                                                data-email="{{ $c->email }}"
+                                                data-documento="{{ $c->documento }}">{{ $c->nome }}@if ($c->telefone) — {{ $c->telefone }}@endif</option>
+                                    @endforeach
+                                </select>
+                                <button type="button" class="btn btn-primary" id="vf-pdv-btn-usar-cli" title="Usar dados do cliente selecionado">
+                                    <i class="bi bi-person-check me-1"></i>Usar
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" id="vf-pdv-btn-limpar-cli" title="Limpar e digitar manualmente">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                            <p class="small text-muted mb-3" id="vf-pdv-busca-cli-info">
+                                <span id="vf-pdv-busca-cli-total">{{ $clientes->count() }}</span> cliente(s) cadastrado(s). Não achou? É só digitar nome e telefone abaixo.
+                            </p>
+                        @endif
                         <div class="row g-2 mb-2">
                             <div class="col-md-6">
                                 <label class="form-label small" for="vf-pdv-cliente-nome">Nome <span class="text-muted small" id="vf-pdv-nome-req"></span></label>
@@ -372,6 +402,110 @@
     }
 
     elBusca.addEventListener('input', filtrarProdutos);
+
+    // --- Busca de cliente cadastrado (mesmo padrão do select de produto) ---
+    const elBuscaCli = document.getElementById('vf-pdv-busca-cli');
+    const elSelectCli = document.getElementById('vf-pdv-select-cli');
+    const elBtnUsarCli = document.getElementById('vf-pdv-btn-usar-cli');
+    const elBtnLimparCli = document.getElementById('vf-pdv-btn-limpar-cli');
+    const elBuscaCliInfo = document.getElementById('vf-pdv-busca-cli-info');
+    const elBuscaCliTotal = document.getElementById('vf-pdv-busca-cli-total');
+    const elCliNome = document.getElementById('vf-pdv-cliente-nome');
+    const elCliTel = document.getElementById('vf-pdv-cliente-tel');
+
+    if (elBuscaCli && elSelectCli) {
+        function todasOpcoesCliente() {
+            return Array.from(elSelectCli.options).filter(function (op) { return op.value !== ''; });
+        }
+
+        todasOpcoesCliente().forEach(function (op) {
+            const partes = [
+                op.getAttribute('data-nome') || '',
+                op.getAttribute('data-telefone') || '',
+                op.getAttribute('data-email') || '',
+                op.getAttribute('data-documento') || ''
+            ].join(' ');
+            op.dataset.buscaNorm = normalizar(partes);
+        });
+
+        function filtrarClientes() {
+            const qBruta = elBuscaCli.value;
+            const q = normalizar(qBruta);
+            const tokens = q === '' ? [] : q.split(' ').filter(Boolean);
+            let visiveis = 0;
+            let primeiroVisivel = '';
+
+            todasOpcoesCliente().forEach(function (op) {
+                const alvo = op.dataset.buscaNorm || '';
+                const ok = tokens.length === 0
+                    || tokens.every(function (t) { return alvo.includes(t); });
+                op.hidden = !ok;
+                op.disabled = !ok;
+                if (ok) {
+                    visiveis++;
+                    if (primeiroVisivel === '') primeiroVisivel = op.value;
+                }
+            });
+
+            const total = todasOpcoesCliente().length;
+            if (qBruta.trim() === '') {
+                elBuscaCliInfo.classList.remove('text-danger');
+                elBuscaCliInfo.innerHTML = '<span id="vf-pdv-busca-cli-total">' + total + '</span> cliente(s) cadastrado(s). Não achou? É só digitar nome e telefone abaixo.';
+            } else if (visiveis === 0) {
+                elBuscaCliInfo.classList.add('text-danger');
+                elBuscaCliInfo.textContent = 'Nenhum cliente encontrado para "' + qBruta.trim() + '". Digite os dados manualmente abaixo.';
+            } else {
+                elBuscaCliInfo.classList.remove('text-danger');
+                elBuscaCliInfo.textContent = visiveis + ' cliente(s) encontrado(s). Selecione e clique em Usar.';
+            }
+
+            const sel = elSelectCli.selectedOptions[0];
+            if (!sel || sel.disabled || sel.value === '') {
+                elSelectCli.value = primeiroVisivel || '';
+            }
+        }
+
+        function aplicarClienteSelecionado() {
+            const op = elSelectCli.selectedOptions[0];
+            if (!op || op.value === '') {
+                elBuscaCliInfo.classList.add('text-danger');
+                elBuscaCliInfo.textContent = 'Selecione um cliente na lista antes de aplicar.';
+                elSelectCli.focus();
+                return;
+            }
+            elCliNome.value = op.getAttribute('data-nome') || '';
+            elCliTel.value = op.getAttribute('data-telefone') || '';
+            elBuscaCliInfo.classList.remove('text-danger');
+            elBuscaCliInfo.innerHTML = '<i class="bi bi-check-circle text-success me-1"></i>Cliente aplicado: <strong>' + (op.getAttribute('data-nome') || '') + '</strong>. Edite abaixo se precisar.';
+        }
+
+        function limparCliente() {
+            elBuscaCli.value = '';
+            filtrarClientes();
+            elSelectCli.value = '';
+            elCliNome.value = '';
+            elCliTel.value = '';
+            elBuscaCliInfo.classList.remove('text-danger');
+            elBuscaCliInfo.innerHTML = '<span id="vf-pdv-busca-cli-total">' + todasOpcoesCliente().length + '</span> cliente(s) cadastrado(s). Não achou? É só digitar nome e telefone abaixo.';
+            elCliNome.focus();
+        }
+
+        elBuscaCli.addEventListener('input', filtrarClientes);
+        elBtnUsarCli.addEventListener('click', aplicarClienteSelecionado);
+        elBtnLimparCli.addEventListener('click', limparCliente);
+        elBuscaCli.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                aplicarClienteSelecionado();
+            }
+        });
+        elSelectCli.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                aplicarClienteSelecionado();
+            }
+        });
+    }
 
     elBtnAdicionar.addEventListener('click', function () {
         const id = elSelectProduto.value;
