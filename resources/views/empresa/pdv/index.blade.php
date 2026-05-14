@@ -293,6 +293,7 @@
 
     const elForma = document.getElementById('vf-pdv-forma');
     const elBlocoTroco = document.getElementById('vf-pdv-bloco-troco');
+    const elTroco = document.getElementById('vf-pdv-troco');
     const elBtnFinalizar = document.getElementById('vf-pdv-btn-finalizar');
     const elBtnWa = document.getElementById('vf-pdv-btn-whatsapp');
     const elHiddenItens = document.getElementById('vf-pdv-itens-hidden');
@@ -620,7 +621,14 @@
     elForma.addEventListener('change', function () {
         const isDin = elForma.value === '{{ \App\Models\Pedido::PAGAMENTO_DINHEIRO }}';
         elBlocoTroco.classList.toggle('d-none', !isDin);
+        if (elTroco) {
+            elTroco.disabled = !isDin;
+            if (!isDin) {
+                elTroco.value = '';
+            }
+        }
     });
+    elForma.dispatchEvent(new Event('change'));
 
     elBtnCalc.addEventListener('click', async function () {
         const cep = elCep.value.replace(/\D/g, '');

@@ -138,6 +138,16 @@ class PdvController extends Controller
         $canalEntrada = (string) $request->input('canal', '');
         $obrigaCliente = $canalEntrada === Pedido::CANAL_WHATSAPP;
 
+        $trocoRaw = $request->input('pagamento_troco_para');
+        if ($trocoRaw === '' || $trocoRaw === null || (is_string($trocoRaw) && trim($trocoRaw) === '')) {
+            $request->merge(['pagamento_troco_para' => null]);
+        } elseif (is_string($trocoRaw) && str_contains($trocoRaw, ',')) {
+            $v = trim($trocoRaw);
+            $v = str_replace('.', '', $v);
+            $v = str_replace(',', '.', $v);
+            $request->merge(['pagamento_troco_para' => is_numeric($v) ? $v : null]);
+        }
+
         $data = $request->validate([
             'canal' => ['required', 'string', Rule::in([Pedido::CANAL_BALCAO, Pedido::CANAL_WHATSAPP])],
             'tipo_entrega' => ['required', 'string', Rule::in($tiposEntregaPermitidos)],
@@ -194,6 +204,23 @@ class PdvController extends Controller
             ];
         }
         $subtotal = round($subtotal, 2);
+
+        $qtdPorProduto = [];
+        foreach ($linhas as $l) {
+            $pid = (int) $l['produto']->id;
+            $qtdPorProduto[$pid] = ($qtdPorProduto[$pid] ?? 0) + (int) $l['quantidade'];
+        }
+        foreach ($qtdPorProduto as $pid => $qtdTotal) {
+            $p = $produtos->get($pid);
+            if (! $p) {
+                continue;
+            }
+            if ($p->estoque !== null && (int) $p->estoque < $qtdTotal) {
+                throw ValidationException::withMessages([
+                    'itens' => 'O produto "'.$p->nome.'" não tem estoque suficiente no PDV. Disponível: '.(int) $p->estoque.'. Reduza a quantidade ou repor o estoque.',
+                ]);
+            }
+        }
 
         $tipoEntrega = $data['tipo_entrega'];
         $taxaVal = 0.0;
