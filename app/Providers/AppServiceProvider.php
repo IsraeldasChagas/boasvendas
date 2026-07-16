@@ -8,6 +8,7 @@ use App\Models\Cliente;
 use App\Models\Comanda;
 use App\Models\ComandaItem;
 use App\Models\Mesa;
+use App\Models\EmpresaApiToken;
 use App\Models\FidelidadeCartao;
 use App\Models\FinanceiroDespesaFixa;
 use App\Models\FinanceiroTitulo;
@@ -126,6 +127,20 @@ class AppServiceProvider extends ServiceProvider
             abort_unless($empresaId, 404);
 
             return FidelidadeCartao::query()
+                ->where('id', $value)
+                ->where('empresa_id', $empresaId)
+                ->firstOrFail();
+        });
+
+        Route::bind('empresaApiToken', function (string $value) {
+            if (! auth()->check()) {
+                abort(404);
+            }
+
+            $empresaId = auth()->user()->empresa_id;
+            abort_unless($empresaId, 404);
+
+            return EmpresaApiToken::query()
                 ->where('id', $value)
                 ->where('empresa_id', $empresaId)
                 ->firstOrFail();

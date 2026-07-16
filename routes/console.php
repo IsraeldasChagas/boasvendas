@@ -301,3 +301,72 @@ Artisan::command('vendaffacil:api-token {--empresa=} {--nome=Token API} {--env=h
 
     return 0;
 })->purpose('Gera um Bearer token de API para uma empresa (texto puro exibido uma vez)');
+
+Artisan::command('vendaffacil:api-preparar-teste {--slug=demo}', function (): int {
+    $this->info('1/4 — Migrations…');
+    Artisan::call('migrate', ['--force' => true]);
+    $this->output->write(Artisan::output());
+
+    $slug = (string) $this->option('slug');
+    $empresa = \App\Models\Empresa::query()->where('slug', $slug)->first();
+
+    if (! $empresa) {
+        $this->warn('Empresa slug "'.$slug.'" não encontrada. Restaurando demo…');
+        Artisan::call('vendaffacil:restaurar-empresa-demo');
+        $this->output->write(Artisan::output());
+        $empresa = \App\Models\Empresa::query()->where('slug', 'demo')->first();
+    }
+
+    if (! $empresa) {
+        $empresa = \App\Models\Empresa::query()->orderBy('id')->first();
+    }
+
+    if (! $empresa) {
+        $this->error('Nenhuma empresa no banco. Cadastre uma empresa ou rode vendaffacil:restaurar-empresa-demo.');
+
+        return 1;
+    }
+
+    $this->info('2/4 — Empresa #'.$empresa->id.' ('.$empresa->nome.')');
+
+    $this->info('3/4 — Gerando token de homologação…');
+    $issued = \App\Models\EmpresaApiToken::issue(
+        $empresa,
+        'Teste integração '.now()->format('Y-m-d H:i'),
+        ['api.visualizar'],
+        \App\Models\EmpresaApiToken::ENV_HOMOLOGACAO,
+    );
+
+    $plain = $issued['plain'];
+    $statusUrl = url('/api/v1/integration/status');
+
+    $this->info('4/4 — Testando endpoint…');
+    $kernel = app(\Illuminate\Contracts\Http\Kernel::class);
+    $request = \Illuminate\Http\Request::create('/api/v1/integration/status', 'GET');
+    $request->headers->set('Authorization', 'Bearer '.$plain);
+    $request->headers->set('Accept', 'application/json');
+    $response = $kernel->handle($request);
+    $kernel->terminate($request, $response);
+
+    if ($response->getStatusCode() === 200) {
+        $this->info('OK — API respondeu HTTP 200 (teste interno).');
+    } else {
+        $this->warn('Resposta HTTP '.$response->getStatusCode().': '.$response->getContent());
+    }
+
+    $this->newLine();
+    $this->warn('TOKEN (copie agora — não será mostrado de novo):');
+    $this->line($plain);
+    $this->newLine();
+    $this->info('Painel: '.url('/login'));
+    $this->line('  E-mail demo: empresa@vendaffacil.com.br');
+    $this->line('  Senha demo: password');
+    $this->line('  Menu: Configurações → API → Tokens');
+    $this->newLine();
+    $this->info('cURL:');
+    $this->line('curl -sS -H "Authorization: Bearer '.$plain.'" -H "Accept: application/json" "'.$statusUrl.'"');
+    $this->newLine();
+    $this->info('Suba o servidor se ainda não estiver rodando: php artisan serve');
+
+    return 0;
+})->purpose('Migrate, empresa demo, token de teste e validação do GET /api/v1/integration/status');

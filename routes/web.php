@@ -357,6 +357,12 @@ Route::middleware(['auth', 'empresa.painel', 'empresa.colaborador', 'empresa.men
     Route::prefix('configuracoes/api')->name('api.')->group(function () {
         Route::get('/', [ApiPainelController::class, 'status'])->name('status');
         Route::get('/tokens', [ApiPainelController::class, 'tokens'])->name('tokens');
+        Route::post('/tokens', [ApiPainelController::class, 'storeToken'])
+            ->middleware('throttle:10,1')
+            ->name('tokens.store');
+        Route::post('/tokens/{empresaApiToken}/revogar', [ApiPainelController::class, 'revokeToken'])
+            ->middleware('throttle:20,1')
+            ->name('tokens.revoke');
         Route::get('/aplicacoes', [ApiPainelController::class, 'aplicacoes'])->name('aplicacoes');
         Route::get('/logs', [ApiPainelController::class, 'logs'])->name('logs');
         Route::get('/ambiente', [ApiPainelController::class, 'ambiente'])->name('ambiente');
