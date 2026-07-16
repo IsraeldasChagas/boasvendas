@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\VitrineBannerSyncController as AdminVitrineBanner
 use App\Http\Controllers\Api\CalcularEntregaController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Empresa\AdicionalController;
+use App\Http\Controllers\Empresa\Api\ApiPainelController;
 use App\Http\Controllers\Empresa\CaixaController;
 use App\Http\Controllers\Empresa\CardapioController;
 use App\Http\Controllers\Empresa\CategoriaController;
@@ -352,6 +353,14 @@ Route::middleware(['auth', 'empresa.painel', 'empresa.colaborador', 'empresa.men
     Route::get('/relatorios', [RelatorioController::class, 'index'])->name('relatorios.index');
     Route::get('/configuracoes', [ConfiguracaoController::class, 'index'])->name('configuracoes.index');
     Route::put('/configuracoes', [ConfiguracaoController::class, 'update'])->name('configuracoes.update');
+
+    Route::prefix('configuracoes/api')->name('api.')->group(function () {
+        Route::get('/', [ApiPainelController::class, 'status'])->name('status');
+        Route::get('/tokens', [ApiPainelController::class, 'tokens'])->name('tokens');
+        Route::get('/aplicacoes', [ApiPainelController::class, 'aplicacoes'])->name('aplicacoes');
+        Route::get('/logs', [ApiPainelController::class, 'logs'])->name('logs');
+        Route::get('/ambiente', [ApiPainelController::class, 'ambiente'])->name('ambiente');
+    });
 
     Route::get('/loja-entrega/faixas-cep', [LojaEntregaFaixaController::class, 'index'])->name('loja-entrega-faixas.index');
     Route::post('/loja-entrega/faixas-cep', [LojaEntregaFaixaController::class, 'store'])->name('loja-entrega-faixas.store');

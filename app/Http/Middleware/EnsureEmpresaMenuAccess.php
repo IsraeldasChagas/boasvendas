@@ -146,6 +146,9 @@ class EnsureEmpresaMenuAccess
         if (str_starts_with($routeName, 'empresa.configuracoes.')) {
             return 'configuracoes';
         }
+        if (str_starts_with($routeName, 'empresa.api.')) {
+            return 'api';
+        }
         if (str_starts_with($routeName, 'empresa.usuarios.')) {
             return 'usuarios';
         }

@@ -236,6 +236,16 @@ class Empresa extends Model
         return $this->hasMany(Pedido::class, 'empresa_id');
     }
 
+    public function apiTokens(): HasMany
+    {
+        return $this->hasMany(EmpresaApiToken::class, 'empresa_id');
+    }
+
+    public function apiLogs(): HasMany
+    {
+        return $this->hasMany(EmpresaApiLog::class, 'empresa_id');
+    }
+
     public function entregaFaixasCep(): HasMany
     {
         return $this->hasMany(EmpresaEntregaFaixaCep::class, 'empresa_id')->orderBy('cep_inicio');
@@ -584,6 +594,7 @@ class Empresa extends Model
             'mesas' => 'Vendas por mesa',
             'suporte' => 'Suporte',
             'configuracoes' => 'Configurações',
+            'api' => 'API (integrações)',
             'usuarios' => 'Usuários',
         ];
     }
@@ -650,6 +661,11 @@ class Empresa extends Model
             in_array('financeiro_pagar', $libs, true)
             || in_array('financeiro_visao', $libs, true)
         )) {
+            return true;
+        }
+
+        // Painel API sob Configurações: libera se api OU configuracoes estiver na lista.
+        if ($key === 'api' && in_array('configuracoes', $libs, true)) {
             return true;
         }
 

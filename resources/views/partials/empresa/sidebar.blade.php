@@ -288,10 +288,15 @@
             <i class="bi bi-truck"></i> Frete por CEP
         </a>
     @endif
-    @if ($tem('configuracoes'))
+    @if ($tem('configuracoes') || $tem('api'))
         <a class="nav-link {{ request()->routeIs('empresa.configuracoes.*') ? 'active' : '' }}" href="{{ route('empresa.configuracoes.index') }}">
             <i class="bi bi-gear"></i> Configurações
         </a>
+        @if ($tem('api') || $tem('configuracoes'))
+            <a class="nav-link ps-4 {{ request()->routeIs('empresa.api.*') ? 'active' : '' }}" href="{{ route('empresa.api.status') }}">
+                <i class="bi bi-plugin"></i> API
+            </a>
+        @endif
     @endif
     @if ($tem('usuarios'))
         <a class="nav-link {{ request()->routeIs('empresa.usuarios.*') ? 'active' : '' }}" href="{{ route('empresa.usuarios.index') }}">

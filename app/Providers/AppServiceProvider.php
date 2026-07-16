@@ -20,9 +20,11 @@ use App\Models\VeFiado;
 use App\Models\VePonto;
 use App\Models\VeRemessa;
 use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
@@ -48,6 +50,16 @@ class AppServiceProvider extends ServiceProvider
         }
 
         Paginator::useBootstrapFive();
+
+        RateLimiter::for('api', function (Request $request) {
+            $perMinute = max(1, (int) config('api.rate_limit_per_minute', 60));
+            $token = $request->attributes->get(\App\Support\Api\ApiTenant::ATTR_TOKEN);
+            $key = $token instanceof \App\Models\EmpresaApiToken
+                ? 'api-token:'.$token->id
+                : 'api-ip:'.$request->ip();
+
+            return Limit::perMinute($perMinute)->by($key);
+        });
 
         Route::bind('adicional', function (string $value) {
             if (! auth()->check()) {

@@ -252,3 +252,52 @@ Artisan::command('vendaffacil:redes-teste {slug?}', function (): int {
 
     return 0;
 })->purpose('Grava Instagram/Facebook de exemplo (contas Meta) para testar ícones na vitrine — uso: php artisan vendaffacil:redes-teste [slug]');
+
+Artisan::command('vendaffacil:api-token {--empresa=} {--nome=Token API} {--env=homologacao} {--abilities=api.visualizar}', function (): int {
+    $empresaId = (int) $this->option('empresa');
+    $nome = (string) $this->option('nome');
+    $env = (string) $this->option('env');
+    $abilitiesRaw = (string) $this->option('abilities');
+
+    if ($empresaId < 1) {
+        $this->error('Informe --empresa=ID');
+
+        return 1;
+    }
+
+    $empresa = \App\Models\Empresa::query()->find($empresaId);
+    if (! $empresa) {
+        $this->error('Empresa não encontrada.');
+
+        return 1;
+    }
+
+    $envs = array_keys(\App\Models\EmpresaApiToken::environmentRotulos());
+    if (! in_array($env, $envs, true)) {
+        $this->error('Ambiente inválido. Use: '.implode(', ', $envs));
+
+        return 1;
+    }
+
+    $abilities = array_values(array_filter(array_map('trim', explode(',', $abilitiesRaw))));
+    if ($abilities === []) {
+        $abilities = ['api.visualizar'];
+    }
+
+    $issued = \App\Models\EmpresaApiToken::issue(
+        $empresa,
+        $nome !== '' ? $nome : 'Token API',
+        $abilities,
+        $env,
+    );
+
+    $this->info('Token criado para empresa #'.$empresa->id.' ('.$empresa->nome.').');
+    $this->warn('Copie agora — o valor em texto puro não será mostrado de novo:');
+    $this->line($issued['plain']);
+    $this->line('Prefixo: '.$issued['model']->token_prefix);
+    $this->line('ID: '.$issued['model']->id);
+    $this->line('Ambiente: '.$issued['model']->environment);
+    $this->line('Abilities: '.implode(', ', $abilities));
+
+    return 0;
+})->purpose('Gera um Bearer token de API para uma empresa (texto puro exibido uma vez)');
