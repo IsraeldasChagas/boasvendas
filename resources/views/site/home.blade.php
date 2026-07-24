@@ -30,38 +30,155 @@
                     </div>
                 </div>
                 <div class="col-lg-6 bv-mockup-wrap">
-                    <div class="bv-mockup-phone">
-                        <div class="bv-mockup-notch"></div>
-                        <div class="bv-mockup-screen text-dark p-3">
-                            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-                                <strong class="small">{{ config('app.name') }}</strong>
-                                <span class="badge bg-success-subtle text-success small">Aberto</span>
-                            </div>
-                            <div class="small text-muted mb-2">Hoje</div>
-                            <div class="row g-2 mb-3">
-                                <div class="col-6">
-                                    <div class="p-2 rounded bg-primary-subtle">
-                                        <span class="text-muted small d-block">Pedidos</span>
-                                        <strong class="fs-5 text-primary">47</strong>
+                    <div class="bv-devices-stage" aria-hidden="true">
+                        {{-- Notebook --}}
+                        <div class="bv-laptop">
+                            <div class="bv-laptop-lid">
+                                <div class="bv-laptop-bezel">
+                                    <div class="bv-laptop-camera"></div>
+                                    <div class="bv-device-screens">
+                                        {{-- Tela 1: Painel empresa --}}
+                                        <div class="bv-device-screen bv-device-screen--1 text-dark">
+                                            <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                                                <strong class="small">{{ config('app.name') }} · Empresa</strong>
+                                                <span class="badge bg-success-subtle text-success" style="font-size:0.65rem">Aberto</span>
+                                            </div>
+                                            <div class="small text-muted mb-1">Painel de hoje</div>
+                                            <div class="row g-1 mb-2">
+                                                <div class="col-4">
+                                                    <div class="p-1 rounded bg-primary-subtle text-center">
+                                                        <span class="text-muted d-block" style="font-size:0.55rem">Pedidos</span>
+                                                        <strong class="text-primary" style="font-size:0.9rem">47</strong>
+                                                    </div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="p-1 rounded bg-success-subtle text-center">
+                                                        <span class="text-muted d-block" style="font-size:0.55rem">Lucro</span>
+                                                        <strong class="text-success" style="font-size:0.85rem">R$ 312</strong>
+                                                    </div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="p-1 rounded bg-warning-subtle text-center">
+                                                        <span class="text-muted d-block" style="font-size:0.55rem">Fiados</span>
+                                                        <strong class="text-warning" style="font-size:0.9rem">8</strong>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="fw-semibold mb-1" style="font-size:0.7rem">Últimos pedidos</div>
+                                            <ul class="list-unstyled mb-0" style="font-size:0.65rem">
+                                                <li class="d-flex justify-content-between py-1 border-bottom"><span>2x Combo + refri</span><span class="text-success">R$ 28</span></li>
+                                                <li class="d-flex justify-content-between py-1 border-bottom"><span>Açaí 500ml</span><span class="text-success">R$ 18</span></li>
+                                                <li class="d-flex justify-content-between py-1"><span>Fiado — Maria</span><span class="text-warning">Anotado</span></li>
+                                            </ul>
+                                        </div>
+                                        {{-- Tela 2: Delivery --}}
+                                        <div class="bv-device-screen bv-device-screen--2 text-dark">
+                                            <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                                                <strong class="small"><i class="bi bi-truck me-1"></i>Delivery</strong>
+                                                <span class="badge bg-primary-subtle text-primary" style="font-size:0.65rem">5 em rota</span>
+                                            </div>
+                                            <ul class="list-unstyled mb-0" style="font-size:0.65rem">
+                                                <li class="d-flex justify-content-between align-items-center py-1 border-bottom gap-2">
+                                                    <span><span class="fw-semibold">#104</span> · Centro</span>
+                                                    <span class="badge bg-primary-subtle text-primary">A caminho</span>
+                                                </li>
+                                                <li class="d-flex justify-content-between align-items-center py-1 border-bottom gap-2">
+                                                    <span><span class="fw-semibold">#105</span> · Jardins</span>
+                                                    <span class="badge bg-warning-subtle text-warning">Preparando</span>
+                                                </li>
+                                                <li class="d-flex justify-content-between align-items-center py-1 border-bottom gap-2">
+                                                    <span><span class="fw-semibold">#106</span> · Vila Nova</span>
+                                                    <span class="badge bg-info-subtle text-info">Saiu</span>
+                                                </li>
+                                                <li class="d-flex justify-content-between align-items-center py-1 gap-2">
+                                                    <span><span class="fw-semibold">#103</span> · Bairro Alto</span>
+                                                    <span class="badge bg-success-subtle text-success">Entregue</span>
+                                                </li>
+                                            </ul>
+                                            <div class="mt-2 p-2 rounded bg-light" style="font-size:0.6rem">
+                                                <i class="bi bi-geo-alt-fill text-danger me-1"></i>Mapa e status em tempo real
+                                            </div>
+                                        </div>
+                                        {{-- Tela 3: Relatórios --}}
+                                        <div class="bv-device-screen bv-device-screen--3 text-dark">
+                                            <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                                                <strong class="small"><i class="bi bi-bar-chart-line me-1"></i>Relatórios</strong>
+                                                <span class="text-muted" style="font-size:0.6rem">Esta semana</span>
+                                            </div>
+                                            <div class="bv-fake-bars mb-2">
+                                                <span style="--h:45%"></span>
+                                                <span style="--h:70%"></span>
+                                                <span style="--h:55%"></span>
+                                                <span style="--h:90%"></span>
+                                                <span style="--h:65%"></span>
+                                                <span style="--h:80%"></span>
+                                                <span style="--h:50%"></span>
+                                            </div>
+                                            <div class="row g-1" style="font-size:0.6rem">
+                                                <div class="col-6"><div class="p-1 rounded bg-success-subtle"><span class="text-muted d-block">Vendas</span><strong class="text-success">R$ 4.280</strong></div></div>
+                                                <div class="col-6"><div class="p-1 rounded bg-primary-subtle"><span class="text-muted d-block">Ticket médio</span><strong class="text-primary">R$ 32</strong></div></div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-6">
-                                    <div class="p-2 rounded bg-success-subtle">
-                                        <span class="text-muted small d-block">Lucro do dia</span>
-                                        <strong class="fs-5 text-success">R$ 312</strong>
+                            </div>
+                            <div class="bv-laptop-base">
+                                <div class="bv-laptop-notch"></div>
+                            </div>
+                        </div>
+
+                        {{-- Celular --}}
+                        <div class="bv-phone-float">
+                            <div class="bv-phone-frame">
+                                <div class="bv-mockup-notch"></div>
+                                <div class="bv-device-screens bv-device-screens--phone">
+                                    <div class="bv-device-screen bv-device-screen--1 text-dark p-2">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <strong style="font-size:0.65rem">Painel</strong>
+                                            <span class="badge bg-success-subtle text-success" style="font-size:0.55rem">Online</span>
+                                        </div>
+                                        <div class="p-2 rounded bg-primary text-white mb-2" style="font-size:0.65rem">
+                                            <div class="opacity-75">Hoje</div>
+                                            <strong>R$ 312</strong>
+                                        </div>
+                                        <div class="d-grid gap-1" style="font-size:0.6rem">
+                                            <div class="p-1 rounded bg-light border">+ Novo pedido</div>
+                                            <div class="p-1 rounded bg-light border">Mesas / comandas</div>
+                                            <div class="p-1 rounded bg-light border">Caixa do dia</div>
+                                        </div>
+                                    </div>
+                                    <div class="bv-device-screen bv-device-screen--2 text-dark p-2">
+                                        <div class="fw-semibold mb-2" style="font-size:0.65rem"><i class="bi bi-bicycle me-1"></i>Entregas</div>
+                                        <div class="p-2 rounded border mb-1" style="font-size:0.58rem">
+                                            <div class="fw-semibold">#104 · João</div>
+                                            <div class="text-muted">Rua das Flores, 120</div>
+                                            <span class="badge bg-primary-subtle text-primary mt-1">A caminho</span>
+                                        </div>
+                                        <div class="p-2 rounded border" style="font-size:0.58rem">
+                                            <div class="fw-semibold">#105 · Ana</div>
+                                            <div class="text-muted">Av. Brasil, 890</div>
+                                            <span class="badge bg-warning-subtle text-warning mt-1">Preparando</span>
+                                        </div>
+                                    </div>
+                                    <div class="bv-device-screen bv-device-screen--3 text-dark p-2">
+                                        <div class="fw-semibold mb-2" style="font-size:0.65rem"><i class="bi bi-pie-chart me-1"></i>Resumo</div>
+                                        <div class="text-center py-2">
+                                            <div class="text-muted" style="font-size:0.55rem">Top produto</div>
+                                            <div class="fw-bold text-primary" style="font-size:0.75rem">Combo Família</div>
+                                            <div class="text-success" style="font-size:0.6rem">23 vendas</div>
+                                        </div>
+                                        <div class="p-2 rounded bg-success-subtle text-center" style="font-size:0.6rem">
+                                            Lucro da semana<br><strong>R$ 1.890</strong>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="small fw-semibold mb-2">Últimos pedidos</div>
-                            <ul class="list-unstyled small mb-0">
-                                <li class="d-flex justify-content-between py-2 border-bottom"><span>2x Combo + refri</span><span class="text-success">R$ 28</span></li>
-                                <li class="d-flex justify-content-between py-2 border-bottom"><span>Açaí 500ml</span><span class="text-success">R$ 18</span></li>
-                                <li class="d-flex justify-content-between py-2 border-bottom"><span>Fiado — Maria</span><span class="text-warning">Anotado</span></li>
-                                <li class="d-flex justify-content-between py-2"><span>Delivery #104</span><span class="badge bg-primary-subtle text-primary">A caminho</span></li>
-                            </ul>
-                            <div class="mt-3 pt-2 border-top d-grid">
-                                <button type="button" class="btn btn-primary btn-sm" disabled>Novo pedido</button>
-                            </div>
+                        </div>
+
+                        <div class="bv-devices-labels">
+                            <span class="bv-devices-label bv-devices-label--1"><i class="bi bi-shop me-1"></i>Empresa</span>
+                            <span class="bv-devices-label bv-devices-label--2"><i class="bi bi-truck me-1"></i>Delivery</span>
+                            <span class="bv-devices-label bv-devices-label--3"><i class="bi bi-graph-up me-1"></i>Relatórios</span>
                         </div>
                     </div>
                 </div>

@@ -1089,9 +1089,256 @@ a.vf-store-brand--outra-unidade:hover {
 }
 
 .bv-mockup-wrap {
-  perspective: 800px;
+  perspective: 1000px;
 }
 
+.bv-devices-stage {
+  position: relative;
+  max-width: 520px;
+  margin: 0 auto;
+  padding-bottom: 2.5rem;
+  min-height: 320px;
+}
+
+/* ——— Notebook ——— */
+.bv-laptop {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  transform: rotateY(-4deg) rotateX(3deg);
+  filter: drop-shadow(0 28px 40px rgba(15, 23, 42, 0.35));
+}
+
+.bv-laptop-lid {
+  background: linear-gradient(160deg, #334155, #0f172a);
+  border-radius: 0.75rem 0.75rem 0.35rem 0.35rem;
+  padding: 0.55rem 0.55rem 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.bv-laptop-bezel {
+  position: relative;
+  background: #020617;
+  border-radius: 0.35rem;
+  padding: 0.45rem 0.4rem 0.35rem;
+  overflow: hidden;
+}
+
+.bv-laptop-camera {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #475569;
+  margin: 0 auto 0.35rem;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+
+.bv-laptop-base {
+  height: 0.7rem;
+  background: linear-gradient(180deg, #64748b, #334155 40%, #1e293b);
+  border-radius: 0 0 0.55rem 0.55rem;
+  margin: 0 -4%;
+  position: relative;
+  box-shadow: 0 2px 0 #0f172a;
+}
+
+.bv-laptop-notch {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  width: 18%;
+  height: 0.28rem;
+  background: #1e293b;
+  border-radius: 0 0 0.35rem 0.35rem;
+}
+
+/* ——— Celular flutuando ——— */
+.bv-phone-float {
+  position: absolute;
+  right: 0;
+  bottom: 1.5rem;
+  z-index: 2;
+  width: 132px;
+  animation: bv-phone-bob 4.5s ease-in-out infinite;
+}
+
+.bv-phone-frame {
+  background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+  border-radius: 1.35rem;
+  padding: 0.4rem;
+  box-shadow:
+    0 18px 36px rgba(15, 23, 42, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.bv-phone-frame .bv-mockup-notch {
+  width: 48px;
+  height: 10px;
+  margin-bottom: 0.25rem;
+  border-radius: 0 0 8px 8px;
+}
+
+/* ——— Telas com transição ——— */
+.bv-device-screens {
+  position: relative;
+  height: 210px;
+  background: var(--vf-surface);
+  border-radius: 0.25rem;
+  overflow: hidden;
+}
+
+.bv-device-screens--phone {
+  height: 168px;
+  border-radius: 0.85rem;
+}
+
+.bv-device-screen {
+  position: absolute;
+  inset: 0;
+  padding: 0.55rem 0.65rem;
+  opacity: 0;
+  transform: translateY(12px) scale(0.98);
+  pointer-events: none;
+  animation: bv-screen-cycle 12s ease-in-out infinite;
+}
+
+.bv-device-screens--phone .bv-device-screen {
+  padding: 0;
+  animation-name: bv-screen-cycle-phone;
+  animation-duration: 12s;
+}
+
+.bv-device-screen--1 { animation-delay: 0s; }
+.bv-device-screen--2 { animation-delay: 4s; }
+.bv-device-screen--3 { animation-delay: 8s; }
+
+.bv-device-screens--phone .bv-device-screen--1 { animation-delay: 0.6s; }
+.bv-device-screens--phone .bv-device-screen--2 { animation-delay: 4.6s; }
+.bv-device-screens--phone .bv-device-screen--3 { animation-delay: 8.6s; }
+
+@keyframes bv-screen-cycle {
+  0%, 2% { opacity: 0; transform: translateY(14px) scale(0.97); }
+  8%, 28% { opacity: 1; transform: translateY(0) scale(1); }
+  33%, 100% { opacity: 0; transform: translateY(-10px) scale(0.98); }
+}
+
+@keyframes bv-screen-cycle-phone {
+  0%, 2% { opacity: 0; transform: translateX(12px) scale(0.97); }
+  8%, 28% { opacity: 1; transform: translateX(0) scale(1); }
+  33%, 100% { opacity: 0; transform: translateX(-10px) scale(0.98); }
+}
+
+@keyframes bv-phone-bob {
+  0%, 100% { transform: translateY(0) rotate(3deg); }
+  50% { transform: translateY(-10px) rotate(1deg); }
+}
+
+.bv-fake-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.3rem;
+  height: 72px;
+  padding: 0.25rem 0.15rem;
+}
+
+.bv-fake-bars span {
+  flex: 1;
+  height: var(--h, 50%);
+  border-radius: 0.25rem 0.25rem 0 0;
+  background: linear-gradient(180deg, #60a5fa, #2563eb 60%, #16a34a);
+  animation: bv-bar-grow 12s ease-in-out infinite;
+  transform-origin: bottom;
+}
+
+.bv-fake-bars span:nth-child(odd) { animation-delay: 0.15s; }
+.bv-fake-bars span:nth-child(3n) { animation-delay: 0.3s; }
+
+@keyframes bv-bar-grow {
+  0%, 66%, 100% { transform: scaleY(0.85); opacity: 0.75; }
+  70%, 90% { transform: scaleY(1); opacity: 1; }
+}
+
+.bv-devices-labels {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  height: 1.75rem;
+}
+
+.bv-devices-label {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  opacity: 0;
+  background: rgba(15, 23, 42, 0.55);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  animation: bv-label-cycle 12s ease-in-out infinite;
+  white-space: nowrap;
+}
+
+.bv-devices-label--1 { animation-delay: 0s; }
+.bv-devices-label--2 { animation-delay: 4s; }
+.bv-devices-label--3 { animation-delay: 8s; }
+
+@keyframes bv-label-cycle {
+  0%, 2% { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  8%, 28% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  33%, 100% { opacity: 0; transform: translateX(-50%) translateY(-4px); }
+}
+
+@media (max-width: 991.98px) {
+  .bv-laptop {
+    transform: none;
+    max-width: 360px;
+  }
+  .bv-phone-float {
+    width: 110px;
+    right: 4%;
+    bottom: 1.25rem;
+  }
+  .bv-device-screens {
+    height: 190px;
+  }
+  .bv-device-screens--phone {
+    height: 150px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bv-device-screen,
+  .bv-device-screens--phone .bv-device-screen,
+  .bv-devices-label,
+  .bv-phone-float,
+  .bv-fake-bars span {
+    animation: none !important;
+  }
+  .bv-device-screen--1,
+  .bv-devices-label--1 {
+    opacity: 1;
+    transform: none;
+  }
+  .bv-device-screen--2,
+  .bv-device-screen--3,
+  .bv-devices-label--2,
+  .bv-devices-label--3 {
+    display: none;
+  }
+}
+
+/* legado (caso ainda usado) */
 .bv-mockup-phone {
   max-width: 300px;
   margin-left: auto;
