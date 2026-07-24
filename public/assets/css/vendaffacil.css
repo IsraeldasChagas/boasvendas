@@ -1218,6 +1218,103 @@ a.vf-store-brand--outra-unidade:hover {
   }
 }
 
+/* ——— Card citação (A solução) — aurora circulando ——— */
+.bv-quote-card {
+  --bv-aurora-1: #2563eb;
+  --bv-aurora-2: #0ea5e9;
+  --bv-aurora-3: #16a34a;
+  --bv-aurora-4: #f59e0b;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: none !important;
+  background: transparent;
+  box-shadow:
+    0 10px 40px rgba(37, 99, 235, 0.12),
+    0 0 28px rgba(14, 165, 233, 0.15);
+}
+
+.bv-quote-card::before {
+  content: "";
+  position: absolute;
+  inset: -55%;
+  z-index: 0;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    transparent 48%,
+    var(--bv-aurora-1) 56%,
+    var(--bv-aurora-2) 64%,
+    #fff 70%,
+    var(--bv-aurora-3) 76%,
+    var(--bv-aurora-4) 84%,
+    transparent 92%,
+    transparent 100%
+  );
+  animation: bv-quote-aurora-spin 4s linear infinite;
+  pointer-events: none;
+  filter: blur(0.5px);
+}
+
+.bv-quote-card::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  z-index: 1;
+  border-radius: calc(var(--vf-radius) - 1px);
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(37, 99, 235, 0.06), transparent 55%),
+    var(--vf-surface);
+  pointer-events: none;
+}
+
+.bv-quote-card > * {
+  position: relative;
+  z-index: 2;
+}
+
+.bv-quote-card:hover {
+  box-shadow:
+    0 14px 48px rgba(37, 99, 235, 0.18),
+    0 0 40px rgba(14, 165, 233, 0.22),
+    0 0 56px rgba(22, 163, 74, 0.12);
+}
+
+.bv-quote-card:hover::before {
+  animation-duration: 2.2s;
+}
+
+.bv-quote-bolt {
+  display: inline-block;
+  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.55));
+  animation: bv-quote-bolt-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes bv-quote-aurora-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes bv-quote-bolt-pulse {
+  0%, 100% {
+    transform: scale(1) translateY(0);
+    filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.4));
+  }
+  50% {
+    transform: scale(1.12) translateY(-3px);
+    filter: drop-shadow(0 0 16px rgba(245, 158, 11, 0.85));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bv-quote-card::before,
+  .bv-quote-bolt {
+    animation: none;
+  }
+  .bv-quote-card::before {
+    background: linear-gradient(135deg, var(--bv-aurora-1), var(--bv-aurora-2), var(--bv-aurora-3));
+  }
+}
+
 /* ——— Cartão fidelidade (Página de Venda) ——— */
 .bv-fidelidade-card {
   background: var(--vf-surface);

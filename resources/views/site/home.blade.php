@@ -129,9 +129,9 @@
                     </ul>
                 </div>
                 <div class="col-lg-6">
-                    <div class="vf-card p-4 p-lg-5 border-primary border-opacity-25 shadow-sm">
+                    <div class="vf-card p-4 p-lg-5 bv-quote-card">
                         <div class="text-center mb-4">
-                            <i class="bi bi-lightning-charge-fill text-warning fs-1"></i>
+                            <i class="bi bi-lightning-charge-fill text-warning fs-1 bv-quote-bolt"></i>
                         </div>
                         <blockquote class="text-center mb-0">
                             <p class="fs-5 fw-semibold mb-3">“Eu só queria parar de misturar papel com WhatsApp. Hoje sei o que vendi e quem me deve — sem virar contador.”</p>
