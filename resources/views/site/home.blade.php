@@ -204,6 +204,100 @@
         </div>
     </section>
 
+    {{-- 5b. CARTÃO FIDELIDADE --}}
+    <section id="fidelidade" class="bv-landing-section py-5" style="background: linear-gradient(160deg, #eff6ff 0%, #ecfdf5 50%, #fff 100%);">
+        <div class="container">
+            <div class="vf-card bv-fidelidade-card p-4 p-lg-5 border-0 shadow-sm overflow-hidden">
+                <div class="row align-items-center g-4 g-lg-5">
+                    <div class="col-lg-5">
+                        <span class="text-primary fw-semibold text-uppercase small">Diferencial</span>
+                        <h2 class="fw-bold mt-2 mb-3">Cartão fidelidade digital</h2>
+                        <p class="text-muted mb-4">
+                            Seu cliente ganha um cartão com selos/pontos a cada compra. Você configura a meta e o prêmio —
+                            o {{ config('app.name') }} cuida do histórico e do resgate, sem papel rasgado nem caderno perdido.
+                        </p>
+
+                        <h3 class="h6 fw-bold text-uppercase text-muted mb-3">Como funciona</h3>
+                        <ol class="list-unstyled mb-0 bv-fidelidade-steps">
+                            <li class="d-flex gap-3 mb-3">
+                                <span class="bv-fidelidade-step-num">1</span>
+                                <div>
+                                    <div class="fw-semibold">Você cria o programa</div>
+                                    <div class="small text-muted">Define quantos selos valem o prêmio e o que o cliente ganha.</div>
+                                </div>
+                            </li>
+                            <li class="d-flex gap-3 mb-3">
+                                <span class="bv-fidelidade-step-num">2</span>
+                                <div>
+                                    <div class="fw-semibold">Cliente recebe o cartão</div>
+                                    <div class="small text-muted">Pelo link da loja, com código no WhatsApp para ver os selos com segurança.</div>
+                                </div>
+                            </li>
+                            <li class="d-flex gap-3 mb-3">
+                                <span class="bv-fidelidade-step-num">3</span>
+                                <div>
+                                    <div class="fw-semibold">A cada compra, você carimba</div>
+                                    <div class="small text-muted">No painel: um toque e o selo entra no cartão do cliente.</div>
+                                </div>
+                            </li>
+                            <li class="d-flex gap-3">
+                                <span class="bv-fidelidade-step-num">4</span>
+                                <div>
+                                    <div class="fw-semibold">Meta batida? Resgata o prêmio</div>
+                                    <div class="small text-muted">Histórico registrado — cliente feliz e você com controle.</div>
+                                </div>
+                            </li>
+                        </ol>
+                    </div>
+
+                    <div class="col-lg-7">
+                        <div class="row g-3">
+                            {{-- Card empresa --}}
+                            <div class="col-md-6">
+                                <div class="bv-fidelidade-side h-100 p-4 rounded-4 bg-primary text-white position-relative overflow-hidden">
+                                    <div class="bv-fidelidade-icon bv-fidelidade-icon--empresa mb-3" aria-hidden="true">
+                                        <div class="bv-fidelidade-plastic">
+                                            <i class="bi bi-shop-window"></i>
+                                            <span class="bv-fidelidade-chip"></span>
+                                            <span class="bv-fidelidade-plastic-label">EMPRESA</span>
+                                        </div>
+                                    </div>
+                                    <h3 class="h5 fw-bold mb-3">Benefícios para a empresa</h3>
+                                    <ul class="list-unstyled small mb-0">
+                                        <li class="d-flex gap-2 mb-2"><i class="bi bi-check2-circle flex-shrink-0 mt-1"></i><span>Cliente volta mais vezes para completar o cartão</span></li>
+                                        <li class="d-flex gap-2 mb-2"><i class="bi bi-check2-circle flex-shrink-0 mt-1"></i><span>Programa com regras suas — sem papel e sem esquecimento</span></li>
+                                        <li class="d-flex gap-2 mb-2"><i class="bi bi-check2-circle flex-shrink-0 mt-1"></i><span>Histórico de selos e resgates no painel</span></li>
+                                        <li class="d-flex gap-2"><i class="bi bi-check2-circle flex-shrink-0 mt-1"></i><span>Negócio mais profissional e cliente fidelizado</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            {{-- Card cliente --}}
+                            <div class="col-md-6">
+                                <div class="bv-fidelidade-side h-100 p-4 rounded-4 bg-success text-white position-relative overflow-hidden">
+                                    <div class="bv-fidelidade-icon bv-fidelidade-icon--cliente mb-3" aria-hidden="true">
+                                        <div class="bv-fidelidade-plastic">
+                                            <i class="bi bi-person-heart"></i>
+                                            <span class="bv-fidelidade-chip"></span>
+                                            <span class="bv-fidelidade-plastic-label">CLIENTE</span>
+                                        </div>
+                                    </div>
+                                    <h3 class="h5 fw-bold mb-3">Benefícios para o cliente</h3>
+                                    <ul class="list-unstyled small mb-0">
+                                        <li class="d-flex gap-2 mb-2"><i class="bi bi-check2-circle flex-shrink-0 mt-1"></i><span>Cartão digital no celular — sem plástico para esquecer</span></li>
+                                        <li class="d-flex gap-2 mb-2"><i class="bi bi-check2-circle flex-shrink-0 mt-1"></i><span>Vê os selos com código seguro no WhatsApp</span></li>
+                                        <li class="d-flex gap-2 mb-2"><i class="bi bi-check2-circle flex-shrink-0 mt-1"></i><span>Sabe exatamente quanto falta para o prêmio</span></li>
+                                        <li class="d-flex gap-2"><i class="bi bi-check2-circle flex-shrink-0 mt-1"></i><span>Sente que a compra vale a pena e volta com prazer</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     {{-- 6. MÓDULOS --}}
     <section id="modulos" class="bv-landing-section py-5 bg-white">
         <div class="container">

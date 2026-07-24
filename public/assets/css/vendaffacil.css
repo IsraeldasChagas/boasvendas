@@ -1218,6 +1218,117 @@ a.vf-store-brand--outra-unidade:hover {
   }
 }
 
+/* ——— Cartão fidelidade (Página de Venda) ——— */
+.bv-fidelidade-card {
+  background: var(--vf-surface);
+  border-radius: 1.25rem;
+}
+
+.bv-fidelidade-step-num {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  background: var(--vf-primary-soft);
+  color: var(--vf-primary);
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.bv-fidelidade-side {
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12);
+}
+
+.bv-fidelidade-icon {
+  display: flex;
+  justify-content: center;
+  perspective: 600px;
+}
+
+.bv-fidelidade-plastic {
+  width: 7.5rem;
+  height: 4.6rem;
+  border-radius: 0.65rem;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding: 0.55rem 0.7rem;
+  color: #fff;
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transform-style: preserve-3d;
+}
+
+.bv-fidelidade-icon--empresa .bv-fidelidade-plastic {
+  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #38bdf8 100%);
+  animation: bv-fid-float-empresa 3.2s ease-in-out infinite;
+}
+
+.bv-fidelidade-icon--cliente .bv-fidelidade-plastic {
+  background: linear-gradient(135deg, #14532d 0%, #16a34a 55%, #4ade80 100%);
+  animation: bv-fid-float-cliente 3.2s ease-in-out infinite;
+  animation-delay: 0.45s;
+}
+
+.bv-fidelidade-plastic > i {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.7rem;
+  font-size: 1.35rem;
+  opacity: 0.95;
+  animation: bv-fid-icon-pulse 2.4s ease-in-out infinite;
+}
+
+.bv-fidelidade-icon--cliente .bv-fidelidade-plastic > i {
+  animation-delay: 0.35s;
+}
+
+.bv-fidelidade-chip {
+  position: absolute;
+  top: 0.7rem;
+  left: 0.7rem;
+  width: 1.35rem;
+  height: 1rem;
+  border-radius: 0.2rem;
+  background: linear-gradient(135deg, #fde68a, #f59e0b 50%, #b45309);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+}
+
+.bv-fidelidade-plastic-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  opacity: 0.9;
+}
+
+@keyframes bv-fid-float-empresa {
+  0%, 100% { transform: translateY(0) rotateY(-8deg) rotateZ(-2deg); }
+  50% { transform: translateY(-10px) rotateY(8deg) rotateZ(2deg); }
+}
+
+@keyframes bv-fid-float-cliente {
+  0%, 100% { transform: translateY(0) rotateY(8deg) rotateZ(2deg); }
+  50% { transform: translateY(-10px) rotateY(-8deg) rotateZ(-2deg); }
+}
+
+@keyframes bv-fid-icon-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.12); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bv-fidelidade-icon--empresa .bv-fidelidade-plastic,
+  .bv-fidelidade-icon--cliente .bv-fidelidade-plastic,
+  .bv-fidelidade-plastic > i {
+    animation: none;
+  }
+}
+
 .bv-pricing-card {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   border: 1px solid var(--vf-border);
