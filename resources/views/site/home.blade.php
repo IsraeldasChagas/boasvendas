@@ -415,6 +415,63 @@
         </div>
     </section>
 
+    {{-- 5c. INTEGRAÇÃO IFOOD --}}
+    <section id="ifood" class="bv-landing-section py-5 bg-white">
+        <div class="container">
+            <div class="vf-card bv-ifood-card p-4 p-lg-5 border-0 shadow-sm overflow-hidden">
+                <div class="row align-items-center g-4 g-lg-5">
+                    <div class="col-lg-5 text-center text-lg-start">
+                        <span class="text-danger fw-semibold text-uppercase small">Integração</span>
+                        <h2 class="fw-bold mt-2 mb-3">Conecte o {{ config('app.name') }} ao iFood</h2>
+                        <p class="text-muted mb-4">
+                            Receba pedidos do iFood no mesmo fluxo do seu negócio: menos tela aberta,
+                            menos erro de digitação e mais tempo pra preparar e entregar.
+                        </p>
+
+                        <div class="bv-ifood-bridge d-flex align-items-center justify-content-center justify-content-lg-start gap-3 mb-2" aria-hidden="true">
+                            <div class="bv-ifood-badge bv-ifood-badge--vf">
+                                <i class="bi bi-bag-heart-fill"></i>
+                                <span>{{ config('app.name') }}</span>
+                            </div>
+                            <div class="bv-ifood-link">
+                                <span class="bv-ifood-dot"></span>
+                                <span class="bv-ifood-dot"></span>
+                                <span class="bv-ifood-dot"></span>
+                                <i class="bi bi-arrow-left-right bv-ifood-arrows"></i>
+                            </div>
+                            <div class="bv-ifood-badge bv-ifood-badge--ifood">
+                                <i class="bi bi-bag-check-fill"></i>
+                                <span>iFood</span>
+                            </div>
+                        </div>
+                        <p class="small text-muted mb-0">Pedidos, status e cardápio conversando no mesmo ritmo.</p>
+                    </div>
+
+                    <div class="col-lg-7">
+                        <div class="row g-3">
+                            @foreach ([
+                                ['icon' => 'bi-inbox', 't' => 'Pedidos em um só lugar', 'd' => 'O pedido do iFood chega organizado junto com balcão, WhatsApp e delivery próprio.'],
+                                ['icon' => 'bi-lightning-charge', 't' => 'Menos retrabalho', 'd' => 'Evita digitar de novo o que o cliente já pediu no app — menos erro e mais velocidade.'],
+                                ['icon' => 'bi-graph-up-arrow', 't' => 'Mais vendas com controle', 'd' => 'Você aproveita o alcance do iFood sem perder a visão do que vendeu no dia.'],
+                                ['icon' => 'bi-phone', 't' => 'Operação no celular', 'd' => 'Acompanhe status e preparação onde estiver — cozinha, balcão ou na rua.'],
+                            ] as $item)
+                                <div class="col-md-6">
+                                    <div class="bv-ifood-benefit h-100 p-3 rounded-3">
+                                        <div class="bv-ifood-benefit-icon mb-2">
+                                            <i class="bi {{ $item['icon'] }}"></i>
+                                        </div>
+                                        <div class="fw-bold mb-1">{{ $item['t'] }}</div>
+                                        <div class="small text-muted">{{ $item['d'] }}</div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     {{-- 6. MÓDULOS --}}
     <section id="modulos" class="bv-landing-section py-5 bg-white">
         <div class="container">
