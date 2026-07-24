@@ -14,7 +14,8 @@
                     <h1 class="display-5 fw-bold mb-3 lh-sm">Pare de perder vendas e dinheiro no seu negócio</h1>
                     <p class="lead text-white-50 mb-4">Controle seus pedidos, vendas e fiado em um único sistema simples que funciona no celular — feito para quem vende na rua, no delivery e no dia a dia.</p>
                     <div class="d-flex flex-wrap gap-3 mb-4">
-                        <a href="{{ route('publico.loja', ['slug' => 'demo']) }}" class="btn btn-light btn-lg px-4 fw-semibold shadow">Testar agora</a>
+                        @php $demoSlug = \App\Models\Empresa::slugVitrineDemo(); @endphp
+                        <a href="{{ $demoSlug ? route('publico.loja', ['slug' => $demoSlug]) : route('auth.cadastro-empresa') }}" class="btn btn-light btn-lg px-4 fw-semibold shadow">Testar agora</a>
                         <a href="{{ route('auth.cadastro-empresa') }}" class="btn btn-outline-light btn-lg px-4 fw-semibold">Começar grátis</a>
                     </div>
                     <p class="small text-white-50 mb-3">Ideal para:</p>
@@ -326,7 +327,7 @@
             <div class="bv-cta-final p-5 p-lg-5 text-center position-relative">
                 <h2 class="fw-bold mb-3 position-relative">Comece agora e organize seu negócio hoje mesmo</h2>
                 <p class="text-white-50 mb-4 col-lg-8 mx-auto position-relative">Cadastro rápido. Você pode testar com a loja demo e ver se o jeito {{ config('app.name') }} combina com o seu ritmo.</p>
-                <a href="{{ route('publico.loja', ['slug' => 'demo']) }}" class="btn btn-light btn-lg fw-bold px-5 py-3 text-uppercase position-relative shadow">Testar agora</a>
+                <a href="{{ (\App\Models\Empresa::slugVitrineDemo()) ? route('publico.loja', ['slug' => \App\Models\Empresa::slugVitrineDemo()]) : route('auth.cadastro-empresa') }}" class="btn btn-light btn-lg fw-bold px-5 py-3 text-uppercase position-relative shadow">Testar agora</a>
             </div>
         </div>
     </section>

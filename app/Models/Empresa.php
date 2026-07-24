@@ -562,6 +562,25 @@ class Empresa extends Model
         ];
     }
 
+    /**
+     * Slug da loja de demonstração, se existir e não estiver suspensa.
+     * Evita 404 nos botões "Testar agora" / "Ver loja demo" quando os dados demo
+     * ainda não foram semeados nesta base. Retorna null se não houver loja demo.
+     */
+    public static function slugVitrineDemo(): ?string
+    {
+        try {
+            $tem = static::query()
+                ->where('slug', 'demo')
+                ->where('status', '!=', 'suspensa')
+                ->exists();
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return $tem ? 'demo' : null;
+    }
+
     /** @return array<string, string> */
     public static function telasMenuEmpresaRotulos(): array
     {
