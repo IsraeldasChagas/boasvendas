@@ -16,7 +16,6 @@
                     <div class="d-flex flex-wrap gap-3 mb-4">
                         @php $demoSlug = \App\Models\Empresa::slugVitrineDemo(); @endphp
                         <a href="{{ $demoSlug ? route('publico.loja', ['slug' => $demoSlug]) : route('auth.cadastro-empresa') }}" class="btn btn-light btn-lg px-4 fw-semibold shadow">Testar agora</a>
-                        <a href="{{ route('auth.cadastro-empresa') }}" class="btn btn-outline-light btn-lg px-4 fw-semibold">Começar grátis</a>
                     </div>
                     <p class="small text-white-50 mb-3">Ideal para:</p>
                     <div class="d-flex flex-wrap gap-2">
