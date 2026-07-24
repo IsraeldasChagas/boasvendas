@@ -1143,13 +1143,23 @@ a.vf-store-brand--outra-unidade:hover {
 }
 
 .bv-pain-card {
+  border: 1px solid rgba(220, 53, 69, 0.35);
   border-left: 4px solid var(--vf-danger);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow:
+    0 0 6px rgba(220, 53, 69, 0.35),
+    0 0 16px rgba(220, 53, 69, 0.2),
+    inset 0 0 8px rgba(220, 53, 69, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .bv-pain-card:hover {
-  transform: translateX(4px);
-  box-shadow: var(--vf-shadow-lg);
+  transform: translateY(-3px);
+  border-color: rgba(220, 53, 69, 0.7);
+  box-shadow:
+    0 0 8px rgba(220, 53, 69, 0.55),
+    0 0 24px rgba(220, 53, 69, 0.4),
+    0 0 48px rgba(220, 53, 69, 0.2),
+    inset 0 0 10px rgba(220, 53, 69, 0.08);
 }
 
 .bv-pricing-card {
