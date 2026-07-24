@@ -1146,6 +1146,104 @@ a.vf-store-brand--outra-unidade:hover {
   box-shadow: var(--vf-shadow-lg);
 }
 
+/* Módulos — pega fogo nas laterais ao tocar */
+.bv-modulo-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bv-modulo-card::before,
+.bv-modulo-card::after {
+  content: "";
+  position: absolute;
+  top: -8%;
+  bottom: -8%;
+  width: 14px;
+  z-index: 0;
+  opacity: 0;
+  pointer-events: none;
+  filter: blur(1px);
+  transition: opacity 0.2s ease;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    #fef08a 8%,
+    #fbbf24 22%,
+    #f97316 42%,
+    #ef4444 62%,
+    #b91c1c 82%,
+    transparent 100%
+  );
+  box-shadow:
+    0 0 12px rgba(249, 115, 22, 0.7),
+    0 0 28px rgba(239, 68, 68, 0.45);
+}
+
+.bv-modulo-card::before {
+  left: 0;
+  border-radius: 0 60% 60% 0 / 0 40% 40% 0;
+  transform-origin: left center;
+}
+
+.bv-modulo-card::after {
+  right: 0;
+  border-radius: 60% 0 0 60% / 40% 0 0 40%;
+  transform-origin: right center;
+}
+
+.bv-modulo-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.bv-modulo-card.is-on-fire::before,
+.bv-modulo-card.is-on-fire::after,
+.bv-modulo-card:active::before,
+.bv-modulo-card:active::after {
+  opacity: 1;
+  animation: bv-fire-flicker 0.35s ease-in-out infinite alternate;
+}
+
+.bv-modulo-card.is-on-fire::after,
+.bv-modulo-card:active::after {
+  animation-delay: 0.12s;
+}
+
+.bv-modulo-card.is-on-fire {
+  box-shadow:
+    0 0 0 1px rgba(249, 115, 22, 0.35),
+    0 8px 28px rgba(239, 68, 68, 0.22),
+    inset 18px 0 24px -16px rgba(249, 115, 22, 0.35),
+    inset -18px 0 24px -16px rgba(239, 68, 68, 0.35);
+  transform: translateY(-2px);
+}
+
+@keyframes bv-fire-flicker {
+  0% {
+    transform: scaleY(0.92) scaleX(0.85);
+    filter: blur(0.5px) brightness(1.05);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scaleY(1.08) scaleX(1.15);
+    filter: blur(1.5px) brightness(1.35);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bv-modulo-card.is-on-fire::before,
+  .bv-modulo-card.is-on-fire::after,
+  .bv-modulo-card:active::before,
+  .bv-modulo-card:active::after {
+    animation: none;
+  }
+}
+
 .vf-loja-adicional-card {
   border: 1px solid rgba(0, 0, 0, 0.06);
 }
