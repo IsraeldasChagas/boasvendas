@@ -433,7 +433,7 @@
                     ['icon' => 'bi-bar-chart-line', 't' => 'Relatórios', 'd' => 'Resumo do dia e do que mais gira no seu negócio.'],
                 ] as $m)
                     <div class="col-md-6 col-lg-4">
-                        <div class="vf-card p-4 h-100 vf-product-card bv-modulo-card" role="button" tabindex="0" aria-label="{{ $m['t'] }}">
+                        <div class="vf-card p-4 h-100 vf-product-card bv-modulo-card">
                             <div class="icon-wrap bg-success-subtle text-success rounded-3 d-inline-flex p-3 mb-3">
                                 <i class="bi {{ $m['icon'] }} fs-4"></i>
                             </div>

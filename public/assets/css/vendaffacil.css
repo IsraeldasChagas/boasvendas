@@ -1146,101 +1146,100 @@ a.vf-store-brand--outra-unidade:hover {
   box-shadow: var(--vf-shadow-lg);
 }
 
-/* Módulos — pega fogo nas laterais ao tocar */
+/* Módulos — chamas por trás do card só no hover do mouse */
+#modulos .row > [class*="col-"] {
+  overflow: visible;
+}
+
 .bv-modulo-card {
   position: relative;
+  z-index: 1;
   isolation: isolate;
-  overflow: hidden;
-  cursor: pointer;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
+  overflow: visible;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .bv-modulo-card::before,
 .bv-modulo-card::after {
   content: "";
   position: absolute;
-  top: -8%;
-  bottom: -8%;
-  width: 14px;
-  z-index: 0;
+  z-index: -1;
+  bottom: -6px;
+  width: 42%;
+  height: calc(100% + 28px);
   opacity: 0;
   pointer-events: none;
-  filter: blur(1px);
-  transition: opacity 0.2s ease;
-  background: linear-gradient(
-    180deg,
-    transparent 0%,
-    #fef08a 8%,
-    #fbbf24 22%,
-    #f97316 42%,
-    #ef4444 62%,
-    #b91c1c 82%,
-    transparent 100%
-  );
+  border-radius: 40% 40% 20% 20% / 55% 55% 25% 25%;
+  background:
+    radial-gradient(ellipse 70% 40% at 50% 100%, rgba(254, 240, 138, 0.95) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 55% at 40% 70%, rgba(251, 146, 60, 0.9) 0%, transparent 60%),
+    radial-gradient(ellipse 75% 50% at 65% 45%, rgba(239, 68, 68, 0.85) 0%, transparent 55%),
+    linear-gradient(180deg, transparent 0%, #fbbf24 35%, #f97316 60%, #dc2626 85%, transparent 100%);
+  filter: blur(4px);
   box-shadow:
-    0 0 12px rgba(249, 115, 22, 0.7),
-    0 0 28px rgba(239, 68, 68, 0.45);
+    0 0 20px rgba(249, 115, 22, 0.55),
+    0 0 40px rgba(220, 38, 38, 0.35);
+  transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
 .bv-modulo-card::before {
-  left: 0;
-  border-radius: 0 60% 60% 0 / 0 40% 40% 0;
-  transform-origin: left center;
+  left: -10%;
+  transform: translateY(12px) scale(0.85) rotate(-4deg);
 }
 
 .bv-modulo-card::after {
-  right: 0;
-  border-radius: 60% 0 0 60% / 40% 0 0 40%;
-  transform-origin: right center;
+  right: -10%;
+  transform: translateY(12px) scale(0.85) rotate(4deg);
 }
 
-.bv-modulo-card > * {
-  position: relative;
-  z-index: 1;
+@media (hover: hover) and (pointer: fine) {
+  .bv-modulo-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--vf-shadow-lg);
+  }
+
+  .bv-modulo-card:hover::before,
+  .bv-modulo-card:hover::after {
+    opacity: 1;
+    animation: bv-fire-rise 0.55s ease-out forwards, bv-fire-flicker 0.4s ease-in-out 0.55s infinite alternate;
+  }
+
+  .bv-modulo-card:hover::after {
+    animation-delay: 0s, 0.7s;
+  }
 }
 
-.bv-modulo-card.is-on-fire::before,
-.bv-modulo-card.is-on-fire::after,
-.bv-modulo-card:active::before,
-.bv-modulo-card:active::after {
-  opacity: 1;
-  animation: bv-fire-flicker 0.35s ease-in-out infinite alternate;
-}
-
-.bv-modulo-card.is-on-fire::after,
-.bv-modulo-card:active::after {
-  animation-delay: 0.12s;
-}
-
-.bv-modulo-card.is-on-fire {
-  box-shadow:
-    0 0 0 1px rgba(249, 115, 22, 0.35),
-    0 8px 28px rgba(239, 68, 68, 0.22),
-    inset 18px 0 24px -16px rgba(249, 115, 22, 0.35),
-    inset -18px 0 24px -16px rgba(239, 68, 68, 0.35);
-  transform: translateY(-2px);
+@keyframes bv-fire-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.75);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-4px) scale(1);
+  }
 }
 
 @keyframes bv-fire-flicker {
   0% {
-    transform: scaleY(0.92) scaleX(0.85);
-    filter: blur(0.5px) brightness(1.05);
-    opacity: 0.85;
+    filter: blur(3px) brightness(1);
+    transform: translateY(-2px) scale(1) rotate(var(--bv-fire-rot, -3deg));
   }
   100% {
-    transform: scaleY(1.08) scaleX(1.15);
-    filter: blur(1.5px) brightness(1.35);
-    opacity: 1;
+    filter: blur(5px) brightness(1.25);
+    transform: translateY(-8px) scale(1.06) rotate(var(--bv-fire-rot, 3deg));
   }
 }
 
+.bv-modulo-card::before { --bv-fire-rot: -4deg; }
+.bv-modulo-card::after { --bv-fire-rot: 4deg; }
+
 @media (prefers-reduced-motion: reduce) {
-  .bv-modulo-card.is-on-fire::before,
-  .bv-modulo-card.is-on-fire::after,
-  .bv-modulo-card:active::before,
-  .bv-modulo-card:active::after {
+  .bv-modulo-card:hover::before,
+  .bv-modulo-card:hover::after {
     animation: none;
+    opacity: 0.85;
+    transform: translateY(-2px) scale(1);
   }
 }
 

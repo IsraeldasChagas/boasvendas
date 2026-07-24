@@ -87,46 +87,15 @@
     });
   }
 
-  function initModuloFireCards() {
-    var cards = document.querySelectorAll('.bv-modulo-card');
-    if (!cards.length) return;
-
-    cards.forEach(function (card) {
-      var timer = null;
-
-      function ignite() {
-        card.classList.add('is-on-fire');
-        if (timer) clearTimeout(timer);
-        timer = setTimeout(function () {
-          card.classList.remove('is-on-fire');
-        }, 2200);
-      }
-
-      card.addEventListener('pointerdown', function (e) {
-        if (e.pointerType === 'mouse' && e.button !== 0) return;
-        ignite();
-      });
-
-      card.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          ignite();
-        }
-      });
-    });
-  }
-
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function () {
       initSidebar();
       initSidebarCollapse();
       initSubmenus();
-      initModuloFireCards();
     });
   } else {
     initSidebar();
     initSidebarCollapse();
     initSubmenus();
-    initModuloFireCards();
   }
 })();
