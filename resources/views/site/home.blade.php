@@ -9,7 +9,7 @@
             <div class="row align-items-center g-5">
                 <div class="col-lg-6">
                     <div class="d-flex flex-wrap gap-2 mb-3">
-                        <span class="badge bg-white bg-opacity-20 text-white border border-white border-opacity-25">Para quem vende de verdade</span>
+                        <span class="badge bg-white text-primary border-0 px-3 py-2">Para quem vende de verdade</span>
                     </div>
                     <h1 class="display-5 fw-bold mb-3 lh-sm">Pare de perder vendas e dinheiro no seu negócio</h1>
                     <p class="lead text-white-50 mb-4">Controle seus pedidos, vendas e fiado em um único sistema simples que funciona no celular — feito para quem vende na rua, no delivery e no dia a dia.</p>
