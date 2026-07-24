@@ -2,6 +2,36 @@
 
 @section('title', $produto->nome.' — '.$empresa->nome)
 
+@push('head_meta')
+    @php
+        $vfShareProdutoUrl = route('publico.produto', ['slug' => $slug, 'produto_id' => $produto->id]);
+        // Card limpo: nome + preço (sem descrição longa / sem repetir a loja).
+        $vfOgTitle = $produto->nome;
+        $vfOgDesc = 'R$ '.number_format((float) $produto->preco, 2, ',', '.');
+        $vfOgImage = $produto->urlFoto();
+        if (! $vfOgImage) {
+            $logoRel = $empresa->urlLogo();
+            $vfOgImage = $logoRel ? url($logoRel) : null;
+        }
+    @endphp
+    <meta property="og:title" content="{{ $vfOgTitle }}">
+    <meta property="og:description" content="{{ $vfOgDesc }}">
+    <meta property="og:type" content="product">
+    <meta property="og:url" content="{{ $vfShareProdutoUrl }}">
+    <meta property="og:site_name" content="{{ $empresa->nome }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $vfOgTitle }}">
+    <meta name="twitter:description" content="{{ $vfOgDesc }}">
+    @if ($vfOgImage)
+        <meta property="og:image" content="{{ $vfOgImage }}">
+        <meta property="og:image:secure_url" content="{{ $vfOgImage }}">
+        <meta property="og:image:alt" content="{{ $produto->nome }}">
+        <meta name="twitter:image" content="{{ $vfOgImage }}">
+        <link rel="image_src" href="{{ $vfOgImage }}">
+    @endif
+    <meta name="description" content="{{ $vfOgTitle }} · {{ $vfOgDesc }}">
+@endpush
+
 @section('content')
     <div class="container">
         <nav aria-label="breadcrumb" class="mb-3">
@@ -39,19 +69,18 @@
                     <h1 class="h3 fw-bold mb-0">{{ $produto->nome }}</h1>
                     @php
                         $vfShareProdutoUrl = route('publico.produto', ['slug' => $slug, 'produto_id' => $produto->id]);
-                        $vfWaTexto = $produto->nome.' — '.$empresa->nome."\n".$vfShareProdutoUrl;
-                        $vfWaHref = 'https://wa.me/?text='.rawurlencode($vfWaTexto);
                         $vfFbHref = 'https://www.facebook.com/sharer/sharer.php?u='.rawurlencode($vfShareProdutoUrl);
                     @endphp
                     <div class="vf-produto-share-bloco d-flex flex-nowrap align-items-center justify-content-between justify-content-md-end gap-2 gap-md-3 pt-1 pt-md-0 align-self-stretch w-100 w-md-auto overflow-x-auto">
                         <span id="vf-share-produto-legenda" class="fw-bold mb-0 text-body lh-sm flex-shrink-0">Compartilhar</span>
                         <div class="vf-produto-share d-flex flex-wrap align-items-center justify-content-between justify-content-md-end gap-2 gap-md-3 flex-grow-1 flex-md-grow-0" role="group" aria-labelledby="vf-share-produto-legenda">
-                        <a href="{{ $vfWaHref }}" target="_blank" rel="noopener noreferrer"
-                           class="btn btn-success vf-produto-share__btn rounded-3"
+                        <button type="button"
+                           class="btn btn-success vf-produto-share__btn vf-share-whatsapp rounded-3"
+                           data-share-url="{{ $vfShareProdutoUrl }}"
                            title="WhatsApp"
                            aria-label="Compartilhar no WhatsApp">
                             <i class="bi bi-whatsapp vf-produto-share__ico" aria-hidden="true"></i><span class="vf-produto-share__label ms-1">WhatsApp</span>
-                        </a>
+                        </button>
                         <a href="{{ $vfFbHref }}" target="_blank" rel="noopener noreferrer"
                            class="btn btn-primary vf-produto-share__btn rounded-3"
                            title="Facebook"
@@ -669,6 +698,26 @@
     @push('scripts')
         <script>
             (function () {
+                var btnWa = document.querySelector('.vf-share-whatsapp');
+                if (btnWa) {
+                    btnWa.addEventListener('click', function () {
+                        var url = btnWa.getAttribute('data-share-url');
+                        if (!url) return;
+                        // Só a URL — sem texto. O WhatsApp monta o card (imagem + nome + preço).
+                        function abrirWa() {
+                            window.open('https://wa.me/?text=' + encodeURIComponent(url), '_blank', 'noopener,noreferrer');
+                        }
+                        if (typeof navigator.share === 'function') {
+                            navigator.share({ url: url }).then(function () {}).catch(function (err) {
+                                if (err && err.name === 'AbortError') return;
+                                abrirWa();
+                            });
+                            return;
+                        }
+                        abrirWa();
+                    });
+                }
+
                 var btn = document.querySelector('.vf-share-instagram');
                 if (!btn) return;
                 btn.addEventListener('click', function () {

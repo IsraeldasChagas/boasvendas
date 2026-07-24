@@ -29,6 +29,6 @@
             <i class="bi bi-headset"></i> Suporte
         </a>
         <hr class="border-secondary opacity-25 mx-2">
-        <a class="nav-link" href="{{ route('site.home') }}"><i class="bi bi-house"></i> Site público</a>
+        <a class="nav-link" href="{{ route('site.home') }}"><i class="bi bi-house"></i> Página de Venda</a>
     </nav>
 </aside>
