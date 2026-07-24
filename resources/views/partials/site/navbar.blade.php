@@ -8,9 +8,9 @@
         </button>
         <div class="collapse navbar-collapse" id="vfSiteNav">
             <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
-                <li class="nav-item"><a class="nav-link" href="{{ route('site.planos') }}">Planos</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ route('site.sobre') }}">Sobre</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ route('site.contato') }}">Contato</a></li>
+                <li class="nav-item"><a class="nav-link vf-nav-neon" href="{{ route('site.planos') }}">Planos</a></li>
+                <li class="nav-item"><a class="nav-link vf-nav-neon" href="{{ route('site.sobre') }}">Sobre</a></li>
+                <li class="nav-item"><a class="nav-link vf-nav-neon" href="{{ route('site.contato') }}">Contato</a></li>
                 @php $demoSlugNav = \App\Models\Empresa::slugVitrineDemo(); @endphp
                 @if ($demoSlugNav)
                     <li class="nav-item"><a class="nav-link" href="{{ route('publico.loja', ['slug' => $demoSlugNav]) }}">Ver loja demo</a></li>

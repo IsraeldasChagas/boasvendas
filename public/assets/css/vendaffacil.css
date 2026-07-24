@@ -35,6 +35,81 @@ body.vf-body {
   color: #fff;
 }
 
+/* Navbar — Planos / Sobre / Contato: neon no hover */
+.navbar .nav-link.vf-nav-neon {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+  overflow: hidden;
+  color: #1e3a8a;
+  font-weight: 600;
+  padding: 0.45rem 1rem !important;
+  border-radius: 999px;
+  background: transparent;
+  transition: color 0.2s ease, text-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.navbar .nav-link.vf-nav-neon::before {
+  content: "";
+  position: absolute;
+  inset: -120%;
+  z-index: -2;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    transparent 55%,
+    #2563eb 62%,
+    #0ea5e9 70%,
+    #fff 74%,
+    #16a34a 80%,
+    #f59e0b 88%,
+    transparent 94%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.navbar .nav-link.vf-nav-neon::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  z-index: -1;
+  border-radius: inherit;
+  background: #fff;
+  pointer-events: none;
+}
+
+.navbar .nav-link.vf-nav-neon:hover,
+.navbar .nav-link.vf-nav-neon:focus-visible {
+  color: #1d4ed8;
+  text-shadow:
+    0 0 10px rgba(37, 99, 235, 0.65),
+    0 0 18px rgba(14, 165, 233, 0.45);
+  background-color: rgba(37, 99, 235, 0.06);
+}
+
+.navbar .nav-link.vf-nav-neon:hover::before,
+.navbar .nav-link.vf-nav-neon:focus-visible::before {
+  opacity: 1;
+  animation: vf-nav-neon-spin 1.5s linear infinite;
+}
+
+@keyframes vf-nav-neon-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navbar .nav-link.vf-nav-neon:hover::before,
+  .navbar .nav-link.vf-nav-neon:focus-visible::before {
+    animation: none;
+    background: linear-gradient(90deg, #2563eb, #0ea5e9, #16a34a);
+    inset: 0;
+    opacity: 1;
+  }
+}
+
 .vf-app-wrapper {
   display: flex;
   min-height: 100vh;
