@@ -3,6 +3,9 @@
         <button type="button" class="btn btn-light btn-sm d-lg-none border" data-vf-sidebar-toggle aria-label="Menu">
             <i class="bi bi-list"></i>
         </button>
+        <button type="button" class="btn btn-light btn-sm d-none d-lg-inline-flex border" data-vf-sidebar-collapse-toggle aria-label="Recolher menu" title="Recolher menu">
+            <i class="bi bi-chevron-left"></i>
+        </button>
         <h1 class="h5 mb-0 text-truncate">{{ $title }}</h1>
     </div>
     <div class="d-flex align-items-center gap-2">
