@@ -14,8 +14,13 @@
             <h3 class="h6 fw-bold mb-0"><i class="bi bi-receipt-cutoff me-1 text-primary"></i>Fiscal (nota)</h3>
             <span class="badge text-bg-light border">Opcional — só para emissão</span>
         </div>
+
+        @include('partials.empresa.fiscal-ajuda-guia', [
+            'linkConfigFiscal' => route('empresa.fiscal.configuracoes.edit'),
+        ])
+
         <p class="small text-muted mb-3">
-            O vendedor de rua pode deixar no automático: escolha o <strong>tipo</strong> e herde os padrões da empresa.
+            Escolha o <strong>tipo</strong> e herde os padrões da empresa.
             Detalhes (NCM, CFOP…) ficam em “Avançado”.
             <a href="{{ route('empresa.fiscal.configuracoes.edit') }}">Configurar padrões fiscais</a>
         </p>

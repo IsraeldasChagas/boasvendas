@@ -9,13 +9,15 @@
     ]])
 
     <h2 class="h4 fw-bold mb-3">Configurações fiscais</h2>
-    <p class="text-muted small mb-4">Parâmetros globais da loja. Integrações reais (Focus, NFE.io, etc.) serão ligadas nos drivers sem alterar esta tela.</p>
+    <p class="text-muted small mb-3">Parâmetros globais da loja. Integrações reais (Focus, NFE.io, etc.) serão ligadas nos drivers sem alterar esta tela.</p>
+
+    @include('partials.empresa.fiscal-ajuda-guia')
 
     @if (session('status'))
         <div class="alert alert-success alert-dismissible fade show">{{ session('status') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
     @endif
 
-    <div class="vf-card p-4" style="max-width: 40rem;">
+    <div class="vf-card p-4" style="max-width: 42rem;">
         <form action="{{ route('empresa.fiscal.configuracoes.update') }}" method="post">
             @csrf
             @method('PUT')
@@ -71,7 +73,14 @@
 
             <hr class="my-4">
             <h3 class="h6 fw-bold mb-2">Padrões para produtos</h3>
-            <p class="small text-muted mb-3">Usados quando o produto marca “Usar padrões fiscais da empresa”. O vendedor só escolhe o tipo (próprio / revenda); o resto herda daqui.</p>
+            <p class="small text-muted mb-2">
+                Preencha <strong>uma vez</strong> com o contador. No produto, o vendedor só escolhe o tipo (próprio / revenda) e marca “Usar padrões”.
+            </p>
+            <div class="alert alert-light border small mb-3 py-2">
+                <strong>Dica:</strong> NCM e CSOSN vêm do contador / tabela da Receita.
+                Origem quase sempre <code>0</code> (nacional). Unidade costuma ser <code>UN</code>.
+                CFOP tipico no estado: produção <code>5101</code>, revenda <code>5102</code>.
+            </div>
             <div class="row g-3 mb-4">
                 <div class="col-md-6">
                     <label class="form-label small" for="padrao_ncm">NCM padrão</label>
