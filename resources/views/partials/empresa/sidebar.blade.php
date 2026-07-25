@@ -51,7 +51,7 @@
             <i class="bi bi-boxes"></i> Estoque
         </a>
         <a class="nav-link {{ request()->routeIs('empresa.insumos.*') ? 'active' : '' }}" href="{{ route('empresa.insumos.index') }}">
-            <i class="bi bi-basket"></i> Insumos / ficha técnica
+            <i class="bi bi-basket"></i> Insumos
         </a>
         <a class="nav-link {{ request()->routeIs('empresa.produtos.*') ? 'active' : '' }}" href="{{ route('empresa.produtos.index') }}">
             <i class="bi bi-box-seam"></i> Produtos

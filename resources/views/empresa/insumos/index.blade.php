@@ -15,6 +15,13 @@
         <a href="{{ route('empresa.insumos.create') }}" class="btn btn-primary btn-sm">Novo insumo</a>
     </div>
 
+    <div class="alert alert-info small">
+        <strong>Ficha técnica (receita do prato)</strong> não fica aqui.
+        Cadastre os ingredientes nesta tela e depois vá em
+        <a href="{{ route('empresa.estoque.index') }}" class="alert-link">Estoque</a>
+        → botão <strong>Ficha técnica</strong> do produto (açaí, prato, etc.) para montar a receita, quantidades e modo de preparo.
+    </div>
+
     @if (! empty($erroInsumos))
         <div class="alert alert-danger">
             <strong>Erro ao carregar insumos:</strong>

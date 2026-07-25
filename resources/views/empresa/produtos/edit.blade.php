@@ -61,6 +61,8 @@
                     <input type="number" class="form-control" id="estoque" value="{{ $produto->estoque }}" readonly disabled>
                     <div class="form-text">
                         <a href="{{ route('empresa.estoque.produto', $produto) }}">Repor / ajustar com histórico</a>
+                        ·
+                        <a href="{{ route('empresa.estoque.ficha', $produto) }}">Ficha técnica (receita)</a>
                     </div>
                     <div class="form-check form-switch mt-1">
                         <input type="hidden" name="controla_estoque" value="0">

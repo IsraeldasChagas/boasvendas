@@ -10,7 +10,9 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <div>
             <h2 class="h4 fw-bold mb-1">Estoque</h2>
-            <p class="small text-muted mb-0">Saldo por produto. As vendas baixam automaticamente (PDV, loja, mesas e venda externa).</p>
+            <p class="small text-muted mb-0">
+                Saldo por produto. Use <strong>Ficha técnica</strong> em cada linha para montar a receita (ingredientes, quantidades e modo de preparo).
+            </p>
         </div>
         @if ($baixoCount > 0)
             <a href="{{ route('empresa.estoque.index', ['filtro' => 'baixo']) }}" class="btn btn-warning btn-sm">
