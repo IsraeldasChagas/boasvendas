@@ -139,13 +139,13 @@ class Produto extends Model
 
     public function temFichaTecnica(): bool
     {
-        if (! Schema::hasTable('produto_ficha_itens')) {
+        try {
+            return $this->relationLoaded('fichaTecnica')
+                ? $this->fichaTecnica->isNotEmpty()
+                : $this->fichaTecnica()->exists();
+        } catch (\Throwable) {
             return false;
         }
-
-        return $this->relationLoaded('fichaTecnica')
-            ? $this->fichaTecnica->isNotEmpty()
-            : $this->fichaTecnica()->exists();
     }
 
     /** Porções que a ficha rende por produção (default 1). */

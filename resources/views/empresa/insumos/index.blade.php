@@ -15,6 +15,14 @@
         <a href="{{ route('empresa.insumos.create') }}" class="btn btn-primary btn-sm">Novo insumo</a>
     </div>
 
+    @if (! empty($erroInsumos))
+        <div class="alert alert-danger">
+            <strong>Erro ao carregar insumos:</strong>
+            <code class="small">{{ $erroInsumos }}</code>
+            <div class="small mt-2 mb-0">No servidor rode: <code>php artisan migrate --force</code> e depois <code>php artisan optimize:clear</code>.</div>
+        </div>
+    @endif
+
     @if (session('status'))
         <div class="alert alert-success alert-dismissible fade show">{{ session('status') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
     @endif

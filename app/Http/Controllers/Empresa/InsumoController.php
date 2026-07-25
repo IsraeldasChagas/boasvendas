@@ -37,16 +37,19 @@ class InsumoController extends Controller
         } catch (\Throwable $e) {
             report($e);
 
-            return redirect()->route('empresa.dashboard')->with(
-                'warning',
-                'Não foi possível abrir os insumos. Confira se a tabela existe (php artisan migrate) e o log em storage/logs/laravel.log.'
-            );
+            return view('empresa.insumos.index', [
+                'empresa' => $empresa,
+                'insumos' => collect(),
+                'abaixoMinimo' => 0,
+                'erroInsumos' => $e->getMessage(),
+            ]);
         }
 
         return view('empresa.insumos.index', [
             'empresa' => $empresa,
             'insumos' => $insumos,
             'abaixoMinimo' => $insumos->filter(fn (Insumo $i) => $i->abaixoDoMinimo())->count(),
+            'erroInsumos' => null,
         ]);
     }
 

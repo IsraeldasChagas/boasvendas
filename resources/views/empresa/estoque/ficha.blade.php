@@ -38,6 +38,13 @@
     @if (session('warning'))
         <div class="alert alert-warning alert-dismissible fade show">{{ session('warning') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
     @endif
+    @if (! empty($erroFicha))
+        <div class="alert alert-danger">
+            <strong>Erro ao carregar a ficha técnica:</strong>
+            <code class="small">{{ $erroFicha }}</code>
+            <div class="small mt-2 mb-0">No servidor: <code>php artisan migrate --force</code> e <code>php artisan optimize:clear</code>.</div>
+        </div>
+    @endif
     @if ($errors->any())
         <div class="alert alert-danger"><ul class="mb-0 small">@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>
     @endif

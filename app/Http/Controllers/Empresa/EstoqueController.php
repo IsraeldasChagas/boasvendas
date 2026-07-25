@@ -81,7 +81,6 @@ class EstoqueController extends Controller
     {
         $empresa = $this->autoriza($request, $produto);
 
-        // Em alguns hostings Schema::hasTable falha; a query abaixo é a fonte da verdade.
         try {
             $produto->load('fichaTecnica.insumo');
             $insumosDisponiveis = Insumo::query()
@@ -92,8 +91,15 @@ class EstoqueController extends Controller
         } catch (\Throwable $e) {
             report($e);
 
-            return redirect()->route('empresa.estoque.produto', $produto)
-                ->with('warning', 'Não foi possível abrir a ficha técnica. Confira migrate e o log.');
+            return view('empresa.estoque.ficha', [
+                'empresa' => $empresa,
+                'produto' => $produto,
+                'ficha' => collect(),
+                'insumosDisponiveis' => collect(),
+                'porcoesPossiveis' => null,
+                'insumoLimitante' => null,
+                'erroFicha' => $e->getMessage(),
+            ]);
         }
 
         return view('empresa.estoque.ficha', [
@@ -103,6 +109,7 @@ class EstoqueController extends Controller
             'insumosDisponiveis' => $insumosDisponiveis,
             'porcoesPossiveis' => $produto->porcoesPossiveisPelaFicha(),
             'insumoLimitante' => $produto->insumoLimitanteDaFicha(),
+            'erroFicha' => null,
         ]);
     }
 
