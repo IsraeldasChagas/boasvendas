@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Empresa;
 
+use App\Enums\Estoque\EstoqueMovimentoTipo;
 use App\Http\Controllers\Controller;
 use App\Models\Empresa;
 use App\Models\Produto;
+use App\Services\Estoque\EstoqueService;
 use App\Models\VeAcerto;
 use App\Models\VeFiado;
 use App\Models\VePonto;
@@ -300,8 +302,10 @@ class VendaExternaController extends Controller
         [$data, $entregaAcerto] = $this->validatedEntregaForm($request, $empresa->id);
         $data['empresa_id'] = $empresa->id;
 
-        DB::transaction(function () use ($data, $entregaAcerto, $empresa) {
+        $userId = $request->user()?->id;
+        DB::transaction(function () use ($data, $entregaAcerto, $empresa, $userId) {
             $remessa = VeRemessa::query()->create($data);
+            $this->baixarEstoqueRemessa($remessa, $userId);
             $this->aplicarAcertoNaEntrega($remessa, $entregaAcerto, $empresa->id);
         });
 
@@ -354,9 +358,15 @@ class VendaExternaController extends Controller
 
         [$data, $entregaAcerto] = $this->validatedEntregaForm($request, $empresa->id);
 
-        DB::transaction(function () use ($veRemessa, $data, $entregaAcerto, $empresa) {
+        $userId = $request->user()?->id;
+        DB::transaction(function () use ($veRemessa, $data, $entregaAcerto, $empresa, $userId) {
+            $produtoAntes = $veRemessa->produto_id !== null ? (int) $veRemessa->produto_id : null;
+            $qtdAntes = max(0, (int) ($veRemessa->quantidade ?? 0));
+
             $veRemessa->update($data);
             $veRemessa->refresh();
+
+            $this->ajustarEstoqueRemessaEditada($veRemessa, $produtoAntes, $qtdAntes, $userId);
             $this->aplicarAcertoNaEntrega($veRemessa, $entregaAcerto, $empresa->id);
         });
 
@@ -370,7 +380,21 @@ class VendaExternaController extends Controller
             abort(403);
         }
 
-        $veRemessa->delete();
+        $userId = $request->user()?->id;
+        DB::transaction(function () use ($veRemessa, $userId) {
+            // Devolve ao estoque só se a remessa ainda não foi acertada (mercadoria volta).
+            if ($this->estoqueVeDisponivel() && $veRemessa->produto_id !== null && ! $veRemessa->estaAcertada()) {
+                app(EstoqueService::class)->devolver(
+                    (int) $veRemessa->produto_id,
+                    max(0, (int) ($veRemessa->quantidade ?? 0)),
+                    EstoqueMovimentoTipo::AcertoVe,
+                    null,
+                    'Remessa #'.$veRemessa->id.' excluída — mercadoria devolvida',
+                    $userId,
+                );
+            }
+            $veRemessa->delete();
+        });
 
         return redirect()->route('empresa.venda-externa.remessas.index')->with('status', 'Entrega excluída.');
     }
@@ -423,6 +447,101 @@ class VendaExternaController extends Controller
         }
 
         return [$validated, $entregaAcerto];
+    }
+
+    /** Módulo de movimentos disponível e remessas com produto/quantidade. */
+    private function estoqueVeDisponivel(): bool
+    {
+        return Schema::hasTable('estoque_movimentos')
+            && Schema::hasColumn('ve_remessas', 'produto_id')
+            && Schema::hasColumn('ve_remessas', 'quantidade');
+    }
+
+    /** Remessa criada = mercadoria saiu da loja: baixa no estoque. */
+    private function baixarEstoqueRemessa(VeRemessa $remessa, ?int $userId): void
+    {
+        if (! $this->estoqueVeDisponivel() || $remessa->produto_id === null) {
+            return;
+        }
+
+        app(EstoqueService::class)->baixar(
+            (int) $remessa->produto_id,
+            max(0, (int) ($remessa->quantidade ?? 0)),
+            EstoqueMovimentoTipo::RemessaVe,
+            $remessa,
+            'Remessa #'.$remessa->id.' para venda externa',
+            $userId,
+        );
+    }
+
+    /** Edição de remessa: devolve o que saiu antes e baixa a nova configuração. */
+    private function ajustarEstoqueRemessaEditada(VeRemessa $remessa, ?int $produtoAntes, int $qtdAntes, ?int $userId): void
+    {
+        if (! $this->estoqueVeDisponivel()) {
+            return;
+        }
+
+        $produtoDepois = $remessa->produto_id !== null ? (int) $remessa->produto_id : null;
+        $qtdDepois = max(0, (int) ($remessa->quantidade ?? 0));
+
+        if ($produtoAntes === $produtoDepois && $qtdAntes === $qtdDepois) {
+            return;
+        }
+
+        $estoque = app(EstoqueService::class);
+
+        if ($produtoAntes !== null && $qtdAntes > 0) {
+            $estoque->devolver(
+                $produtoAntes,
+                $qtdAntes,
+                EstoqueMovimentoTipo::RemessaVe,
+                $remessa,
+                'Remessa #'.$remessa->id.' editada — estorno da saída anterior',
+                $userId,
+            );
+        }
+
+        if ($produtoDepois !== null && $qtdDepois > 0) {
+            $estoque->baixar(
+                $produtoDepois,
+                $qtdDepois,
+                EstoqueMovimentoTipo::RemessaVe,
+                $remessa,
+                'Remessa #'.$remessa->id.' editada — nova saída',
+                $userId,
+            );
+        }
+    }
+
+    /** Acerto concluído: o que não foi vendido volta ao estoque da loja. */
+    private function devolverNaoVendidoNoAcerto(VeAcerto $acerto, ?int $userId): void
+    {
+        if (! $this->estoqueVeDisponivel() || ! Schema::hasColumn('ve_acertos', 'quantidade')) {
+            return;
+        }
+
+        $remessa = $acerto->ve_remessa_id !== null
+            ? VeRemessa::query()->where('empresa_id', $acerto->empresa_id)->whereKey($acerto->ve_remessa_id)->first()
+            : null;
+        if ($remessa === null || $remessa->produto_id === null) {
+            return;
+        }
+
+        $enviado = max(0, (int) ($remessa->quantidade ?? 0));
+        $vendido = max(0, (int) ($acerto->quantidade ?? 0));
+        $naoVendido = max(0, $enviado - $vendido);
+        if ($naoVendido === 0) {
+            return;
+        }
+
+        app(EstoqueService::class)->devolver(
+            (int) $remessa->produto_id,
+            $naoVendido,
+            EstoqueMovimentoTipo::AcertoVe,
+            $acerto,
+            'Acerto da remessa #'.$remessa->id.': '.$naoVendido.' não vendido(s) devolvido(s)',
+            $userId,
+        );
     }
 
     private function aplicarAcertoNaEntrega(VeRemessa $remessa, string $entregaAcerto, int $empresaId): void
@@ -600,7 +719,13 @@ class VendaExternaController extends Controller
         $data['empresa_id'] = $empresa->id;
         $data = $this->aplicarDefaultsAcerto($data, $empresa->id);
 
-        VeAcerto::query()->create($data);
+        $userId = $request->user()?->id;
+        DB::transaction(function () use ($data, $userId) {
+            $acerto = VeAcerto::query()->create($data);
+            if ($acerto->status === VeAcerto::STATUS_CONCLUIDO) {
+                $this->devolverNaoVendidoNoAcerto($acerto, $userId);
+            }
+        });
 
         return redirect()->route('empresa.venda-externa.acertos')->with('status', 'Acerto registrado.');
     }
@@ -649,7 +774,17 @@ class VendaExternaController extends Controller
         $data = $this->validatedAcerto($request, $empresa->id);
         $data = $this->aplicarDefaultsAcerto($data, $empresa->id);
 
-        $veAcerto->update($data);
+        $userId = $request->user()?->id;
+        DB::transaction(function () use ($veAcerto, $data, $userId) {
+            $eraConcluido = $veAcerto->status === VeAcerto::STATUS_CONCLUIDO;
+            $veAcerto->update($data);
+            $veAcerto->refresh();
+
+            // Devolve o não vendido só na transição aberto → concluído (evita duplicar).
+            if (! $eraConcluido && $veAcerto->status === VeAcerto::STATUS_CONCLUIDO) {
+                $this->devolverNaoVendidoNoAcerto($veAcerto, $userId);
+            }
+        });
 
         return redirect()->route('empresa.venda-externa.acertos.show', $veAcerto)->with('status', 'Acerto atualizado.');
     }

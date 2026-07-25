@@ -15,7 +15,9 @@ use App\Models\Pedido;
 use App\Models\PedidoItem;
 use App\Models\Produto;
 use App\Models\ProdutoIngrediente;
+use App\Enums\Estoque\EstoqueMovimentoTipo;
 use App\Services\DeliveryFreteService;
+use App\Services\Estoque\EstoqueService;
 use App\Support\Cep;
 use App\Support\GoogleMapsDistanceMatrix;
 use Illuminate\Http\JsonResponse;
@@ -1202,7 +1204,7 @@ class PublicoController extends Controller
             }
         }
 
-        if ($p->estoque !== null && $p->estoque < $qty) {
+        if ($p->controlaEstoque() && $p->estoque < $qty) {
             return back()->withInput()->with('warning', 'Quantidade indisponível em estoque para este produto.');
         }
 
@@ -1244,7 +1246,7 @@ class PublicoController extends Controller
         $totalMesmoProduto = collect($lines)
             ->filter(fn (array $l) => ($l['linha_tipo'] ?? 'produto') === 'produto' && (int) ($l['produto_id'] ?? 0) === (int) $p->id)
             ->sum('quantidade');
-        if ($p->estoque !== null && $totalMesmoProduto > $p->estoque) {
+        if ($p->controlaEstoque() && $totalMesmoProduto > $p->estoque) {
             return back()->withInput()->with('warning', 'Não há estoque suficiente para a quantidade desejada.');
         }
 
@@ -1712,7 +1714,7 @@ class PublicoController extends Controller
                 continue;
             }
             $q = $l['quantidade'];
-            if ($p->estoque !== null && $p->estoque < $q) {
+            if ($p->controlaEstoque() && $p->estoque < $q) {
                 return back()->withInput()->with('warning', 'O produto "'.$p->nome.'" não tem estoque suficiente. Ajuste o carrinho.');
             }
         }
@@ -1727,7 +1729,8 @@ class PublicoController extends Controller
             $statusInicial = Pedido::STATUS_PENDENTE_LOJA;
         }
 
-        $pedido = DB::transaction(function () use ($empresa, $linhas, $data, $subtotal, $taxa, $total, $pagamentoTrocoPara, $tipoEntrega, $cepNorm, $enderecoPedido, $complementoPedido, $statusInicial) {
+        $estoqueService = app(EstoqueService::class);
+        $pedido = DB::transaction(function () use ($empresa, $linhas, $data, $subtotal, $taxa, $total, $pagamentoTrocoPara, $tipoEntrega, $cepNorm, $enderecoPedido, $complementoPedido, $statusInicial, $estoqueService) {
             $pedido = Pedido::query()->create([
                 'empresa_id' => $empresa->id,
                 'codigo_publico' => $this->gerarCodigoPublico(),
@@ -1803,9 +1806,13 @@ class PublicoController extends Controller
                     'opcoes_linha' => $opLinha === [] ? null : $opLinha,
                 ]);
 
-                if ($p->estoque !== null) {
-                    $p->decrement('estoque', $l['quantidade']);
-                }
+                $estoqueService->baixar(
+                    $p,
+                    (int) $l['quantidade'],
+                    EstoqueMovimentoTipo::VendaLoja,
+                    $pedido,
+                    comFicha: true,
+                );
             }
 
             return $pedido;

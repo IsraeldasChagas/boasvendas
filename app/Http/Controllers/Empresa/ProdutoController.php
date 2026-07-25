@@ -97,6 +97,11 @@ class ProdutoController extends Controller
         }
 
         $data = $this->validated($request, $empresa);
+        if (Schema::hasColumn('produtos', 'controla_estoque')) {
+            $data['controla_estoque'] = $request->boolean('controla_estoque', true);
+        } else {
+            unset($data['controla_estoque']);
+        }
         $itensIng = $this->coletaIngredientesDoRequest($request, $empresa);
         $this->validarLimiteRetirarIngredientes($request, $itensIng);
         $data['max_ingredientes_retirar'] = $this->parseMaxIngredientesRetirarParaPersistencia($request, null, $itensIng);
@@ -158,6 +163,13 @@ class ProdutoController extends Controller
         }
 
         $data = $this->validated($request, $empresa, $produto);
+        // Saldo é gerido pela tela Estoque (movimentos auditáveis); ignora edição direta.
+        unset($data['estoque']);
+        if (Schema::hasColumn('produtos', 'controla_estoque')) {
+            $data['controla_estoque'] = $request->boolean('controla_estoque', true);
+        } else {
+            unset($data['controla_estoque']);
+        }
         $itensIng = $this->coletaIngredientesDoRequest($request, $empresa);
         $this->validarLimiteRetirarIngredientes($request, $itensIng, $produto);
         $data['max_ingredientes_retirar'] = $this->parseMaxIngredientesRetirarParaPersistencia($request, $produto, $itensIng);
@@ -210,7 +222,9 @@ class ProdutoController extends Controller
                 Rule::exists('categorias', 'id')->where(fn ($q) => $q->where('empresa_id', $empresa->id)),
             ],
             'preco' => ['required', 'numeric', 'min:0'],
-            'estoque' => ['required', 'integer', 'min:0'],
+            // Saldo só entra no cadastro inicial; depois muda via tela Estoque (com histórico).
+            'estoque' => [$produto === null ? 'required' : 'sometimes', 'integer', 'min:0'],
+            'controla_estoque' => ['sometimes', 'boolean'],
             'descricao' => ['nullable', 'string', 'max:10000'],
             'foto' => ['nullable', 'image', 'max:3072'],
             'visivel_loja' => ['sometimes', 'boolean'],

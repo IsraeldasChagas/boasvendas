@@ -53,9 +53,14 @@
                             @error('preco')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label" for="estoque">Estoque</label>
+                            <label class="form-label" for="estoque">Estoque inicial</label>
                             <input type="number" class="form-control @error('estoque') is-invalid @enderror" id="estoque" name="estoque" value="{{ old('estoque', 0) }}" min="0" required>
                             @error('estoque')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <div class="form-check form-switch mt-1">
+                                <input type="hidden" name="controla_estoque" value="0">
+                                <input class="form-check-input" type="checkbox" name="controla_estoque" value="1" id="controla-estoque" @checked(old('controla_estoque', '1') === '1')>
+                                <label class="form-check-label small" for="controla-estoque">Controlar estoque</label>
+                            </div>
                         </div>
                         <div class="col-12">
                             <label class="form-label" for="descricao">Descrição</label>

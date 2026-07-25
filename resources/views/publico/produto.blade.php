@@ -98,7 +98,7 @@
                         </div>
                     </div>
                 </div>
-                @if ($produto->estoque === null || $produto->estoque > 0)
+                @if (! $produto->controlaEstoque() || $produto->estoque > 0)
                     <div class="vf-produto-estrelas mb-3" id="vf-produto-estrelas-wrap">
                         <span class="small text-muted d-block mb-1">Sua nota <span class="fw-normal">(opcional)</span></span>
                         <div class="d-inline-flex align-items-center vf-estrelas-grupo" role="group" aria-label="Dar de 1 a 5 estrelas — clique de novo na última estrela da nota para baixar um ponto; com 1 estrela, remove a nota">
@@ -132,7 +132,7 @@
                     $uiAcrescimos = $produto->modoAcrescimosNaLoja();
                 @endphp
                 <p class="h4 text-success mb-1">R$ {{ number_format((float) $produto->preco, 2, ',', '.') }}</p>
-                @if ($produto->estoque !== null)
+                @if ($produto->controlaEstoque())
                     <p class="small text-muted mb-3">
                         @if ($produto->estoque <= 0)
                             <span class="text-danger fw-semibold">Indisponível no momento.</span>
@@ -142,7 +142,7 @@
                     </p>
                 @endif
 
-                @if ($produto->estoque === null || $produto->estoque > 0)
+                @if (! $produto->controlaEstoque() || $produto->estoque > 0)
                     @if ($errors->any())
                         <div class="alert alert-danger small mb-3">
                             <ul class="mb-0 ps-3">
@@ -331,7 +331,7 @@
                         <div class="vf-produto-barra-acoes d-flex flex-column gap-3">
                             <div>
                                 <label class="form-label small text-muted mb-1" for="qtd">Quantidade</label>
-                                <input type="number" class="form-control" id="qtd" name="quantidade" value="1" min="1" max="{{ $produto->estoque !== null ? min(99, $produto->estoque) : 99 }}" style="max-width: 5rem;">
+                                <input type="number" class="form-control" id="qtd" name="quantidade" value="1" min="1" max="{{ $produto->controlaEstoque() ? min(99, max(1, $produto->estoque)) : 99 }}" style="max-width: 5rem;">
                             </div>
                             <div class="d-flex flex-row gap-2 align-items-stretch">
                                 <button type="submit" class="btn btn-primary flex-fill">
@@ -351,7 +351,7 @@
             </div>
         </div>
     </div>
-    @if ($produto->estoque === null || $produto->estoque > 0)
+    @if (! $produto->controlaEstoque() || $produto->estoque > 0)
         @push('scripts')
             <script>
                 (function () {

@@ -58,8 +58,15 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label" for="estoque">Estoque</label>
-                    <input type="number" class="form-control @error('estoque') is-invalid @enderror" id="estoque" name="estoque" value="{{ old('estoque', $produto->estoque) }}" min="0" required>
-                    @error('estoque')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    <input type="number" class="form-control" id="estoque" value="{{ $produto->estoque }}" readonly disabled>
+                    <div class="form-text">
+                        <a href="{{ route('empresa.estoque.produto', $produto) }}">Repor / ajustar com histórico</a>
+                    </div>
+                    <div class="form-check form-switch mt-1">
+                        <input type="hidden" name="controla_estoque" value="0">
+                        <input class="form-check-input" type="checkbox" name="controla_estoque" value="1" id="controla-estoque" @checked(old('controla_estoque', $produto->controlaEstoque() ? '1' : '0') === '1')>
+                        <label class="form-check-label small" for="controla-estoque">Controlar estoque</label>
+                    </div>
                 </div>
                         <div class="col-12">
                             <label class="form-label" for="descricao">Descrição</label>

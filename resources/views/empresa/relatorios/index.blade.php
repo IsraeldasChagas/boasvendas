@@ -125,7 +125,7 @@
             <div class="vf-card p-0 overflow-hidden h-100">
                 <div class="p-3 border-bottom">
                     <h3 class="h6 fw-bold mb-0">Estoque baixo (≤ 10)</h3>
-                    <p class="small text-muted mb-0">Produtos ativos para reposição</p>
+                    <p class="small text-muted mb-0">Produtos ativos para reposição · <a href="{{ route('empresa.estoque.index', ['filtro' => 'baixo']) }}">Abrir estoque</a></p>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-sm mb-0 vf-table">
@@ -135,7 +135,7 @@
                         <tbody>
                             @forelse ($produtosEstoqueBaixo as $pr)
                                 <tr>
-                                    <td class="small"><a href="{{ route('empresa.produtos.edit', $pr) }}">{{ $pr->nome }}</a></td>
+                                    <td class="small"><a href="{{ route('empresa.estoque.produto', $pr) }}">{{ $pr->nome }}</a></td>
                                     <td class="text-end fw-semibold {{ $pr->estoque <= 0 ? 'text-danger' : 'text-warning' }}">{{ $pr->estoque }}</td>
                                     <td class="text-end small">R$ {{ number_format((float) $pr->preco, 2, ',', '.') }}</td>
                                 </tr>

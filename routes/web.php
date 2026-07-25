@@ -38,6 +38,7 @@ use App\Http\Controllers\Empresa\FinanceiroController;
 use App\Http\Controllers\Empresa\LojaEntregaFaixaController;
 use App\Http\Controllers\Empresa\FreteCalculadoraController;
 use App\Http\Controllers\Empresa\PdvController;
+use App\Http\Controllers\Empresa\EstoqueController;
 use App\Http\Controllers\Empresa\PedidoController;
 use App\Http\Controllers\Empresa\PedidoFiscalController;
 use App\Http\Controllers\Empresa\ProdutoController;
@@ -220,6 +221,13 @@ Route::middleware(['auth', 'empresa.painel', 'empresa.colaborador', 'empresa.men
     Route::get('/produtos/{produto}/editar', [ProdutoController::class, 'edit'])->name('produtos.edit');
     Route::put('/produtos/{produto}', [ProdutoController::class, 'update'])->name('produtos.update');
     Route::delete('/produtos/{produto}', [ProdutoController::class, 'destroy'])->name('produtos.destroy');
+
+    Route::get('/estoque', [EstoqueController::class, 'index'])->name('estoque.index');
+    Route::get('/estoque/{produto}', [EstoqueController::class, 'produto'])->name('estoque.produto');
+    Route::post('/estoque/{produto}/repor', [EstoqueController::class, 'repor'])->name('estoque.repor');
+    Route::post('/estoque/{produto}/ajustar', [EstoqueController::class, 'ajustar'])->name('estoque.ajustar');
+    Route::post('/estoque/{produto}/ficha', [EstoqueController::class, 'fichaStore'])->name('estoque.ficha.store');
+    Route::delete('/estoque/{produto}/ficha/{fichaItem}', [EstoqueController::class, 'fichaDestroy'])->name('estoque.ficha.destroy');
 
     Route::get('/adicionais', [AdicionalController::class, 'index'])->name('adicionais.index');
     Route::get('/adicionais/novo', [AdicionalController::class, 'create'])->name('adicionais.create');

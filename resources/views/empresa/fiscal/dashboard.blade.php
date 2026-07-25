@@ -10,8 +10,22 @@
 
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
         <h2 class="h4 fw-bold mb-0">Dashboard fiscal</h2>
-        <a href="{{ route('empresa.fiscal.configuracoes.edit') }}" class="btn btn-outline-primary btn-sm">Configurações</a>
+        <div class="d-flex gap-2">
+            <a href="{{ route('empresa.fiscal.emitentes.index') }}" class="btn btn-outline-primary btn-sm">Emitentes fiscais</a>
+            <a href="{{ route('empresa.fiscal.configuracoes.edit') }}" class="btn btn-outline-primary btn-sm">Configurações</a>
+        </div>
     </div>
+
+    @unless ($temEmitenteCompleto)
+        <div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+                <strong>Complete o cadastro do emitente.</strong>
+                CPF/CNPJ, inscrições, regime e endereço fiscal são necessários antes de emitir.
+            </div>
+            <a href="{{ $emitentesAtivos ? route('empresa.fiscal.emitentes.index') : route('empresa.fiscal.emitentes.create') }}"
+               class="btn btn-warning btn-sm">Completar cadastro fiscal</a>
+        </div>
+    @endunless
 
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">

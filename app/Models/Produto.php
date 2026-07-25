@@ -32,6 +32,7 @@ class Produto extends Model
         'nome',
         'preco',
         'estoque',
+        'controla_estoque',
         'descricao',
         'foto',
         'visivel_loja',
@@ -59,6 +60,7 @@ class Produto extends Model
         return [
             'preco' => 'decimal:2',
             'estoque' => 'integer',
+            'controla_estoque' => 'boolean',
             'visivel_loja' => 'boolean',
             'ativo' => 'boolean',
             'permite_adicionais' => 'boolean',
@@ -114,6 +116,27 @@ class Produto extends Model
     public function ingredientes(): HasMany
     {
         return $this->hasMany(ProdutoIngrediente::class, 'produto_id')->orderBy('ordem')->orderBy('nome');
+    }
+
+    public function estoqueMovimentos(): HasMany
+    {
+        return $this->hasMany(EstoqueMovimento::class, 'produto_id')->orderByDesc('id');
+    }
+
+    /** Ficha técnica: insumos consumidos por unidade vendida deste produto. */
+    public function fichaTecnica(): HasMany
+    {
+        return $this->hasMany(ProdutoFichaItem::class, 'produto_id')->with('insumo');
+    }
+
+    /** Produto com controle de saldo comercial (default true se coluna ausente). */
+    public function controlaEstoque(): bool
+    {
+        if (! Schema::hasColumn('produtos', 'controla_estoque')) {
+            return true;
+        }
+
+        return (bool) ($this->controla_estoque ?? true);
     }
 
     /**

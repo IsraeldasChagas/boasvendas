@@ -2,17 +2,21 @@
 
 namespace App\Services\Mesas;
 
+use App\Enums\Estoque\EstoqueMovimentoTipo;
 use App\Enums\Mesas\ComandaStatus;
 use App\Enums\Mesas\PagamentoComandaStatus;
 use App\Models\Comanda;
 use App\Models\PagamentoComanda;
+use App\Services\Estoque\EstoqueService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class PagamentoComandaService
 {
     public function __construct(
         private readonly ComandaService $comandaService,
         private readonly MesaService $mesaService,
+        private readonly EstoqueService $estoqueService,
     ) {}
 
     /**
@@ -65,17 +69,49 @@ class PagamentoComandaService
                 $p->save();
             }
 
+            $estoqueBaixado = $this->baixarEstoqueDaComanda($comanda, $usuarioId);
+
             $comanda->status = ComandaStatus::Fechada;
             $comanda->fechada_em = now();
-            $comanda->integracao_payload = $this->montarPayloadIntegracao($comanda, $usuarioId);
+            $comanda->integracao_payload = $this->montarPayloadIntegracao($comanda, $usuarioId, $estoqueBaixado);
             $comanda->save();
 
             $this->mesaService->liberarMesaAposFechamento($comanda);
         });
     }
 
+    /**
+     * Baixa os itens da comanda no estoque comercial. A venda já aconteceu na mesa,
+     * então não bloqueia o fechamento: baixa parcial quando o saldo é insuficiente.
+     */
+    private function baixarEstoqueDaComanda(Comanda $comanda, ?int $usuarioId): bool
+    {
+        if (! Schema::hasTable('estoque_movimentos')) {
+            return false;
+        }
+
+        $comanda->loadMissing('itens');
+        foreach ($comanda->itens as $item) {
+            if ($item->produto_id === null) {
+                continue;
+            }
+            $this->estoqueService->baixar(
+                (int) $item->produto_id,
+                (int) $item->quantidade,
+                EstoqueMovimentoTipo::VendaMesa,
+                $comanda,
+                'Comanda #'.$comanda->id.' fechada',
+                $usuarioId,
+                comFicha: true,
+                bloquearSeInsuficiente: false,
+            );
+        }
+
+        return true;
+    }
+
     /** @return array<string, mixed> */
-    private function montarPayloadIntegracao(Comanda $comanda, ?int $usuarioId): array
+    private function montarPayloadIntegracao(Comanda $comanda, ?int $usuarioId, bool $estoqueBaixado = false): array
     {
         $comanda->load(['itens', 'pagamentos', 'mesa']);
 
@@ -107,7 +143,9 @@ class PagamentoComandaService
                 'valor_pago' => (string) $p->valor_pago,
                 'troco' => (string) $p->troco,
             ])->values()->all(),
-            'estoque' => ['status' => 'pendente_baixa', 'observacao' => 'Reservado para futura baixa automática por produto_id/quantidade.'],
+            'estoque' => $estoqueBaixado
+                ? ['status' => 'baixado', 'observacao' => 'Baixa automática por produto_id/quantidade no fechamento (estoque_movimentos).']
+                : ['status' => 'pendente_baixa', 'observacao' => 'Tabela estoque_movimentos ausente; rode as migrations.'],
             'financeiro' => ['status' => 'pendente_lancamento', 'observacao' => 'Reservado para contas a receber / caixa.'],
             'fiscal' => ['status' => 'pendente_nfce', 'observacao' => 'Reservado para módulo fiscal (NFC-e).'],
         ];

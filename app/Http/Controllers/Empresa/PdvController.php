@@ -10,6 +10,8 @@ use App\Models\Pedido;
 use App\Models\PedidoItem;
 use App\Models\Produto;
 use App\Services\DeliveryFreteService;
+use App\Services\Estoque\EstoqueService;
+use App\Enums\Estoque\EstoqueMovimentoTipo;
 use App\Support\Cep;
 use App\Support\WhatsAppPedidoCliente;
 use Illuminate\Http\JsonResponse;
@@ -29,6 +31,10 @@ use Illuminate\View\View;
  */
 class PdvController extends Controller
 {
+    public function __construct(
+        private readonly EstoqueService $estoque,
+    ) {}
+
     public function index(Request $request): View|RedirectResponse
     {
         $empresa = $request->user()->empresa;
@@ -210,16 +216,13 @@ class PdvController extends Controller
             $pid = (int) $l['produto']->id;
             $qtdPorProduto[$pid] = ($qtdPorProduto[$pid] ?? 0) + (int) $l['quantidade'];
         }
+        $estoqueService = app(EstoqueService::class);
         foreach ($qtdPorProduto as $pid => $qtdTotal) {
             $p = $produtos->get($pid);
             if (! $p) {
                 continue;
             }
-            if ($p->estoque !== null && (int) $p->estoque < $qtdTotal) {
-                throw ValidationException::withMessages([
-                    'itens' => 'O produto "'.$p->nome.'" não tem estoque suficiente no PDV. Disponível: '.(int) $p->estoque.'. Reduza a quantidade ou repor o estoque.',
-                ]);
-            }
+            $estoqueService->garantirDisponivel($p, $qtdTotal);
         }
 
         $tipoEntrega = $data['tipo_entrega'];
@@ -303,7 +306,8 @@ class PdvController extends Controller
             ? $enderecoPedido
             : 'Retirada no balcão';
 
-        $pedido = DB::transaction(function () use ($empresa, $linhas, $data, $subtotal, $taxaVal, $total, $pagamentoTrocoPara, $tipoEntrega, $cepNorm, $enderecoFinal, $complementoPedido, $statusInicial, $canal, $clienteNomeFinal, $clienteTelefoneFinal) {
+        $userId = $request->user()?->id;
+        $pedido = DB::transaction(function () use ($empresa, $linhas, $data, $subtotal, $taxaVal, $total, $pagamentoTrocoPara, $tipoEntrega, $cepNorm, $enderecoFinal, $complementoPedido, $statusInicial, $canal, $clienteNomeFinal, $clienteTelefoneFinal, $estoqueService, $userId) {
             $codigo = $this->gerarCodigoPublico();
             $pedido = Pedido::query()->create([
                 'empresa_id' => $empresa->id,
@@ -341,10 +345,14 @@ class PdvController extends Controller
                     'opcoes_linha' => $opLinha,
                 ]);
 
-                $p = $l['produto'];
-                if ($p->estoque !== null) {
-                    $p->decrement('estoque', $l['quantidade']);
-                }
+                $estoqueService->baixar(
+                    $l['produto'],
+                    (int) $l['quantidade'],
+                    EstoqueMovimentoTipo::VendaPdv,
+                    $pedido,
+                    userId: $userId,
+                    comFicha: true,
+                );
             }
 
             return $pedido;

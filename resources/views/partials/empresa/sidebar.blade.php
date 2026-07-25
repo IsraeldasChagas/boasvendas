@@ -47,6 +47,9 @@
         @endif
     @endif
     @if ($tem('produtos'))
+        <a class="nav-link {{ request()->routeIs('empresa.estoque.*') ? 'active' : '' }}" href="{{ route('empresa.estoque.index') }}">
+            <i class="bi bi-boxes"></i> Estoque
+        </a>
         <a class="nav-link {{ request()->routeIs('empresa.produtos.*') ? 'active' : '' }}" href="{{ route('empresa.produtos.index') }}">
             <i class="bi bi-box-seam"></i> Produtos
         </a>

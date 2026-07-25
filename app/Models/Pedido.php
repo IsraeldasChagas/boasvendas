@@ -192,14 +192,23 @@ class Pedido extends Model
         return in_array($this->status, [self::STATUS_PRONTO, self::STATUS_ROTA], true);
     }
 
-    /** Devolve ao estoque as quantidades dos itens (ex.: pedido pendente recusado). */
+    /** Devolve ao estoque as quantidades dos itens (ex.: pedido recusado ou cancelado). */
     public function restaurarEstoqueProdutos(): void
     {
+        $estoque = app(\App\Services\Estoque\EstoqueService::class);
+
         $this->loadMissing('itens.produto');
         foreach ($this->itens as $it) {
             $p = $it->produto;
-            if ($p !== null && $p->estoque !== null) {
-                $p->increment('estoque', (int) $it->quantidade);
+            if ($p !== null) {
+                $estoque->devolver(
+                    $p,
+                    (int) $it->quantidade,
+                    \App\Enums\Estoque\EstoqueMovimentoTipo::Cancelamento,
+                    $this,
+                    'Pedido '.$this->codigo_publico.' cancelado/recusado',
+                    comFicha: true,
+                );
             }
         }
     }

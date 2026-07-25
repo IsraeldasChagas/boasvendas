@@ -52,6 +52,11 @@ class EntregadorPedidoController extends Controller
 
         $pedido->update(['status' => $novoStatus]);
 
+        // Cancelamento devolve os itens ao estoque (baixa aconteceu na criação do pedido).
+        if ($novoStatus === Pedido::STATUS_CANCELADO) {
+            $pedido->restaurarEstoqueProdutos();
+        }
+
         return redirect()
             ->route('publico.entregador.show', ['slug' => $slug, 'codigo' => $codigo, 'token' => $token])
             ->with('status', match ($data['resultado']) {

@@ -66,9 +66,13 @@ class FiscalDashboardController extends Controller
             }
         }
 
-        $emitentesAtivos = Schema::hasTable('fiscal_empresas')
-            ? FiscalEmitente::query()->where('empresa_id', $empresa->id)->where('ativo', true)->count()
-            : 0;
+        $emitentes = Schema::hasTable('fiscal_empresas')
+            ? FiscalEmitente::query()->where('empresa_id', $empresa->id)->get()
+            : collect();
+        $emitentesAtivos = $emitentes->where('ativo', true)->count();
+        $temEmitenteCompleto = $emitentes->contains(
+            fn (FiscalEmitente $emitente) => $emitente->ativo && $emitente->cadastroFiscalCompleto()
+        );
 
         $ultimosLogs = Schema::hasTable('fiscal_logs')
             ? FiscalLog::query()->where('empresa_id', $empresa->id)->orderByDesc('id')->limit(8)->get()
@@ -86,6 +90,7 @@ class FiscalDashboardController extends Controller
             'pendentes',
             'serie7dias',
             'emitentesAtivos',
+            'temEmitenteCompleto',
             'ultimosLogs',
             'config',
         ));
