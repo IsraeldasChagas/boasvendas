@@ -21,6 +21,13 @@ class FiscalConfiguracao extends Model
         'ambiente',
         'emissor_driver_padrao',
         'unidade_id',
+        'padrao_ncm',
+        'padrao_origem',
+        'padrao_unidade',
+        'padrao_csosn',
+        'padrao_cst',
+        'padrao_cfop_producao',
+        'padrao_cfop_revenda',
     ];
 
     protected function casts(): array
@@ -31,6 +38,7 @@ class FiscalConfiguracao extends Model
             'tipo_documento' => FiscalTipoDocumento::class,
             'ambiente' => FiscalAmbiente::class,
             'emissor_driver_padrao' => FiscalEmissorDriver::class,
+            'padrao_origem' => 'integer',
         ];
     }
 
@@ -49,6 +57,11 @@ class FiscalConfiguracao extends Model
                 'tipo_documento' => FiscalTipoDocumento::Nfce,
                 'ambiente' => FiscalAmbiente::Homologacao,
                 'emissor_driver_padrao' => FiscalEmissorDriver::Interno,
+                'padrao_origem' => 0,
+                'padrao_unidade' => 'UN',
+                'padrao_csosn' => '102',
+                'padrao_cfop_producao' => '5101',
+                'padrao_cfop_revenda' => '5102',
             ]
         );
     }

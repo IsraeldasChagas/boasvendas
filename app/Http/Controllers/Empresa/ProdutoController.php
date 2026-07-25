@@ -8,6 +8,8 @@ use App\Models\Categoria;
 use App\Models\Empresa;
 use App\Models\Produto;
 use App\Models\ProdutoIngrediente;
+use App\Models\FiscalConfiguracao;
+use App\Support\Fiscal\ProdutoFiscal;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -82,7 +84,9 @@ class ProdutoController extends Controller
             ->orderBy('nome')
             ->get();
 
-        return view('empresa.produtos.create', compact('empresa', 'categorias', 'adicionais'));
+        $fiscalConfig = FiscalConfiguracao::obterOuCriarPadrao($empresa->id);
+
+        return view('empresa.produtos.create', compact('empresa', 'categorias', 'adicionais', 'fiscalConfig'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -141,7 +145,9 @@ class ProdutoController extends Controller
 
         $produto->load(['adicionais', 'ingredientes']);
 
-        return view('empresa.produtos.edit', compact('empresa', 'produto', 'categorias', 'adicionais'));
+        $fiscalConfig = FiscalConfiguracao::obterOuCriarPadrao($empresa->id);
+
+        return view('empresa.produtos.edit', compact('empresa', 'produto', 'categorias', 'adicionais', 'fiscalConfig'));
     }
 
     public function update(Request $request, Produto $produto): RedirectResponse
@@ -261,6 +267,19 @@ class ProdutoController extends Controller
             ])];
         }
 
+        if (ProdutoFiscal::schemaTemCamposProduto()) {
+            $rules['fiscal_tipo_item'] = ['nullable', 'string', Rule::in(array_keys(ProdutoFiscal::tiposItemRotulos()))];
+            $rules['fiscal_herdar_padrao'] = ['sometimes', 'boolean'];
+            $rules['fiscal_ncm'] = ['nullable', 'string', 'max:16'];
+            $rules['fiscal_cfop'] = ['nullable', 'string', 'max:8'];
+            $rules['fiscal_origem'] = ['nullable', 'integer', 'min:0', 'max:8'];
+            $rules['fiscal_unidade'] = ['nullable', 'string', 'max:8'];
+            $rules['fiscal_csosn'] = ['nullable', 'string', 'max:8'];
+            $rules['fiscal_cst'] = ['nullable', 'string', 'max:8'];
+            $rules['fiscal_cest'] = ['nullable', 'string', 'max:16'];
+            $rules['fiscal_gtin'] = ['nullable', 'string', 'max:20'];
+        }
+
         $data = $request->validate($rules);
 
         $data['visivel_loja'] = $request->boolean('visivel_loja');
@@ -269,6 +288,18 @@ class ProdutoController extends Controller
             $data['permite_adicionais'] = $request->boolean('permite_adicionais');
         } else {
             unset($data['permite_adicionais']);
+        }
+
+        if (ProdutoFiscal::schemaTemCamposProduto()) {
+            $data['fiscal_herdar_padrao'] = $request->boolean('fiscal_herdar_padrao', true);
+            foreach (['fiscal_tipo_item', 'fiscal_ncm', 'fiscal_cfop', 'fiscal_unidade', 'fiscal_csosn', 'fiscal_cst', 'fiscal_cest', 'fiscal_gtin'] as $fk) {
+                if (array_key_exists($fk, $data) && ($data[$fk] === null || trim((string) $data[$fk]) === '')) {
+                    $data[$fk] = null;
+                }
+            }
+            if (array_key_exists('fiscal_origem', $data) && ($data['fiscal_origem'] === null || $data['fiscal_origem'] === '')) {
+                $data['fiscal_origem'] = null;
+            }
         }
 
         if (Schema::hasColumn('produtos', 'acrescimo_escolhas_min')) {

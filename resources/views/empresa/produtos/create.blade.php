@@ -118,6 +118,10 @@
                             'produto' => null,
                             'opcoesPagasAberto' => $opcoesPagasAberto,
                         ])
+                        @include('partials.empresa.produto-fiscal-form', [
+                            'produto' => null,
+                            'fiscalConfig' => $fiscalConfig ?? null,
+                        ])
                         <div class="col-12">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" name="visivel_loja" id="visivel_loja" value="1" {{ old('visivel_loja', true) ? 'checked' : '' }}>

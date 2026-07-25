@@ -42,6 +42,16 @@ class Produto extends Model
         'max_ingredientes_retirar',
         'ingredientes_retirar_ui',
         'acrescimos_loja_ui',
+        'fiscal_tipo_item',
+        'fiscal_herdar_padrao',
+        'fiscal_ncm',
+        'fiscal_cfop',
+        'fiscal_origem',
+        'fiscal_unidade',
+        'fiscal_csosn',
+        'fiscal_cst',
+        'fiscal_cest',
+        'fiscal_gtin',
     ];
 
     protected function casts(): array
@@ -52,6 +62,8 @@ class Produto extends Model
             'visivel_loja' => 'boolean',
             'ativo' => 'boolean',
             'permite_adicionais' => 'boolean',
+            'fiscal_herdar_padrao' => 'boolean',
+            'fiscal_origem' => 'integer',
         ];
     }
 

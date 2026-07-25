@@ -69,6 +69,44 @@
                 @error('emissor_driver_padrao')<div class="text-danger small">{{ $message }}</div>@enderror
             </div>
 
+            <hr class="my-4">
+            <h3 class="h6 fw-bold mb-2">Padrões para produtos</h3>
+            <p class="small text-muted mb-3">Usados quando o produto marca “Usar padrões fiscais da empresa”. O vendedor só escolhe o tipo (próprio / revenda); o resto herda daqui.</p>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label small" for="padrao_ncm">NCM padrão</label>
+                    <input type="text" class="form-control form-control-sm" name="padrao_ncm" id="padrao_ncm" value="{{ old('padrao_ncm', $config->padrao_ncm) }}" maxlength="16" placeholder="Ex.: 21069090">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small" for="padrao_unidade">Unidade</label>
+                    <input type="text" class="form-control form-control-sm" name="padrao_unidade" id="padrao_unidade" value="{{ old('padrao_unidade', $config->padrao_unidade ?: 'UN') }}" maxlength="8">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small" for="padrao_origem">Origem</label>
+                    <select class="form-select form-select-sm" name="padrao_origem" id="padrao_origem">
+                        @foreach (\App\Support\Fiscal\ProdutoFiscal::origensRotulos() as $cod => $rot)
+                            <option value="{{ $cod }}" @selected((string) old('padrao_origem', $config->padrao_origem ?? 0) === (string) $cod)>{{ $rot }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small" for="padrao_csosn">CSOSN (Simples)</label>
+                    <input type="text" class="form-control form-control-sm" name="padrao_csosn" id="padrao_csosn" value="{{ old('padrao_csosn', $config->padrao_csosn ?: '102') }}" maxlength="8">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small" for="padrao_cst">CST (regime normal)</label>
+                    <input type="text" class="form-control form-control-sm" name="padrao_cst" id="padrao_cst" value="{{ old('padrao_cst', $config->padrao_cst) }}" maxlength="8" placeholder="Opcional">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small" for="padrao_cfop_producao">CFOP produção própria</label>
+                    <input type="text" class="form-control form-control-sm" name="padrao_cfop_producao" id="padrao_cfop_producao" value="{{ old('padrao_cfop_producao', $config->padrao_cfop_producao ?: '5101') }}" maxlength="8">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small" for="padrao_cfop_revenda">CFOP revenda</label>
+                    <input type="text" class="form-control form-control-sm" name="padrao_cfop_revenda" id="padrao_cfop_revenda" value="{{ old('padrao_cfop_revenda', $config->padrao_cfop_revenda ?: '5102') }}" maxlength="8">
+                </div>
+            </div>
+
             <button type="submit" class="btn btn-primary">Salvar</button>
             <a href="{{ route('empresa.fiscal.dashboard') }}" class="btn btn-link">Dashboard</a>
         </form>
