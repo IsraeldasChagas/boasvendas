@@ -46,6 +46,24 @@ return new class extends Migration
                 $table->unique(['produto_id', 'insumo_id']);
                 $table->index(['empresa_id', 'produto_id']);
             });
+        } else {
+            Schema::table('produto_ficha_itens', function (Blueprint $table) {
+                if (! Schema::hasColumn('produto_ficha_itens', 'insumo_id')) {
+                    $table->unsignedBigInteger('insumo_id')->nullable()->after('produto_id');
+                }
+                if (! Schema::hasColumn('produto_ficha_itens', 'unidade')) {
+                    $table->string('unidade', 8)->default('g')->after('quantidade');
+                }
+                if (! Schema::hasColumn('produto_ficha_itens', 'quantidade_base')) {
+                    $table->decimal('quantidade_base', 14, 3)->default(0)->after('unidade');
+                }
+                if (! Schema::hasColumn('produto_ficha_itens', 'observacao')) {
+                    $table->string('observacao', 200)->nullable();
+                }
+                if (! Schema::hasColumn('produto_ficha_itens', 'ordem')) {
+                    $table->unsignedSmallInteger('ordem')->default(0);
+                }
+            });
         }
 
         if (Schema::hasTable('produtos')) {
