@@ -81,22 +81,26 @@ class EstoqueController extends Controller
     {
         $empresa = $this->autoriza($request, $produto);
 
-        if (! Schema::hasTable('insumos')) {
-            return redirect()->route('empresa.estoque.produto', $produto)
-                ->with('warning', 'Rode as migrations para habilitar a ficha técnica.');
-        }
+        // Em alguns hostings Schema::hasTable falha; a query abaixo é a fonte da verdade.
+        try {
+            $produto->load('fichaTecnica.insumo');
+            $insumosDisponiveis = Insumo::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('ativo', true)
+                ->orderBy('nome')
+                ->get();
+        } catch (\Throwable $e) {
+            report($e);
 
-        $produto->load('fichaTecnica.insumo');
+            return redirect()->route('empresa.estoque.produto', $produto)
+                ->with('warning', 'Não foi possível abrir a ficha técnica. Confira migrate e o log.');
+        }
 
         return view('empresa.estoque.ficha', [
             'empresa' => $empresa,
             'produto' => $produto,
             'ficha' => $produto->fichaTecnica,
-            'insumosDisponiveis' => Insumo::query()
-                ->where('empresa_id', $empresa->id)
-                ->where('ativo', true)
-                ->orderBy('nome')
-                ->get(),
+            'insumosDisponiveis' => $insumosDisponiveis,
             'porcoesPossiveis' => $produto->porcoesPossiveisPelaFicha(),
             'insumoLimitante' => $produto->insumoLimitanteDaFicha(),
         ]);

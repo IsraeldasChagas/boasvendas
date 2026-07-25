@@ -10,7 +10,6 @@ use App\Services\Estoque\EstoqueService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -27,20 +26,22 @@ class InsumoController extends Controller
             return redirect()->route('empresa.dashboard')->with('warning', 'Vincule sua empresa para gerenciar insumos.');
         }
 
-        if (! Schema::hasTable('insumos')) {
+        try {
+            $query = Insumo::query()->where('empresa_id', $empresa->id)->orderBy('nome');
+
+            if ($request->filled('q')) {
+                $query->where('nome', 'like', '%'.$request->string('q')->trim().'%');
+            }
+
+            $insumos = $query->get();
+        } catch (\Throwable $e) {
+            report($e);
+
             return redirect()->route('empresa.dashboard')->with(
                 'warning',
-                'O módulo de insumos ainda não foi instalado no banco. Rode: php artisan migrate'
+                'Não foi possível abrir os insumos. Confira se a tabela existe (php artisan migrate) e o log em storage/logs/laravel.log.'
             );
         }
-
-        $query = Insumo::query()->where('empresa_id', $empresa->id)->orderBy('nome');
-
-        if ($request->filled('q')) {
-            $query->where('nome', 'like', '%'.$request->string('q')->trim().'%');
-        }
-
-        $insumos = $query->get();
 
         return view('empresa.insumos.index', [
             'empresa' => $empresa,
