@@ -10,6 +10,7 @@ use App\Services\Estoque\EstoqueService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -24,6 +25,13 @@ class InsumoController extends Controller
         $empresa = $request->user()->empresa;
         if (! $empresa) {
             return redirect()->route('empresa.dashboard')->with('warning', 'Vincule sua empresa para gerenciar insumos.');
+        }
+
+        if (! Schema::hasTable('insumos')) {
+            return redirect()->route('empresa.dashboard')->with(
+                'warning',
+                'O módulo de insumos ainda não foi instalado no banco. Rode: php artisan migrate'
+            );
         }
 
         $query = Insumo::query()->where('empresa_id', $empresa->id)->orderBy('nome');

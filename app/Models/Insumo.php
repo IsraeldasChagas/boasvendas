@@ -75,9 +75,13 @@ class Insumo extends Model
         }
 
         $path = ltrim(str_replace('\\', '/', (string) $this->foto), '/');
+        if ($path === '' || ! Storage::disk('uploads')->exists($path)) {
+            return null;
+        }
 
-        return Storage::disk('uploads')->exists($path)
-            ? Storage::disk('uploads')->url($path)
-            : null;
+        // Disco `uploads` aponta para public/uploads — não usar Storage::url (aponta para /storage).
+        $v = $this->updated_at?->getTimestamp() ?? time();
+
+        return asset('uploads/'.$path).'?v='.$v;
     }
 }
