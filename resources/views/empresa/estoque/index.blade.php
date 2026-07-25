@@ -70,6 +70,7 @@
                             </td>
                             <td class="text-end">
                                 <a href="{{ route('empresa.estoque.produto', $p) }}" class="btn btn-sm btn-outline-primary">Movimentar</a>
+                                <a href="{{ route('empresa.estoque.ficha', $p) }}" class="btn btn-sm btn-outline-secondary">Ficha técnica</a>
                             </td>
                         </tr>
                     @empty

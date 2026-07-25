@@ -26,6 +26,34 @@
                     @if ($item->observacao)
                         <div class="alert alert-warning py-2 px-2 small my-2 mb-0">{{ $item->observacao }}</div>
                     @endif
+                    @php $produtoItem = $item->produto; @endphp
+                    @if ($produtoItem && (filled($produtoItem->modo_preparo) || $produtoItem->fichaTecnica->isNotEmpty()))
+                        <div class="mt-2">
+                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#preparo-{{ $item->id }}">
+                                <i class="bi bi-journal-text"></i> Ficha técnica
+                                @if ($produtoItem->ficha_tempo_preparo_min)
+                                    <span class="text-muted">· {{ $produtoItem->ficha_tempo_preparo_min }} min</span>
+                                @endif
+                            </button>
+                            <div class="collapse mt-2" id="preparo-{{ $item->id }}">
+                                @if ($produtoItem->fichaTecnica->isNotEmpty())
+                                    <ul class="list-unstyled small mb-2">
+                                        @foreach ($produtoItem->fichaTecnica as $ing)
+                                            <li class="d-flex align-items-center gap-2 mb-1">
+                                                @if ($ing->insumo?->urlFoto())
+                                                    <img src="{{ $ing->insumo->urlFoto() }}" alt="" width="28" height="28" class="rounded border object-fit-cover">
+                                                @endif
+                                                <span><strong>{{ $ing->quantidadeFormatada() }}</strong> {{ $ing->insumo?->nome }}</span>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                @endif
+                                @if (filled($produtoItem->modo_preparo))
+                                    <div class="bg-light rounded p-2 small" style="white-space: pre-line">{{ $produtoItem->modo_preparo }}</div>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
                     <div class="d-flex flex-wrap gap-2 mt-3">
                         @if ($item->status === \App\Enums\Mesas\ComandaItemStatus::Enviado)
                             <form method="post" action="{{ route('empresa.mesas.cozinha.item-status', $item) }}">@csrf

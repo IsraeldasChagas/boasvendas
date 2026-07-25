@@ -3,8 +3,8 @@
 namespace App\Services\Mesas;
 
 use App\Enums\Mesas\ComandaItemStatus;
-use App\Enums\Mesas\ComandaStatus;
 use App\Enums\Mesas\ComandaSetorDestino;
+use App\Enums\Mesas\ComandaStatus;
 use App\Models\ComandaItem;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -23,7 +23,8 @@ class CozinhaService
     public function itensPainel(int $empresaId, ?ComandaSetorDestino $setor = null): Collection
     {
         $q = ComandaItem::query()
-            ->with(['comanda.mesa'])
+            // produto.fichaTecnica alimenta o modo de preparo exibido no painel.
+            ->with(['comanda.mesa', 'produto.fichaTecnica.insumo'])
             ->whereHas('comanda', function (Builder $b) use ($empresaId) {
                 $b->where('empresa_id', $empresaId)
                     ->whereIn('status', ComandaStatus::abertasValues());

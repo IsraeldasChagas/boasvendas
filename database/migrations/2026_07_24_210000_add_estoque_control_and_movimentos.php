@@ -12,13 +12,16 @@ return new class extends Migration
             $table->boolean('controla_estoque')->default(true)->after('estoque');
         });
 
+        // Movimentos de produto acabado (inteiro) e de insumo (fracionado: g, ml, un).
         Schema::create('estoque_movimentos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('empresa_id')->constrained('empresas')->cascadeOnDelete();
-            $table->foreignId('produto_id')->constrained('produtos')->cascadeOnDelete();
+            $table->foreignId('produto_id')->nullable()->constrained('produtos')->cascadeOnDelete();
+            $table->unsignedBigInteger('insumo_id')->nullable();
             $table->string('tipo', 32);
-            $table->integer('delta');
-            $table->unsignedInteger('saldo_apos');
+            $table->decimal('delta', 14, 3);
+            $table->decimal('saldo_apos', 14, 3);
+            $table->string('unidade', 8)->nullable();
             $table->nullableMorphs('referencia');
             $table->string('observacao', 500)->nullable();
             $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
@@ -26,6 +29,7 @@ return new class extends Migration
 
             $table->index(['empresa_id', 'created_at']);
             $table->index(['produto_id', 'created_at']);
+            $table->index(['insumo_id', 'created_at']);
             $table->index(['tipo', 'created_at']);
         });
     }

@@ -34,6 +34,9 @@ class Produto extends Model
         'estoque',
         'controla_estoque',
         'descricao',
+        'modo_preparo',
+        'ficha_rendimento',
+        'ficha_tempo_preparo_min',
         'foto',
         'visivel_loja',
         'ativo',
@@ -61,6 +64,8 @@ class Produto extends Model
             'preco' => 'decimal:2',
             'estoque' => 'integer',
             'controla_estoque' => 'boolean',
+            'ficha_rendimento' => 'integer',
+            'ficha_tempo_preparo_min' => 'integer',
             'visivel_loja' => 'boolean',
             'ativo' => 'boolean',
             'permite_adicionais' => 'boolean',
@@ -123,10 +128,68 @@ class Produto extends Model
         return $this->hasMany(EstoqueMovimento::class, 'produto_id')->orderByDesc('id');
     }
 
-    /** Ficha técnica: insumos consumidos por unidade vendida deste produto. */
+    /** Ficha técnica (receita): insumos consumidos pela produção deste produto. */
     public function fichaTecnica(): HasMany
     {
-        return $this->hasMany(ProdutoFichaItem::class, 'produto_id')->with('insumo');
+        return $this->hasMany(ProdutoFichaItem::class, 'produto_id')
+            ->with('insumo')
+            ->orderBy('ordem')
+            ->orderBy('id');
+    }
+
+    public function temFichaTecnica(): bool
+    {
+        if (! Schema::hasTable('produto_ficha_itens')) {
+            return false;
+        }
+
+        return $this->relationLoaded('fichaTecnica')
+            ? $this->fichaTecnica->isNotEmpty()
+            : $this->fichaTecnica()->exists();
+    }
+
+    /** Porções que a ficha rende por produção (default 1). */
+    public function fichaRendimento(): int
+    {
+        return max(1, (int) ($this->ficha_rendimento ?? 1));
+    }
+
+    /**
+     * Quantas porções ainda dá para produzir com os insumos em estoque.
+     * null = sem ficha técnica cadastrada (não há como calcular).
+     */
+    public function porcoesPossiveisPelaFicha(): ?int
+    {
+        if (! $this->temFichaTecnica()) {
+            return null;
+        }
+
+        $itens = $this->relationLoaded('fichaTecnica') ? $this->fichaTecnica : $this->fichaTecnica()->get();
+
+        $limites = $itens
+            ->map(fn (ProdutoFichaItem $item) => $item->porcoesPossiveis())
+            ->filter(fn (?int $v) => $v !== null);
+
+        if ($limites->isEmpty()) {
+            return null;
+        }
+
+        return (int) $limites->min() * $this->fichaRendimento();
+    }
+
+    /** Insumo que primeiro limita a produção (para avisar a cozinha). */
+    public function insumoLimitanteDaFicha(): ?ProdutoFichaItem
+    {
+        if (! $this->temFichaTecnica()) {
+            return null;
+        }
+
+        $itens = $this->relationLoaded('fichaTecnica') ? $this->fichaTecnica : $this->fichaTecnica()->get();
+
+        return $itens
+            ->filter(fn (ProdutoFichaItem $i) => $i->porcoesPossiveis() !== null)
+            ->sortBy(fn (ProdutoFichaItem $i) => $i->porcoesPossiveis())
+            ->first();
     }
 
     /** Produto com controle de saldo comercial (default true se coluna ausente). */

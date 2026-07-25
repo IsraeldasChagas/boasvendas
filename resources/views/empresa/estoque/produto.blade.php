@@ -19,7 +19,10 @@
                 · <a href="{{ route('empresa.produtos.edit', $produto) }}">Editar produto</a>
             </p>
         </div>
-        <a href="{{ route('empresa.estoque.index') }}" class="btn btn-outline-secondary btn-sm">Voltar ao estoque</a>
+        <div class="d-flex gap-2">
+            <a href="{{ route('empresa.estoque.ficha', $produto) }}" class="btn btn-outline-primary btn-sm">Ficha técnica</a>
+            <a href="{{ route('empresa.estoque.index') }}" class="btn btn-outline-secondary btn-sm">Voltar ao estoque</a>
+        </div>
     </div>
 
     @if (session('status'))
@@ -74,65 +77,19 @@
         </div>
     </div>
 
+    @php $porcoes = $produto->porcoesPossiveisPelaFicha(); @endphp
     <div class="vf-card p-3 mb-3">
-        <h3 class="h6 fw-bold mb-2"><i class="bi bi-diagram-3 text-primary me-1"></i>Ficha técnica (insumos)</h3>
-        <p class="small text-muted mb-3">
-            Cada venda de <strong>1 {{ $produto->nome }}</strong> também baixa os insumos abaixo.
-            A falta de insumo não trava a venda: a baixa é parcial e fica registrada no histórico.
-        </p>
-
-        @if ($ficha->isNotEmpty())
-            <div class="table-responsive mb-3">
-                <table class="table table-sm mb-0 align-middle">
-                    <thead>
-                        <tr>
-                            <th>Insumo</th>
-                            <th class="text-end">Consumo por unidade</th>
-                            <th class="text-end">Saldo do insumo</th>
-                            <th class="text-end"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($ficha as $item)
-                            <tr>
-                                <td class="small">{{ $item->insumo?->nome ?? '—' }}</td>
-                                <td class="small text-end">{{ $item->quantidade }}</td>
-                                <td class="small text-end">{{ $item->insumo?->estoque ?? '—' }}</td>
-                                <td class="text-end">
-                                    <form method="post" action="{{ route('empresa.estoque.ficha.destroy', [$produto, $item]) }}" onsubmit="return confirm('Remover este insumo da ficha?');" class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">Remover</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+        <h3 class="h6 fw-bold mb-2"><i class="bi bi-diagram-3 text-primary me-1"></i>Ficha técnica (receita)</h3>
+        @if ($porcoes !== null)
+            <p class="small mb-2">
+                Com os insumos atuais, ainda dá para fazer <strong>{{ $porcoes }}</strong> porção(ões).
+            </p>
         @else
-            <p class="small text-muted">Nenhum insumo vinculado. Produtos simples (revenda) não precisam de ficha.</p>
+            <p class="small text-muted mb-2">
+                Sem receita cadastrada. Monte a ficha com os ingredientes, quantidades e modo de preparo — a venda passa a baixar os insumos.
+            </p>
         @endif
-
-        <form method="post" action="{{ route('empresa.estoque.ficha.store', $produto) }}" class="row g-2 align-items-end">
-            @csrf
-            <div class="col-md-6">
-                <label class="form-label small fw-semibold" for="insumo">Adicionar insumo</label>
-                <select class="form-select form-select-sm" id="insumo" name="insumo_produto_id" required>
-                    <option value="">— Escolha um produto/insumo —</option>
-                    @foreach ($insumosDisponiveis as $i)
-                        <option value="{{ $i->id }}">{{ $i->nome }} (saldo {{ $i->estoque }})</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label small fw-semibold" for="ficha-qtd">Consumo por unidade</label>
-                <input type="number" class="form-control form-control-sm" id="ficha-qtd" name="quantidade" min="1" max="1000" value="1" required>
-            </div>
-            <div class="col-md-3">
-                <button type="submit" class="btn btn-outline-primary btn-sm">Adicionar à ficha</button>
-            </div>
-        </form>
+        <a href="{{ route('empresa.estoque.ficha', $produto) }}" class="btn btn-outline-primary btn-sm">Abrir ficha técnica</a>
     </div>
 
     <div class="vf-card p-0 overflow-hidden">

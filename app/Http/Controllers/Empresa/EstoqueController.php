@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers\Empresa;
 
+use App\Enums\Estoque\UnidadeMedida;
 use App\Http\Controllers\Controller;
+use App\Models\Empresa;
+use App\Models\Insumo;
 use App\Models\Produto;
 use App\Models\ProdutoFichaItem;
 use App\Services\Estoque\EstoqueService;
@@ -65,23 +68,53 @@ class EstoqueController extends Controller
     {
         $empresa = $this->autoriza($request, $produto);
 
-        $movimentos = $produto->estoqueMovimentos()->with('user')->limit(100)->get();
-        $ficha = Schema::hasTable('produto_ficha_itens') ? $produto->fichaTecnica()->get() : collect();
-
-        $insumosDisponiveis = Produto::query()
-            ->where('empresa_id', $empresa->id)
-            ->where('id', '!=', $produto->id)
-            ->orderBy('nome')
-            ->get(['id', 'nome', 'estoque']);
-
         return view('empresa.estoque.produto', [
             'empresa' => $empresa,
             'produto' => $produto,
-            'movimentos' => $movimentos,
-            'ficha' => $ficha,
-            'insumosDisponiveis' => $insumosDisponiveis,
+            'movimentos' => $produto->estoqueMovimentos()->with('user')->limit(100)->get(),
             'limiarBaixo' => self::LIMIAR_BAIXO,
         ]);
+    }
+
+    /** Ficha técnica (receita): ingredientes, quantidades e modo de preparo. */
+    public function ficha(Request $request, Produto $produto): View|RedirectResponse
+    {
+        $empresa = $this->autoriza($request, $produto);
+
+        if (! Schema::hasTable('insumos')) {
+            return redirect()->route('empresa.estoque.produto', $produto)
+                ->with('warning', 'Rode as migrations para habilitar a ficha técnica.');
+        }
+
+        $produto->load('fichaTecnica.insumo');
+
+        return view('empresa.estoque.ficha', [
+            'empresa' => $empresa,
+            'produto' => $produto,
+            'ficha' => $produto->fichaTecnica,
+            'insumosDisponiveis' => Insumo::query()
+                ->where('empresa_id', $empresa->id)
+                ->where('ativo', true)
+                ->orderBy('nome')
+                ->get(),
+            'porcoesPossiveis' => $produto->porcoesPossiveisPelaFicha(),
+            'insumoLimitante' => $produto->insumoLimitanteDaFicha(),
+        ]);
+    }
+
+    public function fichaCabecalho(Request $request, Produto $produto): RedirectResponse
+    {
+        $this->autoriza($request, $produto);
+
+        $data = $request->validate([
+            'ficha_rendimento' => ['required', 'integer', 'min:1', 'max:10000'],
+            'ficha_tempo_preparo_min' => ['nullable', 'integer', 'min:1', 'max:1440'],
+            'modo_preparo' => ['nullable', 'string', 'max:10000'],
+        ]);
+
+        $produto->update($data);
+
+        return back()->with('status', 'Ficha técnica atualizada.');
     }
 
     public function repor(Request $request, Produto $produto): RedirectResponse
@@ -117,27 +150,58 @@ class EstoqueController extends Controller
         $empresa = $this->autoriza($request, $produto);
 
         $data = $request->validate([
-            'insumo_produto_id' => [
+            'insumo_id' => [
                 'required',
                 'integer',
-                Rule::exists('produtos', 'id')->where('empresa_id', $empresa->id),
-                Rule::notIn([(string) $produto->id]),
-                Rule::unique('produto_ficha_itens', 'insumo_produto_id')->where('produto_id', $produto->id),
+                Rule::exists('insumos', 'id')->where('empresa_id', $empresa->id),
+                Rule::unique('produto_ficha_itens', 'insumo_id')->where('produto_id', $produto->id),
             ],
-            'quantidade' => ['required', 'integer', 'min:1', 'max:1000'],
+            'quantidade' => ['required', 'numeric', 'min:0.001', 'max:999999'],
+            'unidade' => ['required', Rule::enum(UnidadeMedida::class)],
+            'observacao' => ['nullable', 'string', 'max:200'],
         ], [
-            'insumo_produto_id.not_in' => 'O produto não pode ser insumo de si mesmo.',
-            'insumo_produto_id.unique' => 'Este insumo já está na ficha técnica.',
+            'insumo_id.unique' => 'Este ingrediente já está na ficha técnica.',
         ]);
+
+        $insumo = Insumo::query()->where('empresa_id', $empresa->id)->findOrFail($data['insumo_id']);
+        $unidade = UnidadeMedida::from($data['unidade']);
 
         ProdutoFichaItem::query()->create([
             'empresa_id' => $empresa->id,
             'produto_id' => $produto->id,
-            'insumo_produto_id' => (int) $data['insumo_produto_id'],
-            'quantidade' => (int) $data['quantidade'],
+            'insumo_id' => $insumo->id,
+            'quantidade' => (float) $data['quantidade'],
+            'unidade' => $unidade,
+            'quantidade_base' => $this->estoque->converterParaBase((float) $data['quantidade'], $unidade, $insumo),
+            'observacao' => $data['observacao'] ?? null,
+            'ordem' => (int) ProdutoFichaItem::query()->where('produto_id', $produto->id)->max('ordem') + 1,
         ]);
 
-        return back()->with('status', 'Insumo adicionado à ficha técnica.');
+        return back()->with('status', 'Ingrediente adicionado à ficha técnica.');
+    }
+
+    public function fichaUpdate(Request $request, Produto $produto, ProdutoFichaItem $fichaItem): RedirectResponse
+    {
+        $this->autoriza($request, $produto);
+        abort_unless((int) $fichaItem->produto_id === (int) $produto->id, 403);
+
+        $data = $request->validate([
+            'quantidade' => ['required', 'numeric', 'min:0.001', 'max:999999'],
+            'unidade' => ['required', Rule::enum(UnidadeMedida::class)],
+            'observacao' => ['nullable', 'string', 'max:200'],
+        ]);
+
+        $unidade = UnidadeMedida::from($data['unidade']);
+        $insumo = $fichaItem->insumo;
+
+        $fichaItem->update([
+            'quantidade' => (float) $data['quantidade'],
+            'unidade' => $unidade,
+            'quantidade_base' => $this->estoque->converterParaBase((float) $data['quantidade'], $unidade, $insumo),
+            'observacao' => $data['observacao'] ?? null,
+        ]);
+
+        return back()->with('status', 'Ingrediente atualizado.');
     }
 
     public function fichaDestroy(Request $request, Produto $produto, ProdutoFichaItem $fichaItem): RedirectResponse
@@ -147,10 +211,10 @@ class EstoqueController extends Controller
 
         $fichaItem->delete();
 
-        return back()->with('status', 'Insumo removido da ficha técnica.');
+        return back()->with('status', 'Ingrediente removido da ficha técnica.');
     }
 
-    private function autoriza(Request $request, Produto $produto): \App\Models\Empresa
+    private function autoriza(Request $request, Produto $produto): Empresa
     {
         $empresa = $request->user()->empresa;
         abort_unless($empresa && (int) $produto->empresa_id === (int) $empresa->id, 403);

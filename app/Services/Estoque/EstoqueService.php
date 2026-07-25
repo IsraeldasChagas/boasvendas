@@ -3,25 +3,31 @@
 namespace App\Services\Estoque;
 
 use App\Enums\Estoque\EstoqueMovimentoTipo;
+use App\Enums\Estoque\UnidadeMedida;
 use App\Models\EstoqueMovimento;
+use App\Models\Insumo;
 use App\Models\Produto;
+use App\Models\ProdutoFichaItem;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Único ponto de mutação de produtos.estoque: baixa/devolução por venda,
- * reposição e ajuste manual, sempre com lock de linha e movimento gravado.
- * Ficha técnica: venda do produto final também baixa os insumos vinculados.
+ * Único ponto de mutação de estoque: produtos acabados (`produtos.estoque`,
+ * inteiro) e insumos (`insumos.saldo`, fracionado em g/ml/un). Sempre com lock
+ * de linha e movimento gravado em `estoque_movimentos`.
+ *
+ * Vender um prato com ficha técnica consome os insumos da receita.
  */
 class EstoqueService
 {
     /**
-     * Baixa estoque (saída de venda ou remessa).
+     * Baixa produto acabado (venda/remessa) e, se pedido, consome a receita.
      *
-     * @param  bool  $comFicha  também baixa insumos da ficha técnica (não bloqueia a venda)
-     * @param  bool  $bloquearSeInsuficiente  false = baixa parcial até zerar (ex.: fechamento de mesa)
+     * @param  bool  $comFicha  consome os insumos da ficha técnica
+     * @param  bool  $bloquearSeInsuficiente  false = baixa parcial (ex.: fechamento de mesa)
      *
      * @throws ValidationException
      */
@@ -56,23 +62,19 @@ class EstoqueService
                     $observacao = trim(($observacao ?? '').' (saldo insuficiente; baixa parcial de '.abs($delta).' de '.$quantidade.')');
                 }
                 if ($delta !== 0) {
-                    $mov = $this->aplicarDelta($p, $delta, $tipo, $referencia, $observacao, $userId);
+                    $mov = $this->aplicarDeltaProduto($p, $delta, $tipo, $referencia, $observacao, $userId);
                 }
             }
 
             if ($comFicha) {
-                $this->consumirFicha($p, $quantidade, $referencia, $userId);
+                $this->consumirReceita($p, $quantidade, $referencia, $userId);
             }
 
             return $mov;
         });
     }
 
-    /**
-     * Devolve estoque (cancelamento/acerto).
-     *
-     * @param  bool  $comFicha  também devolve insumos da ficha técnica
-     */
+    /** Devolve produto acabado (cancelamento/acerto) e, se pedido, os insumos. */
     public function devolver(
         Produto|int $produto,
         int $quantidade,
@@ -92,18 +94,18 @@ class EstoqueService
 
             $mov = null;
             if ($this->controla($p)) {
-                $mov = $this->aplicarDelta($p, $quantidade, $tipo, $referencia, $observacao, $userId);
+                $mov = $this->aplicarDeltaProduto($p, $quantidade, $tipo, $referencia, $observacao, $userId);
             }
 
             if ($comFicha) {
-                $this->devolverFicha($p, $quantidade, $referencia, $userId);
+                $this->devolverReceita($p, $quantidade, $referencia, $userId);
             }
 
             return $mov;
         });
     }
 
-    /** Reposição manual: soma quantidade ao saldo. */
+    /** Reposição manual de produto acabado. */
     public function repor(
         Produto|int $produto,
         int $quantidade,
@@ -120,11 +122,11 @@ class EstoqueService
             $p = $this->produtoBloqueado($produto);
             $this->garantirControle($p);
 
-            return $this->aplicarDelta($p, $quantidade, EstoqueMovimentoTipo::Reposicao, null, $observacao, $userId);
+            return $this->aplicarDeltaProduto($p, $quantidade, EstoqueMovimentoTipo::Reposicao, null, $observacao, $userId);
         });
     }
 
-    /** Ajuste de inventário: define o saldo absoluto. */
+    /** Ajuste de inventário de produto acabado: define o saldo absoluto. */
     public function ajustar(
         Produto|int $produto,
         int $novoSaldo,
@@ -146,12 +148,64 @@ class EstoqueService
                 return null;
             }
 
-            return $this->aplicarDelta($p, $delta, EstoqueMovimentoTipo::Ajuste, null, $observacao, $userId);
+            return $this->aplicarDeltaProduto($p, $delta, EstoqueMovimentoTipo::Ajuste, null, $observacao, $userId);
         });
     }
 
     /**
-     * Valida saldo suficiente antes de vender (quando o produto controla estoque).
+     * Reposição de insumo (compra). A quantidade é convertida da unidade
+     * informada para a base do insumo.
+     */
+    public function reporInsumo(
+        Insumo|int $insumo,
+        float $quantidade,
+        UnidadeMedida $unidade,
+        ?string $observacao = null,
+        ?int $userId = null,
+    ): EstoqueMovimento {
+        if ($quantidade <= 0) {
+            throw ValidationException::withMessages([
+                'quantidade' => 'Informe uma quantidade maior que zero.',
+            ]);
+        }
+
+        return DB::transaction(function () use ($insumo, $quantidade, $unidade, $observacao, $userId) {
+            $i = $this->insumoBloqueado($insumo);
+            $base = $this->converterParaBase($quantidade, $unidade, $i);
+
+            return $this->aplicarDeltaInsumo($i, $base, EstoqueMovimentoTipo::Reposicao, null, $observacao, $userId);
+        });
+    }
+
+    /** Ajuste de inventário de insumo: define o saldo absoluto na unidade informada. */
+    public function ajustarInsumo(
+        Insumo|int $insumo,
+        float $novoSaldo,
+        UnidadeMedida $unidade,
+        ?string $observacao = null,
+        ?int $userId = null,
+    ): ?EstoqueMovimento {
+        if ($novoSaldo < 0) {
+            throw ValidationException::withMessages([
+                'novo_saldo' => 'O saldo não pode ser negativo.',
+            ]);
+        }
+
+        return DB::transaction(function () use ($insumo, $novoSaldo, $unidade, $observacao, $userId) {
+            $i = $this->insumoBloqueado($insumo);
+            $baseAlvo = $this->converterParaBase($novoSaldo, $unidade, $i);
+
+            $delta = round($baseAlvo - (float) $i->saldo, 3);
+            if (abs($delta) < 0.001) {
+                return null;
+            }
+
+            return $this->aplicarDeltaInsumo($i, $delta, EstoqueMovimentoTipo::Ajuste, null, $observacao, $userId);
+        });
+    }
+
+    /**
+     * Valida saldo do produto acabado antes de vender.
      *
      * @throws ValidationException
      */
@@ -173,56 +227,91 @@ class EstoqueService
         return $produto->controlaEstoque();
     }
 
-    /** Consome insumos da ficha (baixa parcial; nunca bloqueia a venda do produto final). */
-    private function consumirFicha(Produto $produto, int $quantidadeVendida, ?Model $referencia, ?int $userId): void
+    /** Converte a quantidade informada para a unidade base do insumo. */
+    public function converterParaBase(float $quantidade, UnidadeMedida $unidade, Insumo $insumo): float
     {
-        foreach ($this->itensFicha($produto) as $item) {
-            $insumo = $this->produtoBloqueado((int) $item->insumo_produto_id);
-            if (! $this->controla($insumo)) {
+        $base = $insumo->unidadeBase();
+
+        if (! $unidade->compativelCom($base)) {
+            throw ValidationException::withMessages([
+                'unidade' => 'A unidade '.$unidade->sigla().' não é compatível com "'.$insumo->nome.'" (medido em '.$base->sigla().').',
+            ]);
+        }
+
+        return $unidade->paraBase($quantidade);
+    }
+
+    /**
+     * Consome a receita. Ficha que rende N porções consome 1 receita a cada N
+     * unidades vendidas. Falta de insumo não trava a venda: baixa parcial
+     * registrada no histórico.
+     */
+    private function consumirReceita(Produto $produto, int $quantidadeVendida, ?Model $referencia, ?int $userId): void
+    {
+        foreach ($this->itensDaFicha($produto) as $item) {
+            $insumo = $this->insumoBloqueado((int) $item->insumo_id);
+            $necessario = $this->totalNecessario($item, $produto, $quantidadeVendida);
+            if ($necessario <= 0) {
                 continue;
             }
 
-            $necessario = (int) $item->quantidade * $quantidadeVendida;
-            $delta = -min($necessario, (int) $insumo->estoque);
-            $obs = 'Ficha técnica de "'.$produto->nome.'"';
-            if (abs($delta) < $necessario) {
-                $obs .= ' (saldo insuficiente; baixa parcial de '.abs($delta).' de '.$necessario.')';
-            }
-            if ($delta !== 0) {
-                $this->aplicarDelta($insumo, $delta, EstoqueMovimentoTipo::ConsumoFicha, $referencia, $obs, $userId);
-            }
-        }
-    }
-
-    /** Devolve insumos da ficha (cancelamento do produto final). */
-    private function devolverFicha(Produto $produto, int $quantidadeDevolvida, ?Model $referencia, ?int $userId): void
-    {
-        foreach ($this->itensFicha($produto) as $item) {
-            $insumo = $this->produtoBloqueado((int) $item->insumo_produto_id);
-            if (! $this->controla($insumo)) {
+            $disponivel = max(0, (float) $insumo->saldo);
+            $consumo = min($necessario, $disponivel);
+            if ($consumo <= 0) {
                 continue;
             }
 
-            $qtd = (int) $item->quantidade * $quantidadeDevolvida;
-            if ($qtd > 0) {
-                $this->aplicarDelta($insumo, $qtd, EstoqueMovimentoTipo::ConsumoFicha, $referencia, 'Devolução — ficha técnica de "'.$produto->nome.'"', $userId);
+            $obs = 'Receita de "'.$produto->nome.'"';
+            if ($consumo < $necessario) {
+                $obs .= ' (insumo insuficiente; consumo parcial de '
+                    .UnidadeMedida::formatar($consumo, $insumo->unidadeBase()).' de '
+                    .UnidadeMedida::formatar($necessario, $insumo->unidadeBase()).')';
             }
+
+            $this->aplicarDeltaInsumo($insumo, -$consumo, EstoqueMovimentoTipo::ConsumoFicha, $referencia, $obs, $userId);
         }
     }
 
-    /** @return \Illuminate\Support\Collection<int, \App\Models\ProdutoFichaItem> */
-    private function itensFicha(Produto $produto)
+    /** Devolve à receita os insumos de um produto cancelado. */
+    private function devolverReceita(Produto $produto, int $quantidadeDevolvida, ?Model $referencia, ?int $userId): void
     {
-        if (! Schema::hasTable('produto_ficha_itens')) {
+        foreach ($this->itensDaFicha($produto) as $item) {
+            $insumo = $this->insumoBloqueado((int) $item->insumo_id);
+            $total = $this->totalNecessario($item, $produto, $quantidadeDevolvida);
+            if ($total <= 0) {
+                continue;
+            }
+
+            $this->aplicarDeltaInsumo(
+                $insumo,
+                $total,
+                EstoqueMovimentoTipo::ConsumoFicha,
+                $referencia,
+                'Devolução — receita de "'.$produto->nome.'"',
+                $userId,
+            );
+        }
+    }
+
+    /** Quantidade base de um insumo para produzir N unidades do produto. */
+    private function totalNecessario(ProdutoFichaItem $item, Produto $produto, int $quantidade): float
+    {
+        $porPorcao = (float) $item->quantidade_base / max(1, $produto->fichaRendimento());
+
+        return round($porPorcao * $quantidade, 3);
+    }
+
+    /** @return Collection<int, ProdutoFichaItem> */
+    private function itensDaFicha(Produto $produto)
+    {
+        if (! Schema::hasTable('produto_ficha_itens') || ! Schema::hasTable('insumos')) {
             return collect();
         }
 
-        return \App\Models\ProdutoFichaItem::query()
-            ->where('produto_id', $produto->id)
-            ->get();
+        return ProdutoFichaItem::query()->where('produto_id', $produto->id)->get();
     }
 
-    private function aplicarDelta(
+    private function aplicarDeltaProduto(
         Produto $produto,
         int $delta,
         EstoqueMovimentoTipo $tipo,
@@ -240,12 +329,47 @@ class EstoqueService
         $produto->estoque = $novo;
         $produto->save();
 
-        return EstoqueMovimento::query()->create([
+        return $this->registrar([
             'empresa_id' => $produto->empresa_id,
             'produto_id' => $produto->id,
             'tipo' => $tipo,
             'delta' => $delta,
             'saldo_apos' => $novo,
+        ], $referencia, $observacao, $userId);
+    }
+
+    private function aplicarDeltaInsumo(
+        Insumo $insumo,
+        float $delta,
+        EstoqueMovimentoTipo $tipo,
+        ?Model $referencia,
+        ?string $observacao,
+        ?int $userId,
+    ): EstoqueMovimento {
+        $novo = round((float) $insumo->saldo + $delta, 3);
+        if ($novo < 0) {
+            throw ValidationException::withMessages([
+                'saldo' => 'O insumo "'.$insumo->nome.'" ficaria com saldo negativo.',
+            ]);
+        }
+
+        $insumo->saldo = $novo;
+        $insumo->save();
+
+        return $this->registrar([
+            'empresa_id' => $insumo->empresa_id,
+            'insumo_id' => $insumo->id,
+            'tipo' => $tipo,
+            'delta' => $delta,
+            'saldo_apos' => $novo,
+            'unidade' => $insumo->unidadeBase(),
+        ], $referencia, $observacao, $userId);
+    }
+
+    /** @param  array<string, mixed>  $dados */
+    private function registrar(array $dados, ?Model $referencia, ?string $observacao, ?int $userId): EstoqueMovimento
+    {
+        return EstoqueMovimento::query()->create($dados + [
             'referencia_type' => $referencia?->getMorphClass(),
             'referencia_id' => $referencia?->getKey(),
             'observacao' => filled($observacao) ? mb_substr(trim((string) $observacao), 0, 500) : null,
@@ -274,5 +398,19 @@ class EstoqueService
         }
 
         return $p;
+    }
+
+    private function insumoBloqueado(Insumo|int $insumo): Insumo
+    {
+        $id = $insumo instanceof Insumo ? $insumo->id : $insumo;
+
+        $i = Insumo::query()->whereKey($id)->lockForUpdate()->first();
+        if ($i === null) {
+            throw ValidationException::withMessages([
+                'insumo' => 'Insumo não encontrado.',
+            ]);
+        }
+
+        return $i;
     }
 }

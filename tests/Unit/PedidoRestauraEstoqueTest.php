@@ -55,7 +55,7 @@ class PedidoRestauraEstoqueTest extends TestCase
 
         $mov = $produto->estoqueMovimentos()->first();
         $this->assertSame(EstoqueMovimentoTipo::Cancelamento, $mov->tipo);
-        $this->assertSame(2, $mov->delta);
-        $this->assertSame(10, $mov->saldo_apos);
+        $this->assertSame(2.0, (float) $mov->delta);
+        $this->assertSame(10.0, (float) $mov->saldo_apos);
     }
 }
